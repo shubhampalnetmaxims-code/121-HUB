@@ -1,8 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Bold, Italic, List, CloudUpload, Sparkles, Loader2 } from 'lucide-react';
+import { X, Bold, Italic, List, CloudUpload } from 'lucide-react';
 import { Facility } from '../../types';
-import { generateFacilityDescription } from '../../geminiService';
 
 interface FacilityFormModalProps {
   facility: Facility | null;
@@ -18,7 +17,6 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
     imageUrl: facility?.imageUrl || '',
     isActive: facility ? facility.isActive : true
   });
-  const [isGenerating, setIsGenerating] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,15 +27,6 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
       reader.onloadend = () => setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleAiDescription = async () => {
-    if (!formData.name) return;
-    setIsGenerating(true);
-    const desc = await generateFacilityDescription(formData.name);
-    if (editorRef.current) editorRef.current.innerHTML = desc;
-    setFormData(prev => ({ ...prev, description: desc }));
-    setIsGenerating(false);
   };
 
   const execCommand = (command: string, value: string = '') => {
@@ -77,10 +66,6 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
           <div>
             <div className="flex justify-between items-center mb-3">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest">About Facility</label>
-              <button type="button" onClick={handleAiDescription} disabled={isGenerating || !formData.name} className="text-[10px] flex items-center gap-1.5 font-black text-blue-600 disabled:opacity-50 uppercase tracking-widest border border-blue-100 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                Gemini AI Write
-              </button>
             </div>
             <div className="border border-slate-200 rounded-[28px] overflow-hidden bg-slate-50">
               <div className="flex items-center gap-1 p-3 bg-white border-b border-slate-200">

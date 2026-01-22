@@ -43,8 +43,11 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onLogout, onDele
     navigate('/app/home');
   };
 
-  const ProfileMenuItem = ({ icon: Icon, label, color = 'text-slate-900', sublabel = '' }: { icon: any, label: string, color?: string, sublabel?: string }) => (
-    <button className="w-full p-5 bg-white border border-slate-100 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all group shadow-sm">
+  const ProfileMenuItem = ({ icon: Icon, label, color = 'text-slate-900', sublabel = '', onClick }: { icon: any, label: string, color?: string, sublabel?: string, onClick?: () => void }) => (
+    <button 
+      onClick={onClick}
+      className="w-full p-5 bg-white border border-slate-100 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all group shadow-sm"
+    >
        <div className={`w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center ${color}`}>
          <Icon className="w-5 h-5" />
        </div>
@@ -55,6 +58,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onLogout, onDele
        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
     </button>
   );
+
+  const primaryCard = currentUser.paymentCards?.find(c => c.isPrimary);
 
   return (
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
@@ -92,7 +97,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, onLogout, onDele
         {/* Action Menu */}
         <section className="space-y-3">
           <h4 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Manage Account</h4>
-          <ProfileMenuItem icon={CreditCard} label="My Payments" sublabel={currentUser.paymentMethod === 'added' ? 'Verified Method' : 'Add Card'} />
+          <ProfileMenuItem 
+            icon={CreditCard} 
+            label="My Payments" 
+            sublabel={primaryCard ? `Default: ${primaryCard.brand} ${primaryCard.cardNumber.slice(-4)}` : 'Add Card'} 
+            onClick={() => navigate('/app/profile/payments')}
+          />
           <ProfileMenuItem icon={Calendar} label="My Bookings" sublabel="Session History" />
           <ProfileMenuItem icon={ShoppingBag} label="My Orders" sublabel="Digital Receipts" />
           <ProfileMenuItem icon={Ticket} label="Memberships & Passes" sublabel="Active Subscriptions" />

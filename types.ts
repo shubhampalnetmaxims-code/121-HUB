@@ -72,6 +72,16 @@ export interface Product {
   color?: string;
 }
 
+export interface PaymentCard {
+  id: string;
+  holderName: string;
+  cardNumber: string; // Stored as masked except last 4
+  brand: 'Visa' | 'Mastercard' | 'Amex' | 'Other';
+  expiryDate: string; // MM/YY
+  isPrimary: boolean;
+  createdAt: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -81,6 +91,7 @@ export interface User {
   paymentMethod: 'added' | 'skipped';
   status: 'active' | 'blocked';
   createdAt: number;
+  paymentCards: PaymentCard[];
 }
 
 export interface AppNotification {
@@ -170,7 +181,8 @@ export const DEFAULT_USERS: User[] = [
     gender: 'Female',
     paymentMethod: 'added',
     status: 'active',
-    createdAt: Date.now() - 500000
+    createdAt: Date.now() - 500000,
+    paymentCards: []
   },
   {
     id: 'u2',
@@ -180,6 +192,7 @@ export const DEFAULT_USERS: User[] = [
     gender: 'Male',
     paymentMethod: 'skipped',
     status: 'active',
-    createdAt: Date.now() - 1000000
+    createdAt: Date.now() - 1000000,
+    paymentCards: []
   }
 ];

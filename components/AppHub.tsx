@@ -13,6 +13,7 @@ import FacilityInfoModal from './app/FacilityInfoModal';
 import BottomNav from './app/BottomNav';
 import OnboardingFlow from './app/OnboardingFlow';
 import ProfileView from './app/ProfileView';
+import MyPaymentsView from './app/MyPaymentsView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -31,13 +32,14 @@ interface AppHubProps {
   products: Product[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
+  onUpdateUser: (id: string, updates: Partial<User>) => void;
   onLogout: () => void;
   onDeleteUser: (id: string) => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
   facilities, classes, trainers, locations, classSlots, products, 
-  currentUser, onRegisterUser, onLogout, onDeleteUser
+  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,9 +60,10 @@ const AppHub: React.FC<AppHubProps> = ({
           <Routes>
             <Route index element={<EntryView />} />
             <Route path="onboarding" element={<OnboardingFlow onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />
-            <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} />} />
+            <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
             <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="profile" element={<ProfileView currentUser={currentUser} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />

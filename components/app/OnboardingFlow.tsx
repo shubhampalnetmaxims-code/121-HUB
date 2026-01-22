@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Mail, ShieldCheck, User, Phone, CreditCard, ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { User as UserType } from '../../types';
+import { Mail, ShieldCheck, User, Phone, CreditCard, ArrowLeft, ArrowRight, Check, Plus, Trash2, Shield } from 'lucide-react';
+import { User as UserType, PaymentCard } from '../../types';
 import { useToast } from '../ToastContext';
+import CardFormModal from './CardFormModal';
 
 interface OnboardingFlowProps {
   onComplete: (data: Omit<UserType, 'id' | 'status' | 'createdAt'>) => void;
@@ -17,16 +18,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [step, setStep] = useState<OnboardingStep>('email');
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     fullName: '',
     phone: '',
     gender: 'Other',
-    paymentMethod: 'skipped' as 'added' | 'skipped',
     otp: ''
   });
+  const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
 
-  // Extract where to return to after completion
   const returnTo = (location.state as any)?.returnTo || '/app/home';
 
   const nextStep = () => {
@@ -61,24 +62,51 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
     else onCancel();
   };
 
-  const handleFinalize = (isPaymentAdded: boolean) => {
+  const handleAddCard = (cardData: Omit<PaymentCard, 'id' | 'createdAt'>) => {
+    const newCard: PaymentCard = {
+      ...cardData,
+      id: Math.random().toString(36).substring(2, 9),
+      createdAt: Date.now(),
+      // Ensure exclusivity of primary card
+      isPrimary: paymentCards.length === 0 ? true : cardData.isPrimary
+    };
+    
+    setPaymentCards(prev => {
+      let updated = [...prev];
+      if (newCard.isPrimary) {
+        updated = updated.map(c => ({ ...c, isPrimary: false }));
+      }
+      return [...updated, newCard];
+    });
+    
+    setIsCardModalOpen(false);
+    showToast('Card validated and added', 'success');
+  };
+
+  const removeCard = (id: string) => {
+    setPaymentCards(prev => {
+      const filtered = prev.filter(c => c.id !== id);
+      // Auto-primary if only one left
+      if (filtered.length === 1) filtered[0].isPrimary = true;
+      return filtered;
+    });
+  };
+
+  const handleFinalize = (skipPayment: boolean = false) => {
     onComplete({
       email: formData.email,
       fullName: formData.fullName,
       phone: formData.phone,
       gender: formData.gender,
-      paymentMethod: isPaymentAdded ? 'added' : 'skipped'
+      paymentMethod: (!skipPayment && paymentCards.length > 0) ? 'added' : 'skipped',
+      paymentCards: skipPayment ? [] : paymentCards
     });
-    if (isPaymentAdded) {
-       showToast('Payment method linked successfully', 'success');
-    }
-    // Navigate back to where they started
     navigate(returnTo, { replace: true });
   };
 
   return (
     <div className="h-full bg-white flex flex-col p-8 text-left animate-in slide-in-from-right duration-300">
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex items-center justify-between mb-12 shrink-0">
         <button onClick={prevStep} className="p-2 -ml-2 hover:bg-slate-100 rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -94,12 +122,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
         {step === 'email' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
             <div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4">Start Your Journey</h2>
-              <p className="text-slate-500 font-medium">Enter your email to join the 121 community.</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Start Your Journey</h2>
+              <p className="text-slate-500 font-medium leading-relaxed">Enter your email to join the 121 community.</p>
             </div>
             <div className="space-y-4">
               <div className="relative">
@@ -130,7 +158,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
               <ShieldCheck className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4">Verify Email</h2>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Verify Email</h2>
               <p className="text-slate-500 font-medium">We sent a magic code to <br/><span className="text-slate-900 font-bold">{formData.email}</span></p>
             </div>
             <div className="space-y-6">
@@ -164,8 +192,8 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
         {step === 'details' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
             <div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4">About You</h2>
-              <p className="text-slate-500 font-medium">Let's personalize your hub experience.</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">About You</h2>
+              <p className="text-slate-500 font-medium leading-relaxed">Let's personalize your hub experience.</p>
             </div>
             <div className="space-y-4">
               <div className="relative">
@@ -214,46 +242,79 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
         )}
 
         {step === 'payment' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500 pb-10">
             <div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4">One Last Step</h2>
-              <p className="text-slate-500 font-medium">Add a payment method for seamless bookings and market purchases.</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Wallet Setup</h2>
+              <p className="text-slate-500 font-medium leading-relaxed">Add one or more cards for seamless bookings and market purchases.</p>
             </div>
             
-            <div className="p-8 bg-blue-600 rounded-[40px] text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
-               <div className="relative z-10 space-y-8">
-                 <div className="flex justify-between items-start">
-                    <CreditCard className="w-10 h-10 opacity-60" />
-                    <div className="text-right">
-                       <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Default Method</p>
+            <div className="space-y-4">
+              {paymentCards.map(card => (
+                <div 
+                  key={card.id}
+                  className={`p-5 rounded-[28px] border-2 transition-all relative ${
+                    card.isPrimary ? 'border-blue-600 bg-blue-50/10' : 'border-slate-100 bg-slate-50/50'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-6 bg-slate-900 rounded-md flex items-center justify-center text-[7px] font-black italic text-white uppercase">{card.brand}</div>
+                      <div className="text-left">
+                        <p className="font-mono text-sm tracking-widest leading-none mb-1">{card.cardNumber}</p>
+                        <div className="flex items-center gap-2">
+                           {card.isPrimary && <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Primary</span>}
+                           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Exp: {card.expiryDate}</span>
+                        </div>
+                      </div>
                     </div>
-                 </div>
-                 <div className="text-xl font-bold tracking-widest opacity-20 italic">•••• •••• •••• ••••</div>
-                 <div className="flex justify-between items-end">
-                    <p className="font-bold uppercase text-xs tracking-widest">{formData.fullName || 'Member Name'}</p>
-                    <button type="button" className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Add Card</button>
-                 </div>
-               </div>
-               <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+                    <button onClick={() => removeCard(card.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <button 
+                onClick={() => setIsCardModalOpen(true)}
+                className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50/30 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <span className="font-bold text-xs">Add Payment Card</span>
+              </button>
             </div>
 
             <div className="space-y-4 pt-4">
               <button 
-                onClick={() => handleFinalize(true)}
-                className="w-full bg-black text-white py-5 rounded-[24px] font-black text-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all"
+                onClick={() => handleFinalize(false)}
+                disabled={paymentCards.length === 0}
+                className="w-full bg-black text-white py-5 rounded-[24px] font-black text-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
               >
                 Finish & Enter Hub <Check className="w-5 h-5" />
               </button>
               <button 
-                onClick={() => handleFinalize(false)}
+                onClick={() => handleFinalize(true)}
                 className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors"
               >
                 Skip for now
               </button>
             </div>
+            
+            <div className="flex items-center justify-center gap-2 py-4 opacity-40 grayscale pointer-events-none">
+               <Shield className="w-4 h-4" />
+               <p className="text-[10px] font-black uppercase tracking-widest">Encrypted Data Only</p>
+            </div>
           </div>
         )}
       </div>
+
+      {isCardModalOpen && (
+        <CardFormModal 
+          onClose={() => setIsCardModalOpen(false)} 
+          onSave={handleAddCard} 
+        />
+      )}
     </div>
   );
 };

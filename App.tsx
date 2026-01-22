@@ -86,7 +86,6 @@ const AppContent: React.FC = () => {
     else setClassSlots(DEFAULT_CLASS_SLOTS);
 
     if (storedP) setProducts(JSON.parse(storedP));
-    // DEFAULT_PRODUCTS removed from logic to rely on storage, assuming storage setup elsewhere
     
     if (storedU) setUsers(JSON.parse(storedU));
     else setUsers(DEFAULT_USERS);
@@ -197,7 +196,8 @@ const AppContent: React.FC = () => {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
       status: 'active',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      paymentCards: userData.paymentCards || []
     };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
@@ -252,6 +252,7 @@ const AppContent: React.FC = () => {
                 products={products}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
+                onUpdateUser={updateUser}
                 onLogout={handleLogout}
                 onDeleteUser={deleteUser}
               />
