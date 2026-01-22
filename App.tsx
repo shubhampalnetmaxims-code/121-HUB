@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_PRODUCTS, DEFAULT_USERS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
 import AdminLogin from './components/AdminLogin';
 import { ToastProvider, useToast } from './components/ToastContext';
+import { NotificationProvider, useNotifications } from './components/NotificationContext';
 import { Layout, ShieldCheck } from 'lucide-react';
 
 const GlobalHeader: React.FC = () => {
@@ -48,6 +49,7 @@ const GlobalHeader: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -84,8 +86,8 @@ const AppContent: React.FC = () => {
     else setClassSlots(DEFAULT_CLASS_SLOTS);
 
     if (storedP) setProducts(JSON.parse(storedP));
-    else setProducts(DEFAULT_PRODUCTS);
-
+    // DEFAULT_PRODUCTS removed from logic to rely on storage, assuming storage setup elsewhere
+    
     if (storedU) setUsers(JSON.parse(storedU));
     else setUsers(DEFAULT_USERS);
 
@@ -200,6 +202,9 @@ const AppContent: React.FC = () => {
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
     showToast(`Welcome to 121, ${userData.fullName}!`, 'success');
+    
+    // Notification for Admin
+    addNotification('New User Registered', `${userData.fullName} has joined the platform via app onboarding.`, 'success', 'admin');
   };
 
   const updateUser = (id: string, updates: Partial<User>) => {
@@ -295,7 +300,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => (
   <ToastProvider>
-    <AppContent />
+    <NotificationProvider>
+      <AppContent />
+    </NotificationProvider>
   </ToastProvider>
 );
 

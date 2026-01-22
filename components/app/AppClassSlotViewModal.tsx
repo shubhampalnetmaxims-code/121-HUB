@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck } from 'lucide-react';
 import { ClassSlot, Class, Trainer, Location, User as UserType } from '../../types';
 import { useToast } from '../ToastContext';
+import { useNotifications } from '../NotificationContext';
 
 interface AppClassSlotViewModalProps {
   slot: ClassSlot;
@@ -34,6 +35,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
   slot, cls, trainer, location, onClose, onAuthTrigger, currentUser 
 }) => {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const [personCount, setPersonCount] = useState(1);
   const [names, setNames] = useState<string[]>(['']);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -65,6 +67,22 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
     } else {
       setIsBooked(true);
       showToast(`Class reserved for ${personCount} person(s)`, 'success');
+      
+      // Notify User
+      addNotification(
+        'Booking Confirmed!', 
+        `Your reservation for ${cls?.name} at ${slot.startTime} has been secured for ${personCount} attendee(s).`, 
+        'success', 
+        currentUser.id
+      );
+
+      // Notify Admin
+      addNotification(
+        'New Class Booking', 
+        `${currentUser.fullName} booked ${cls?.name} for ${personCount} person(s).`, 
+        'info', 
+        'admin'
+      );
     }
   };
 

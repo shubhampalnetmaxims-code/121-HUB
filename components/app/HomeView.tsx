@@ -1,17 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Dumbbell, Info, MapPin, ArrowRight } from 'lucide-react';
-import { Facility } from '../../types';
+import { Facility, User } from '../../types';
+import { useNotifications } from '../NotificationContext';
+import NotificationListModal from './NotificationListModal';
 
 interface HomeViewProps {
   facilities: Facility[];
   onShowInfo: (f: Facility) => void;
+  currentUser?: User | null;
 }
 
-const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo }) => {
+const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser }) => {
   const navigate = useNavigate();
+  const { notifications } = useNotifications();
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
   const filteredFacilities = facilities.filter(f => f.isActive);
+  const userNotifs = notifications.filter(n => n.target === currentUser?.id);
+  const unreadCount = userNotifs.filter(n => !n.isRead).length;
 
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
@@ -22,7 +30,17 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo }) => {
         </div>
         <div className="flex gap-2">
           <button className="p-3 rounded-2xl bg-slate-50 border border-slate-100"><Search className="w-5 h-5 text-slate-400" /></button>
-          <button className="p-3 rounded-2xl bg-slate-50 border border-slate-100"><Bell className="w-5 h-5 text-slate-400" /></button>
+          <button 
+            onClick={() => setIsNotifOpen(true)}
+            className="p-3 rounded-2xl bg-slate-50 border border-slate-100 relative"
+          >
+            <Bell className="w-5 h-5 text-slate-400" />
+            {unreadCount > 0 && (
+              <div className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                {unreadCount}
+              </div>
+            )}
+          </button>
         </div>
       </div>
 
@@ -86,6 +104,10 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo }) => {
           </div>
         </section>
       </div>
+
+      {isNotifOpen && (
+        <NotificationListModal currentUser={currentUser || null} onClose={() => setIsNotifOpen(false)} />
+      )}
     </div>
   );
 };

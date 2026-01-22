@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Dumbbell, ChevronRight, Edit3, Trash2, Menu } from 'lucide-react';
+import { Plus, Search, Dumbbell, ChevronRight, Edit3, Trash2, Menu, Bell } from 'lucide-react';
 import { Facility } from '../../types';
+import { useNotifications } from '../NotificationContext';
 import FacilityFormModal from './FacilityFormModal';
+import AdminNotifications from './AdminNotifications';
 
 interface FacilitiesViewProps {
   facilities: Facility[];
@@ -15,9 +17,13 @@ interface FacilitiesViewProps {
 
 const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUpdate, onDelete, onOpenSidebar }) => {
   const navigate = useNavigate();
+  const { notifications } = useNotifications();
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
+
+  const unreadCount = notifications.filter(n => n.target === 'admin' && !n.isRead).length;
 
   const handleEdit = (f: Facility) => {
     setEditingFacility(f);
@@ -44,13 +50,26 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
               <p className="text-slate-500 text-xs md:text-sm">Manage location profiles and descriptions.</p>
             </div>
           </div>
-          <button 
-            onClick={() => { setEditingFacility(null); setIsFormOpen(true); }}
-            className="bg-black text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-black/10"
-          >
-            <Plus className="w-5 h-5" />
-            Add Facility
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsNotifOpen(true)}
+              className="p-3 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl transition-all relative border border-slate-100"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </div>
+              )}
+            </button>
+            <button 
+              onClick={() => { setEditingFacility(null); setIsFormOpen(true); }}
+              className="bg-black text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-black/10"
+            >
+              <Plus className="w-5 h-5" />
+              Add Facility
+            </button>
+          </div>
         </div>
       </header>
 
@@ -129,6 +148,10 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSave} 
         />
+      )}
+
+      {isNotifOpen && (
+        <AdminNotifications onClose={() => setIsNotifOpen(false)} />
       )}
     </>
   );
