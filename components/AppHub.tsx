@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate, Link, useParams, useLocation } from 'react-router-dom';
-import { Facility, Class, TimetableEntry, FEATURE_MODULES, DAYS_OF_WEEK } from '../types';
+import { Facility, Class, FEATURE_MODULES } from '../types';
 import { 
   Info, Dumbbell, Flower2, Activity, X, ChevronLeft, Bell, User, Search,
   Home as HomeIcon, Calendar, Compass, ArrowRight, LayoutDashboard,
@@ -12,83 +12,18 @@ import {
 interface AppHubProps {
   facilities: Facility[];
   classes: Class[];
-  timetable: TimetableEntry[];
 }
 
 const IconMap: Record<string, any> = {
-  BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Calendar
+  BookOpen, Layers, Ticket, CreditCard, ShoppingBag
 };
 
-const AppHub: React.FC<AppHubProps> = ({ facilities, classes, timetable }) => {
+const AppHub: React.FC<AppHubProps> = ({ facilities, classes }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedInfoFacility, setSelectedInfoFacility] = useState<Facility | null>(null);
 
   const filteredFacilities = facilities.filter(f => f.isActive);
-
-  const TimetableListView = () => {
-    const { id } = useParams();
-    const facility = facilities.find(f => f.id === id);
-    if (!facility) return null;
-    
-    const facilityTimetable = timetable.filter(t => t.facilityId === id);
-    const [selectedDay, setSelectedDay] = useState(DAYS_OF_WEEK[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1]);
-
-    const dailySessions = facilityTimetable.filter(t => t.day === selectedDay).sort((a,b) => a.startTime.localeCompare(b.startTime));
-
-    return (
-      <div className="h-full flex flex-col bg-slate-50 overflow-hidden">
-        <div className="bg-white p-6 pt-12 flex items-center gap-4 border-b border-slate-100">
-          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="text-left">
-            <h2 className="text-xl font-bold tracking-tight">Facility Schedule</h2>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Plan your visit</p>
-          </div>
-        </div>
-
-        {/* Day Selector */}
-        <div className="bg-white px-6 py-4 flex gap-3 overflow-x-auto no-scrollbar border-b border-slate-50">
-           {DAYS_OF_WEEK.map(day => (
-             <button 
-              key={day} 
-              onClick={() => setSelectedDay(day)}
-              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${selectedDay === day ? 'bg-black text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
-             >
-               {day.substring(0, 3)}
-             </button>
-           ))}
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-24">
-          {dailySessions.length > 0 ? dailySessions.map(t => {
-            const targetClass = classes.find(c => c.id === t.classId);
-            return (
-              <div key={t.id} className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 flex items-center justify-between">
-                <div className="flex gap-4 items-center">
-                   <div className="text-center min-w-[60px]">
-                      <p className="text-sm font-black text-slate-900">{t.startTime}</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase">{t.endTime}</p>
-                   </div>
-                   <div className="h-10 w-[1px] bg-slate-100"></div>
-                   <div className="text-left">
-                      <h4 className="font-extrabold text-slate-900 leading-tight">{targetClass?.name || 'Session'}</h4>
-                      <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">{t.instructor}</p>
-                   </div>
-                </div>
-                <button className="p-3 bg-slate-50 rounded-2xl text-slate-400 hover:text-black">
-                   <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            );
-          }) : (
-            <div className="py-20 text-center text-slate-400 font-bold">No sessions scheduled for {selectedDay}.</div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   const ClassListView = () => {
     const { id } = useParams();
@@ -167,10 +102,7 @@ const AppHub: React.FC<AppHubProps> = ({ facilities, classes, timetable }) => {
                   return (
                     <button 
                       key={module.id}
-                      onClick={() => {
-                        if (module.id === 'classes') navigate(`/app/facility/${id}/classes`);
-                        if (module.id === 'timetable') navigate(`/app/facility/${id}/timetable`);
-                      }}
+                      onClick={() => module.id === 'classes' ? navigate(`/app/facility/${id}/classes`) : null}
                       className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
                     >
                       <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -387,7 +319,6 @@ const AppHub: React.FC<AppHubProps> = ({ facilities, classes, timetable }) => {
             <Route path="home" element={<HomePage />} />
             <Route path="facility/:id" element={<FacilityHub />} />
             <Route path="facility/:id/classes" element={<ClassListView />} />
-            <Route path="facility/:id/timetable" element={<TimetableListView />} />
           </Routes>
         </div>
       </div>

@@ -7,7 +7,7 @@ export interface Facility {
   imageUrl?: string;
   isActive: boolean;
   createdAt: number;
-  features: string[]; // List of enabled feature IDs (e.g., 'classes', 'blocks', 'timetable')
+  features: string[]; // List of enabled feature IDs (e.g., 'classes', 'blocks')
 }
 
 export interface Class {
@@ -22,22 +22,10 @@ export interface Class {
   createdAt: number;
 }
 
-export interface TimetableEntry {
-  id: string;
-  facilityId: string;
-  classId: string;
-  day: string;
-  startTime: string;
-  endTime: string;
-  instructor: string;
-  room?: string;
-}
-
 export type AppView = 'landing' | 'app' | 'admin' | 'app-home' | 'admin-login';
 
 export const FEATURE_MODULES = [
   { id: 'classes', name: 'Classes', icon: 'BookOpen' },
-  { id: 'timetable', name: 'Timetable', icon: 'Calendar' },
   { id: 'blocks', name: 'Blocks', icon: 'Layers' },
   { id: 'passes', name: 'Passes', icon: 'Ticket' },
   { id: 'memberships', name: 'Memberships', icon: 'CreditCard' },
@@ -45,7 +33,6 @@ export const FEATURE_MODULES = [
 ];
 
 export const CLASS_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'All Levels'];
-export const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const DEFAULT_FACILITIES: Facility[] = [
   {
@@ -56,7 +43,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 100000,
-    features: ['classes', 'timetable', 'memberships']
+    features: ['classes', 'memberships']
   },
   {
     id: '2',
@@ -66,7 +53,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 50000,
-    features: ['classes', 'timetable']
+    features: ['classes']
   }
 ];
 
@@ -81,18 +68,5 @@ export const DEFAULT_CLASSES: Class[] = [
     level: 'Expert',
     imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop',
     createdAt: Date.now()
-  }
-];
-
-export const DEFAULT_TIMETABLE: TimetableEntry[] = [
-  {
-    id: 't1',
-    facilityId: '1',
-    classId: 'c1',
-    day: 'Monday',
-    startTime: '09:00',
-    endTime: '09:45',
-    instructor: 'Alex Rivera',
-    room: 'Studio A'
   }
 ];
