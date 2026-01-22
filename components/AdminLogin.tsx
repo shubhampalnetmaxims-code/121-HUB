@@ -2,19 +2,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, User, ArrowRight } from 'lucide-react';
+import { useToast } from './ToastContext';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('admin');
-  const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === 'admin' && password === 'admin') {
+      showToast('Admin session authorized', 'success');
       navigate('/admin');
     } else {
-      setError('Invalid credentials. (Try admin/admin)');
+      showToast('Invalid administrator credentials', 'error');
     }
   };
 
@@ -58,8 +60,6 @@ const AdminLogin: React.FC = () => {
                 />
               </div>
             </div>
-
-            {error && <p className="text-red-500 text-xs text-center font-medium">{error}</p>}
 
             <button
               type="submit"
