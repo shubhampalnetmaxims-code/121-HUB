@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, DEFAULT_FACILITIES, DEFAULT_CLASSES } from './types';
+import { Facility, Class, TimetableEntry, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TIMETABLE } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -48,17 +48,22 @@ const GlobalHeader: React.FC = () => {
 const App: React.FC = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedF = localStorage.getItem('121_facilities');
     const storedC = localStorage.getItem('121_classes');
+    const storedT = localStorage.getItem('121_timetable');
     
     if (storedF) setFacilities(JSON.parse(storedF));
     else setFacilities(DEFAULT_FACILITIES);
 
     if (storedC) setClasses(JSON.parse(storedC));
     else setClasses(DEFAULT_CLASSES);
+
+    if (storedT) setTimetable(JSON.parse(storedT));
+    else setTimetable(DEFAULT_TIMETABLE);
 
     setIsLoading(false);
   }, []);
@@ -67,8 +72,9 @@ const App: React.FC = () => {
     if (!isLoading) {
       localStorage.setItem('121_facilities', JSON.stringify(facilities));
       localStorage.setItem('121_classes', JSON.stringify(classes));
+      localStorage.setItem('121_timetable', JSON.stringify(timetable));
     }
-  }, [facilities, classes, isLoading]);
+  }, [facilities, classes, timetable, isLoading]);
 
   // Facility Actions
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
@@ -105,6 +111,24 @@ const App: React.FC = () => {
 
   const deleteClass = (id: string) => {
     setClasses(prev => prev.filter(c => c.id !== id));
+    setTimetable(prev => prev.filter(t => t.classId !== id)); // Cleanup timetable
+  };
+
+  // Timetable Actions
+  const addTimetable = (entry: Omit<TimetableEntry, 'id'>) => {
+    const newEntry: TimetableEntry = {
+      ...entry,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    setTimetable(prev => [...prev, newEntry]);
+  };
+
+  const updateTimetable = (id: string, updates: Partial<TimetableEntry>) => {
+    setTimetable(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  };
+
+  const deleteTimetable = (id: string) => {
+    setTimetable(prev => prev.filter(t => t.id !== id));
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -115,7 +139,7 @@ const App: React.FC = () => {
       <div className="pt-0">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/app/*" element={<AppHub facilities={facilities} classes={classes} />} />
+          <Route path="/app/*" element={<AppHub facilities={facilities} classes={classes} timetable={timetable} />} />
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route 
             path="/admin/*" 
@@ -129,6 +153,10 @@ const App: React.FC = () => {
                 onAddClass={addClass}
                 onUpdateClass={updateClass}
                 onDeleteClass={deleteClass}
+                timetable={timetable}
+                onAddTimetable={addTimetable}
+                onUpdateTimetable={updateTimetable}
+                onDeleteTimetable={deleteTimetable}
               />
             } 
           />
