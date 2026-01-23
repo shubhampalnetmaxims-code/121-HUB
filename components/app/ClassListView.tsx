@@ -18,15 +18,12 @@ const ClassListView: React.FC<ClassListViewProps> = ({ facilities, classes, onAu
   const facility = facilities.find(f => f.id === id);
   if (!facility) return null;
   
-  const facilityClasses = classes.filter(c => c.facilityId === id);
+  // Filter for both facility ID and active status
+  const facilityClasses = classes.filter(c => c.facilityId === id && c.status === 'active');
 
-  const handleBook = () => {
-    // Basic auth check before allowing booking
-    if (!currentUser) {
-      onAuthTrigger();
-    } else {
-      alert("Booking for this class type is handled via the Timetable view.");
-    }
+  const handleViewTimetable = (classId: string) => {
+    // Navigate to timetable and pass the specific class ID to pre-filter results
+    navigate(`/app/facility/${id}/timetable`, { state: { preSelectedClassId: classId } });
   };
 
   return (
@@ -58,12 +55,11 @@ const ClassListView: React.FC<ClassListViewProps> = ({ facilities, classes, onAu
                   <Package className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div className="text-xs font-semibold text-slate-600 leading-tight">Bring: {c.requirements}</div>
                </div>
-               {/* Fixed: Hooked up Book Spot button to use the new auth props */}
                <button 
-                onClick={handleBook}
+                onClick={() => handleViewTimetable(c.id)}
                 className="w-full mt-5 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
                >
-                Book Spot
+                View Timetable
                </button>
              </div>
           </div>

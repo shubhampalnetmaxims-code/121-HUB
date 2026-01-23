@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Filter, Plus, Menu, Edit3, Trash2, CalendarD
 import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK } from '../../types';
 import ClassSlotFormModal from './ClassSlotFormModal';
 import ClassSlotViewModal from './ClassSlotViewModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface TimetableViewProps {
   facilities: Facility[];
@@ -27,6 +28,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewingSlot, setViewingSlot] = useState<ClassSlot | null>(null);
   const [editingSlot, setEditingSlot] = useState<ClassSlot | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   
   // Date and View State
   const [viewType, setViewType] = useState<'week' | 'day'>('week');
@@ -53,6 +55,11 @@ const TimetableView: React.FC<TimetableViewProps> = ({
 
   const filteredSlots = classSlots.filter(s => {
     if (s.facilityId !== selectedFacilityId) return false;
+    
+    // Status check for parent class
+    const parentClass = classes.find(c => c.id === s.classId);
+    if (!parentClass || parentClass.status === 'inactive') return false;
+
     if (classFilter !== 'all' && s.classId !== classFilter) return false;
     if (trainerFilter !== 'all' && s.trainerId !== trainerFilter) return false;
     if (locationFilter !== 'all' && s.locationId !== locationFilter) return false;
@@ -80,6 +87,17 @@ const TimetableView: React.FC<TimetableViewProps> = ({
       next.setDate(anchorDate.getDate() + direction);
     }
     setAnchorDate(next);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val) {
+      const selectedDate = new Date(val);
+      if (!isNaN(selectedDate.getTime())) {
+        setAnchorDate(selectedDate);
+        setViewType('day'); // Requirement: show data only for the selected date
+      }
+    }
   };
 
   const getFormatDate = (date: Date) => {
@@ -119,6 +137,13 @@ const TimetableView: React.FC<TimetableViewProps> = ({
     setEditingSlot(null);
   };
 
+  const confirmDelete = () => {
+    if (deletingId) {
+      onDeleteSlot(deletingId);
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen text-left">
       <header className="bg-white border-b border-slate-200 px-6 py-6 sticky top-0 z-10 lg:mt-14 mt-12 shadow-sm">
@@ -144,7 +169,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
               <Filter className="w-4 h-4 text-slate-400" />
               <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="bg-transparent text-xs font-bold outline-none cursor-pointer">
                 <option value="all">All Classes</option>
-                {classes.filter(c => c.facilityId === selectedFacilityId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {classes.filter(c => c.facilityId === selectedFacilityId && c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2">
@@ -195,7 +220,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                     type="date" 
                     ref={dateInputRef} 
                     className="absolute opacity-0 pointer-events-none" 
-                    onChange={(e) => setAnchorDate(new Date(e.target.value))}
+                    onChange={handleDateChange}
                   />
                   <button 
                     onClick={handleDatePicker}
@@ -262,6 +287,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                             <div 
                               key={s.id} 
                               onClick={() => setViewingSlot(s)}
+                              style={{ borderLeft: `4px solid ${trn?.colorCode || '#f1f5f9'}` }}
                               className="min-w-[220px] bg-slate-50/50 border border-slate-100 rounded-2xl p-4 relative group hover:border-blue-200 hover:bg-blue-50/10 transition-all cursor-pointer flex flex-col justify-between h-40"
                             >
                               <div className="flex items-start justify-between">
@@ -283,7 +309,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                                     <Edit3 className="w-3.5 h-3.5" />
                                    </button>
                                    <button 
-                                    onClick={(e) => { e.stopPropagation(); onDeleteSlot(s.id); }} 
+                                    onClick={(e) => { e.stopPropagation(); setDeletingId(s.id); }} 
                                     className="p-1.5 hover:bg-white text-red-600 rounded-lg transition-colors"
                                    >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -291,7 +317,10 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                                 </div>
                               </div>
                               <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                                <p className="text-xs font-bold text-slate-500">{trn?.name || 'TBA'}</p>
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: trn?.colorCode || '#cbd5e1' }} />
+                                  <p className="text-xs font-bold text-slate-500">{trn?.name || 'TBA'}</p>
+                                </div>
                                 <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase">
                                   <Users className="w-3 h-3" /> {s.currentBookings}/{s.maxBookings}
                                 </div>
@@ -340,6 +369,17 @@ const TimetableView: React.FC<TimetableViewProps> = ({
             setViewingSlot(null);
             setIsModalOpen(true);
           }}
+        />
+      )}
+
+      {deletingId && (
+        <ConfirmationModal
+          title="Delete Slot?"
+          message="Are you sure you want to remove this specific class session from the timetable?"
+          confirmText="Delete Slot"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingId(null)}
         />
       )}
     </div>

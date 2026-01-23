@@ -1,18 +1,22 @@
 
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, AlertTriangle } from 'lucide-react';
-import { User as UserType } from '../../types';
+import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight } from 'lucide-react';
+import { User as UserType, Booking, Class, Facility } from '../../types';
 import { useToast } from '../ToastContext';
+import ConfirmationModal from './ConfirmationModal';
 
 interface UserDetailViewProps {
   users: UserType[];
+  bookings: Booking[];
+  classes: Class[];
+  facilities: Facility[];
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
   onDeleteUser: (id: string) => void;
   onOpenSidebar: () => void;
 }
 
-const UserDetailView: React.FC<UserDetailViewProps> = ({ users, onUpdateUser, onDeleteUser, onOpenSidebar }) => {
+const UserDetailView: React.FC<UserDetailViewProps> = ({ users, bookings, classes, facilities, onUpdateUser, onDeleteUser, onOpenSidebar }) => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -28,10 +32,25 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ users, onUpdateUser, on
     );
   }
 
+  const userBookings = bookings.filter(b => b.userId === user.id).sort((a, b) => b.bookingDate - a.bookingDate);
+
   const handleDelete = () => {
     onDeleteUser(user.id);
     showToast('Member account purged successfully', 'info');
     navigate('/admin/users');
+  };
+
+  const handleBookingClick = (booking: Booking) => {
+    navigate('/admin/bookings-orders', { 
+      state: { 
+        filterType: 'class',
+        facilityId: booking.facilityId,
+        classId: booking.classId,
+        trainerId: booking.trainerId,
+        status: booking.status,
+        searchId: booking.id
+      } 
+    });
   };
 
   return (
@@ -136,7 +155,91 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ users, onUpdateUser, on
           </div>
         </div>
 
-        {/* Administration Section */}
+        {/* Booking History Section */}
+        <div className="bg-white rounded-[40px] border border-slate-200 overflow-hidden shadow-sm">
+           <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <ClipboardList className="w-5 h-5" />
+                </div>
+                <h4 className="text-xl font-bold text-slate-900">Booking History</h4>
+              </div>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{userBookings.length} total sessions</span>
+           </div>
+           
+           <div className="overflow-x-auto">
+             <table className="w-full text-left">
+               <thead>
+                 <tr className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                   <th className="px-8 py-4">Service / Class</th>
+                   <th className="px-8 py-4">Facility</th>
+                   <th className="px-8 py-4">Date & Time</th>
+                   <th className="px-8 py-4">Attendees</th>
+                   <th className="px-8 py-4">Status</th>
+                   <th className="px-8 py-4 text-right"></th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-slate-50">
+                 {userBookings.length > 0 ? userBookings.map(b => {
+                   const cls = classes.find(c => c.id === b.classId);
+                   const fac = facilities.find(f => f.id === b.facilityId);
+                   return (
+                     <tr 
+                      key={b.id} 
+                      onClick={() => handleBookingClick(b)}
+                      className="hover:bg-blue-50/50 transition-colors group text-sm cursor-pointer"
+                     >
+                       <td className="px-8 py-5">
+                          <div className="flex items-center gap-3">
+                            <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{cls?.name || 'Class'}</p>
+                          </div>
+                       </td>
+                       <td className="px-8 py-5">
+                          <div className="flex items-center gap-2">
+                             <MapPin className="w-3 h-3 text-blue-600" />
+                             <span className="text-slate-500 font-medium">{fac?.name || 'Facility'}</span>
+                          </div>
+                       </td>
+                       <td className="px-8 py-5 text-left">
+                          <div className="flex items-center gap-2 text-slate-700 font-bold whitespace-nowrap">
+                            <Calendar className="w-3.5 h-3.5 text-slate-300" />
+                            {new Date(b.bookingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                            <Clock className="w-3 h-3" />
+                            {b.startTime}
+                          </div>
+                       </td>
+                       <td className="px-8 py-5">
+                          <span className="text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg">
+                            {b.persons} {b.persons > 1 ? 'PERSONS' : 'PERSON'}
+                          </span>
+                       </td>
+                       <td className="px-8 py-5">
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                            b.status === 'upcoming' ? 'bg-blue-50 text-blue-600' :
+                            b.status === 'delivered' ? 'bg-green-50 text-green-600' :
+                            'bg-red-50 text-red-600'
+                          }`}>
+                            {b.status}
+                          </span>
+                       </td>
+                       <td className="px-8 py-5 text-right">
+                          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                       </td>
+                     </tr>
+                   );
+                 }) : (
+                   <tr>
+                     <td colSpan={6} className="py-20 text-center text-slate-400 font-bold italic">No booking records found for this member.</td>
+                   </tr>
+                 )}
+               </tbody>
+             </table>
+           </div>
+        </div>
+
+        {/* Administration Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="col-span-2 p-8 bg-blue-50 border border-blue-100 rounded-[40px] flex items-center gap-6">
              <div className="w-16 h-16 bg-blue-600 text-white rounded-3xl flex items-center justify-center shadow-xl shadow-blue-500/30">
@@ -158,23 +261,15 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ users, onUpdateUser, on
         </div>
       </div>
 
-      {/* Delete Confirmation Overlay */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-           <div className="bg-white rounded-[40px] p-8 text-center space-y-6 max-w-xs shadow-2xl">
-             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mx-auto">
-               <AlertTriangle className="w-8 h-8" />
-             </div>
-             <div>
-               <h3 className="text-2xl font-black text-slate-900 tracking-tight">Confirm Deletion</h3>
-               <p className="text-slate-500 text-sm font-medium">Are you sure? This will permanently delete the account data for {user.fullName}. This cannot be undone.</p>
-             </div>
-             <div className="space-y-3 pt-2">
-               <button onClick={handleDelete} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black active:scale-95 transition-all">Delete Account</button>
-               <button onClick={() => setIsDeleteConfirmOpen(false)} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors">Cancel</button>
-             </div>
-           </div>
-        </div>
+        <ConfirmationModal
+          title="Purge Member Record?"
+          message={`Are you sure you want to permanently delete "${user.fullName}" and all their associated platform data? This action is irreversible.`}
+          variant="danger"
+          confirmText="Confirm Purge"
+          onConfirm={handleDelete}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
       )}
     </div>
   );

@@ -15,8 +15,17 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('121_notifications');
-    if (stored) setNotifications(JSON.parse(stored));
+    try {
+      const stored = localStorage.getItem('121_notifications');
+      if (stored && stored !== 'null' && stored !== 'undefined') {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setNotifications(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load notifications:', e);
+    }
   }, []);
 
   useEffect(() => {
@@ -33,19 +42,19 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       createdAt: Date.now(),
       isRead: false
     };
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications(prev => [newNotification, ...(prev || [])]);
   }, []);
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    setNotifications(prev => (prev || []).map(n => n.id === id ? { ...n, isRead: true } : n));
   }, []);
 
   const clearNotifications = useCallback((target: string) => {
-    setNotifications(prev => prev.filter(n => n.target !== target));
+    setNotifications(prev => (prev || []).filter(n => n.target !== target));
   }, []);
 
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, markAsRead, clearNotifications }}>
+    <NotificationContext.Provider value={{ notifications: notifications || [], addNotification, markAsRead, clearNotifications }}>
       {children}
     </NotificationContext.Provider>
   );

@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck } from 'lucide-react';
-import { ClassSlot, Class, Trainer, Location, User as UserType } from '../../types';
+import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck, DollarSign } from 'lucide-react';
+import { ClassSlot, Class, Trainer, Location, User as UserType, Booking } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
+import BookingPreviewModal from './BookingPreviewModal';
 
 interface AppClassSlotViewModalProps {
   slot: ClassSlot;
@@ -13,6 +14,8 @@ interface AppClassSlotViewModalProps {
   onClose: () => void;
   onAuthTrigger: () => void;
   currentUser: UserType | null;
+  onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
+  onUpdateUser: (id: string, updates: Partial<UserType>) => void;
 }
 
 const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel: () => void }) => (
@@ -32,13 +35,14 @@ const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel
 );
 
 const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({ 
-  slot, cls, trainer, location, onClose, onAuthTrigger, currentUser 
+  slot, cls, trainer, location, onClose, onAuthTrigger, currentUser, onAddBooking, onUpdateUser
 }) => {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
   const [personCount, setPersonCount] = useState(1);
   const [names, setNames] = useState<string[]>(['']);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
   
   // Simulated per-person limit
@@ -56,7 +60,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
     setNames(newNames);
   };
 
-  const handleBook = () => {
+  const handlePreview = () => {
     if (names.some(n => !n.trim())) {
       showToast("Please enter names for all participants", "error");
       return;
@@ -65,25 +69,13 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
     if (!currentUser) {
       setIsLoginPromptOpen(true);
     } else {
-      setIsBooked(true);
-      showToast(`Class reserved for ${personCount} person(s)`, 'success');
-      
-      // Notify User
-      addNotification(
-        'Booking Confirmed!', 
-        `Your reservation for ${cls?.name} at ${slot.startTime} has been secured for ${personCount} attendee(s).`, 
-        'success', 
-        currentUser.id
-      );
-
-      // Notify Admin
-      addNotification(
-        'New Class Booking', 
-        `${currentUser.fullName} booked ${cls?.name} for ${personCount} person(s).`, 
-        'info', 
-        'admin'
-      );
+      setIsPreviewOpen(true);
     }
+  };
+
+  const handleBookingComplete = () => {
+    setIsBooked(true);
+    setIsPreviewOpen(false);
   };
 
   if (isBooked) {
@@ -115,8 +107,11 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
             <div>
               <h4 className="text-3xl font-black text-slate-900 tracking-tighter leading-none mb-2">{cls?.name || 'Unknown'}</h4>
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${slot.status === 'available' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                  {slot.status === 'available' ? 'Open for Booking' : slot.status}
+                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
+                  slot.status === 'available' ? 'bg-orange-100 text-orange-600' : 
+                  slot.status === 'full' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                }`}>
+                  {slot.status === 'available' ? 'Open for Booking' : slot.status === 'full' ? 'Session Full' : slot.status}
                 </span>
                 <span className="text-slate-300 text-xs font-bold">•</span>
                 <span className="text-slate-500 text-xs font-bold uppercase tracking-tight">{cls?.level}</span>
@@ -145,6 +140,16 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
             <p className="font-extrabold text-slate-900 leading-none mb-1">{location?.name || 'TBA'}</p>
             <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">On-site</p>
           </div>
+          {cls?.pricePerSession !== undefined && (
+            <div className="p-5 bg-blue-50 border border-blue-100 rounded-[28px] col-span-2">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign className="w-4 h-4 text-blue-600" />
+                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">Pricing</p>
+              </div>
+              <p className="font-extrabold text-slate-900 leading-none">${cls.pricePerSession}</p>
+              <p className="text-[10px] font-bold text-slate-500">Per Session / Participant</p>
+            </div>
+          )}
         </div>
 
         <section className="bg-slate-50 border border-slate-100 rounded-[32px] p-5">
@@ -164,49 +169,58 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           </div>
         </section>
 
-        {/* Booking Form */}
-        <section className="space-y-6 pt-4 border-t border-slate-100">
-           <div className="flex items-center justify-between">
-              <h5 className="text-lg font-black text-slate-900 tracking-tight">Reservation</h5>
-              <div className="flex items-center bg-slate-100 rounded-xl p-1">
-                <button onClick={() => handlePersonCountChange(personCount - 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">-</button>
-                <span className="px-4 font-black text-slate-900 text-sm">{personCount}</span>
-                <button onClick={() => handlePersonCountChange(personCount + 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">+</button>
-              </div>
-           </div>
-
-           <div className="space-y-3">
-              {names.map((name, idx) => (
-                <div key={idx} className="relative">
-                  <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder={`Guest ${idx + 1} Name`} 
-                    value={name}
-                    onChange={(e) => {
-                      const newNames = [...names];
-                      newNames[idx] = e.target.value;
-                      setNames(newNames);
-                    }}
-                    className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
+        {/* Booking Form - Only visible if not full */}
+        {slot.status !== 'full' ? (
+          <section className="space-y-6 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+                <h5 className="text-lg font-black text-slate-900 tracking-tight">Reservation</h5>
+                <div className="flex items-center bg-slate-100 rounded-xl p-1">
+                  <button onClick={() => handlePersonCountChange(personCount - 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">-</button>
+                  <span className="px-4 font-black text-slate-900 text-sm">{personCount}</span>
+                  <button onClick={() => handlePersonCountChange(personCount + 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">+</button>
                 </div>
-              ))}
-           </div>
+            </div>
 
-           <p className="text-[9px] font-bold text-slate-400 uppercase text-center leading-relaxed">
-             Booking policy: Max {MAX_PER_PERSON} guests per session. <br/> Cancellations must be made 24h prior.
-           </p>
-        </section>
+            <div className="space-y-3">
+                {names.map((name, idx) => (
+                  <div key={idx} className="relative">
+                    <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder={`Guest ${idx + 1} Name`} 
+                      value={name}
+                      onChange={(e) => {
+                        const newNames = [...names];
+                        newNames[idx] = e.target.value;
+                        setNames(newNames);
+                      }}
+                      className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                ))}
+            </div>
+
+            <p className="text-[9px] font-bold text-slate-400 uppercase text-center leading-relaxed">
+              Booking policy: Max {MAX_PER_PERSON} guests per session. <br/> Cancellations must be made 24h prior.
+            </p>
+          </section>
+        ) : (
+          <section className="pt-4 border-t border-slate-100">
+            <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 text-center">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Attendance Limit Reached</p>
+              <p className="text-xs text-slate-500 mt-1">This session is currently at full capacity. View other slots for availability.</p>
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="p-6 pt-2 pb-10 border-t border-slate-50 bg-white/80 backdrop-blur-md sticky bottom-0 z-10 shrink-0">
         <button 
-          onClick={handleBook}
+          onClick={handlePreview}
           disabled={slot.status === 'full'}
           className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50"
         >
-          {slot.status === 'full' ? 'Class Full' : 'Confirm Booking'}
+          {slot.status === 'full' ? 'Slot Fully Booked' : 'Preview'}
         </button>
       </div>
 
@@ -214,6 +228,21 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
         <LoginPromptModal 
           onLogin={onAuthTrigger}
           onCancel={() => setIsLoginPromptOpen(false)}
+        />
+      )}
+
+      {isPreviewOpen && currentUser && (
+        <BookingPreviewModal
+          slot={slot}
+          cls={cls}
+          trainer={trainer}
+          location={location}
+          currentUser={currentUser}
+          participantNames={names}
+          onClose={() => setIsPreviewOpen(false)}
+          onComplete={handleBookingComplete}
+          onAddBooking={onAddBooking}
+          onUpdateUser={onUpdateUser}
         />
       )}
     </div>

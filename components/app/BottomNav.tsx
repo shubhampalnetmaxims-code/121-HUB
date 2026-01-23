@@ -23,7 +23,7 @@ const BottomNav: React.FC = () => {
         <Compass className="w-6 h-6" />
         <span className="text-[9px] font-bold uppercase tracking-widest">Explore</span>
       </button>
-      <button className="flex flex-col items-center gap-1.5 text-slate-400">
+      <button onClick={() => navigate('/app/bookings')} className={`flex flex-col items-center gap-1.5 transition-colors ${isActive('/bookings') ? 'text-blue-600' : 'text-slate-400'}`}>
         <Calendar className="w-6 h-6" />
         <span className="text-[9px] font-bold uppercase tracking-widest">Bookings</span>
       </button>

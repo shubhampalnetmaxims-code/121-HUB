@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking } from '../types';
 import { LayoutDashboard } from 'lucide-react';
 import EntryView from './app/EntryView';
 import HomeView from './app/HomeView';
@@ -14,6 +13,7 @@ import BottomNav from './app/BottomNav';
 import OnboardingFlow from './app/OnboardingFlow';
 import ProfileView from './app/ProfileView';
 import MyPaymentsView from './app/MyPaymentsView';
+import MyBookingsView from './app/MyBookingsView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -30,16 +30,19 @@ interface AppHubProps {
   locations: Location[];
   classSlots: ClassSlot[];
   products: Product[];
+  bookings: Booking[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
   onLogout: () => void;
   onDeleteUser: (id: string) => void;
+  onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
+  onUpdateBooking: (id: string, updates: Partial<Booking>) => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
-  facilities, classes, trainers, locations, classSlots, products, 
-  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser
+  facilities, classes, trainers, locations, classSlots, products, bookings,
+  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, onUpdateBooking
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,8 +65,10 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="onboarding" element={<OnboardingFlow onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />
             <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
             <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
-            <Route path="profile" element={<ProfileView currentUser={currentUser} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
+            {/* Fix: Pass missing required props to ProfileView */}
+            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
+            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} trainers={trainers} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
@@ -81,6 +86,8 @@ const AppHub: React.FC<AppHubProps> = ({
                       classSlots={classSlots}
                       onAuthTrigger={handleAuthTrigger}
                       currentUser={currentUser}
+                      onAddBooking={onAddBooking}
+                      onUpdateUser={onUpdateUser}
                     />
                   )} 
                 />

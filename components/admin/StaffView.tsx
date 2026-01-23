@@ -6,6 +6,7 @@ import TrainerFormModal from './TrainerFormModal';
 import LocationFormModal from './LocationFormModal';
 import TrainerViewModal from './TrainerViewModal';
 import LocationViewModal from './LocationViewModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface StaffViewProps {
   facilities: Facility[];
@@ -34,6 +35,9 @@ const StaffView: React.FC<StaffViewProps> = ({
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [viewingLocation, setViewingLocation] = useState<Location | null>(null);
 
+  const [deletingTrainerId, setDeletingTrainerId] = useState<string | null>(null);
+  const [deletingLocationId, setDeletingLocationId] = useState<string | null>(null);
+
   const [trainerFacilityFilter, setTrainerFacilityFilter] = useState<string>('all');
   const [locationFacilityFilter, setLocationFacilityFilter] = useState<string>('all');
 
@@ -57,8 +61,22 @@ const StaffView: React.FC<StaffViewProps> = ({
     setIsLocationModalOpen(true);
   };
 
+  const confirmDeleteTrainer = () => {
+    if (deletingTrainerId) {
+      onDeleteTrainer(deletingTrainerId);
+      setDeletingTrainerId(null);
+    }
+  };
+
+  const confirmDeleteLocation = () => {
+    if (deletingLocationId) {
+      onDeleteLocation(deletingLocationId);
+      setDeletingLocationId(null);
+    }
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen text-left">
       <header className="bg-white border-b border-slate-200 px-6 py-6 sticky top-0 z-10 lg:mt-14 mt-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="text-left flex items-center gap-3">
@@ -89,7 +107,7 @@ const StaffView: React.FC<StaffViewProps> = ({
 
       <div className="p-4 md:p-8 pb-24">
         {activeTab === 'trainers' ? (
-          <div className="space-y-6 text-left">
+          <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
               <div className="flex items-center gap-4 flex-1 w-full">
                 <div className="relative flex-1 max-w-xs">
@@ -128,21 +146,21 @@ const StaffView: React.FC<StaffViewProps> = ({
                     {filteredTrainers.length > 0 ? filteredTrainers.map(t => (
                       <tr key={t.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-6">
-                          <div className="flex items-center gap-4 text-left">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                               {t.profilePicture ? <img src={t.profilePicture} className="w-full h-full object-cover" /> : <Users className="w-5 h-5 mx-auto mt-3.5 text-slate-300" />}
                             </div>
-                            <div className="text-left">
-                               <p className="font-bold text-slate-900">{t.name}</p>
+                            <div className="text-left overflow-hidden">
+                               <p className="font-bold text-slate-900 truncate">{t.name}</p>
                                <div className="flex items-center gap-1.5">
-                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: t.colorCode }}></div>
-                                 <span className="text-[10px] font-bold text-slate-400 uppercase">Professional</span>
+                                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: t.colorCode }}></div>
+                                 <span className="text-[10px] font-bold text-slate-400 uppercase truncate">Professional</span>
                                </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-8 py-6 text-left">
-                           <div className="text-sm font-medium text-slate-600">{t.email}</div>
+                           <div className="text-sm font-medium text-slate-600 truncate max-w-[200px]">{t.email}</div>
                            <div className="text-xs text-slate-400 font-bold">{t.phone}</div>
                         </td>
                         <td className="px-8 py-6 text-left">
@@ -161,7 +179,7 @@ const StaffView: React.FC<StaffViewProps> = ({
                           <div className="flex justify-end gap-2">
                              <button onClick={() => setViewingTrainer(t)} className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="View Profile"><Eye className="w-4 h-4" /></button>
                              <button onClick={() => handleEditTrainer(t)} className="p-2 bg-slate-50 text-slate-400 hover:text-black rounded-lg transition-colors" title="Edit Profile"><Edit3 className="w-4 h-4" /></button>
-                             <button onClick={() => onDeleteTrainer(t.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                             <button onClick={() => setDeletingTrainerId(t.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -176,7 +194,7 @@ const StaffView: React.FC<StaffViewProps> = ({
             </div>
           </div>
         ) : (
-          <div className="space-y-6 text-left">
+          <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm">
               <div className="flex items-center gap-4 flex-1 w-full">
                 <div className="relative flex-1 max-w-xs">
@@ -216,10 +234,10 @@ const StaffView: React.FC<StaffViewProps> = ({
                       <tr key={l.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-6">
                            <div className="flex items-center gap-4 text-left">
-                             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                                <MapPin className="w-5 h-5" />
                              </div>
-                             <p className="font-bold text-slate-900">{l.name}</p>
+                             <p className="font-bold text-slate-900 truncate">{l.name}</p>
                            </div>
                         </td>
                         <td className="px-8 py-6 text-left">
@@ -241,7 +259,7 @@ const StaffView: React.FC<StaffViewProps> = ({
                           <div className="flex justify-end gap-2">
                              <button onClick={() => setViewingLocation(l)} className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-lg transition-colors" title="View Detail"><Eye className="w-4 h-4" /></button>
                              <button onClick={() => handleEditLocation(l)} className="p-2 bg-slate-50 text-slate-400 hover:text-black rounded-lg transition-colors" title="Edit Area"><Edit3 className="w-4 h-4" /></button>
-                             <button onClick={() => onDeleteLocation(l.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                             <button onClick={() => setDeletingLocationId(l.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 rounded-lg transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -299,6 +317,28 @@ const StaffView: React.FC<StaffViewProps> = ({
           location={viewingLocation} 
           facilities={facilities} 
           onClose={() => setViewingLocation(null)} 
+        />
+      )}
+
+      {deletingTrainerId && (
+        <ConfirmationModal
+          title="Delete Trainer?"
+          message="Are you sure you want to remove this trainer's profile from all assigned facilities?"
+          confirmText="Delete Profile"
+          variant="danger"
+          onConfirm={confirmDeleteTrainer}
+          onCancel={() => setDeletingTrainerId(null)}
+        />
+      )}
+
+      {deletingLocationId && (
+        <ConfirmationModal
+          title="Delete Area?"
+          message="Are you sure you want to remove this facility area? This may affect existing class schedules."
+          confirmText="Delete Area"
+          variant="danger"
+          onConfirm={confirmDeleteLocation}
+          onCancel={() => setDeletingLocationId(null)}
         />
       )}
     </div>

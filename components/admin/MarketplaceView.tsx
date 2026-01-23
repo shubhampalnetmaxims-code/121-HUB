@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Menu, ShoppingBag, Edit3, Trash2, Tag, Layers, Search, ChevronRight } from 'lucide-react';
 import { Facility, Product } from '../../types';
 import ProductFormModal from './ProductFormModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface MarketplaceViewProps {
   facilities: Facility[];
@@ -18,6 +19,7 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const facility = facilities.find(f => f.id === selectedFacilityId);
   const isEnabled = facility?.features?.includes('marketplace');
@@ -38,6 +40,13 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
     else onAddProduct(data);
     setIsFormOpen(false);
     setEditingProduct(null);
+  };
+
+  const confirmDelete = () => {
+    if (deletingId) {
+      onDeleteProduct(deletingId);
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -107,7 +116,7 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
                   </div>
                   <div className="absolute top-4 right-4 flex gap-2">
                     <button onClick={() => handleEdit(p)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-blue-600 hover:bg-white shadow-xl transition-all"><Edit3 className="w-4 h-4" /></button>
-                    <button onClick={() => onDeleteProduct(p.id)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-red-600 hover:bg-white shadow-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => setDeletingId(p.id)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-red-600 hover:bg-white shadow-xl transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
                 <div className="p-5 flex-1 flex flex-col">
@@ -142,6 +151,17 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
           initialFacilityId={selectedFacilityId}
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSave} 
+        />
+      )}
+
+      {deletingId && (
+        <ConfirmationModal
+          title="Delete Product?"
+          message="Are you sure you want to remove this product from the marketplace? It will no longer be visible to members."
+          confirmText="Delete Product"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingId(null)}
         />
       )}
     </div>

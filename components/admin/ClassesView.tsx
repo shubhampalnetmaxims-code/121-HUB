@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Plus, Menu, BookOpen, Edit3, Trash2, Clock, Package, Image as ImageIcon } from 'lucide-react';
 import { Facility, Class } from '../../types';
 import ClassFormModal from './ClassFormModal';
+import ConfirmationModal from './ConfirmationModal';
 
 interface ClassesViewProps {
   facilities: Facility[];
@@ -17,6 +18,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({ facilities, classes, onAddCla
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const grouped = facilities.reduce((acc, f) => {
     acc[f.id] = classes.filter(c => c.facilityId === f.id);
@@ -33,6 +35,13 @@ const ClassesView: React.FC<ClassesViewProps> = ({ facilities, classes, onAddCla
     else onAddClass(data);
     setIsFormOpen(false);
     setEditingClass(null);
+  };
+
+  const confirmDelete = () => {
+    if (deletingId) {
+      onDeleteClass(deletingId);
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -65,23 +74,28 @@ const ClassesView: React.FC<ClassesViewProps> = ({ facilities, classes, onAddCla
               <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600"><BookOpen className="w-5 h-5" /></div>
               <div className="text-left">
                 <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{f.name}</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{grouped[f.id]?.length || 0} active classes</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{grouped[f.id]?.length || 0} registered classes</p>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {grouped[f.id]?.map(c => (
-                <div key={c.id} className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col">
+                <div key={c.id} className={`bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col ${c.status === 'inactive' ? 'opacity-60' : ''}`}>
                   <div className="aspect-video relative bg-slate-50 overflow-hidden">
                     {c.imageUrl ? (
                       <img src={c.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={c.name} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-200"><ImageIcon className="w-10 h-10" /></div>
                     )}
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur rounded-lg px-2 py-1 text-[10px] font-black uppercase text-blue-600 shadow-sm">{c.level}</div>
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      <div className="bg-white/90 backdrop-blur rounded-lg px-2 py-1 text-[10px] font-black uppercase text-blue-600 shadow-sm">{c.level}</div>
+                      <div className={`backdrop-blur rounded-lg px-2 py-1 text-[10px] font-black uppercase shadow-sm ${c.status === 'active' ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'}`}>
+                        {c.status}
+                      </div>
+                    </div>
                     <div className="absolute top-4 right-4 flex gap-2">
                       <button onClick={() => handleEdit(c)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-blue-600 hover:bg-white shadow-xl transition-all"><Edit3 className="w-4 h-4" /></button>
-                      <button onClick={() => onDeleteClass(c.id)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-red-600 hover:bg-white shadow-xl transition-all"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => setDeletingId(c.id)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-red-600 hover:bg-white shadow-xl transition-all"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                   <div className="p-6 text-left flex-1 flex flex-col">
@@ -117,6 +131,17 @@ const ClassesView: React.FC<ClassesViewProps> = ({ facilities, classes, onAddCla
           initialFacilityId={selectedFacilityId}
           onClose={() => setIsFormOpen(false)} 
           onSave={handleSave} 
+        />
+      )}
+
+      {deletingId && (
+        <ConfirmationModal
+          title="Delete Class?"
+          message="Are you sure you want to remove this class from the schedule? This action cannot be undone."
+          confirmText="Delete Class"
+          variant="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingId(null)}
         />
       )}
     </div>

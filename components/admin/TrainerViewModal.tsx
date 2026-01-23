@@ -23,11 +23,12 @@ const TrainerViewModal: React.FC<TrainerViewModalProps> = ({ trainer, facilities
         
         <div className="flex-1 p-6 md:p-10 space-y-10 overflow-y-auto pb-24 scrollbar-hide text-left">
           <div className="flex flex-col md:flex-row items-center gap-8 border-b border-slate-50 pb-10">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-[40px] overflow-hidden bg-slate-100 ring-8 ring-slate-50 shadow-inner">
+            {/* Reduced image size: w-32/h-32 -> w-24/h-24 and w-40/h-40 -> w-32/h-32 */}
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-[32px] overflow-hidden bg-slate-100 ring-8 ring-slate-50 shadow-inner">
                {trainer.profilePicture ? (
                  <img src={trainer.profilePicture} className="w-full h-full object-cover" />
                ) : (
-                 <Users className="w-12 h-12 mx-auto mt-10 text-slate-300" />
+                 <Users className="w-10 h-10 mx-auto mt-7 md:mt-11 text-slate-300" />
                )}
             </div>
             <div className="text-center md:text-left">

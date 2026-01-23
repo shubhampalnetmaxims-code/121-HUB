@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -57,41 +57,33 @@ const AppContent: React.FC = () => {
   const [classSlots, setClassSlots] = useState<ClassSlot[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Helper for safe data hydration
+  const safeHydrate = <T,>(key: string, fallback: T): T => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored || stored === 'undefined' || stored === 'null') return fallback;
+      const parsed = JSON.parse(stored);
+      return parsed || fallback;
+    } catch (e) {
+      console.error(`Failed to hydrate ${key}:`, e);
+      return fallback;
+    }
+  };
+
   useEffect(() => {
-    const storedF = localStorage.getItem('121_facilities');
-    const storedC = localStorage.getItem('121_classes');
-    const storedT = localStorage.getItem('121_trainers');
-    const storedL = localStorage.getItem('121_locations');
-    const storedS = localStorage.getItem('121_slots');
-    const storedP = localStorage.getItem('121_products');
-    const storedU = localStorage.getItem('121_users');
-    const storedCurU = localStorage.getItem('121_current_user');
-    
-    if (storedF) setFacilities(JSON.parse(storedF));
-    else setFacilities(DEFAULT_FACILITIES);
-
-    if (storedC) setClasses(JSON.parse(storedC));
-    else setClasses(DEFAULT_CLASSES);
-
-    if (storedT) setTrainers(JSON.parse(storedT));
-    else setTrainers(DEFAULT_TRAINERS);
-
-    if (storedL) setLocations(JSON.parse(storedL));
-    else setLocations(DEFAULT_LOCATIONS);
-
-    if (storedS) setClassSlots(JSON.parse(storedS));
-    else setClassSlots(DEFAULT_CLASS_SLOTS);
-
-    if (storedP) setProducts(JSON.parse(storedP));
-    
-    if (storedU) setUsers(JSON.parse(storedU));
-    else setUsers(DEFAULT_USERS);
-
-    if (storedCurU) setCurrentUser(JSON.parse(storedCurU));
-
+    setFacilities(safeHydrate('121_facilities', DEFAULT_FACILITIES));
+    setClasses(safeHydrate('121_classes', DEFAULT_CLASSES));
+    setTrainers(safeHydrate('121_trainers', DEFAULT_TRAINERS));
+    setLocations(safeHydrate('121_locations', DEFAULT_LOCATIONS));
+    setClassSlots(safeHydrate('121_slots', DEFAULT_CLASS_SLOTS));
+    setProducts(safeHydrate('121_products', DEFAULT_PRODUCTS));
+    setUsers(safeHydrate('121_users', DEFAULT_USERS));
+    setBookings(safeHydrate('121_bookings', DEFAULT_BOOKINGS));
+    setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
 
@@ -104,13 +96,14 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_slots', JSON.stringify(classSlots));
       localStorage.setItem('121_products', JSON.stringify(products));
       localStorage.setItem('121_users', JSON.stringify(users));
+      localStorage.setItem('121_bookings', JSON.stringify(bookings));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, currentUser, isLoading]);
 
   // Actions
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
@@ -202,8 +195,6 @@ const AppContent: React.FC = () => {
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
     showToast(`Welcome to 121, ${userData.fullName}!`, 'success');
-    
-    // Notification for Admin
     addNotification('New User Registered', `${userData.fullName} has joined the platform via app onboarding.`, 'success', 'admin');
   };
 
@@ -225,6 +216,21 @@ const AppContent: React.FC = () => {
     } else {
       showToast('Member account removed', 'info');
     }
+  };
+
+  const onAddBooking = (booking: Omit<Booking, 'id' | 'createdAt'>) => {
+    const newBooking: Booking = {
+      ...booking,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: Date.now()
+    };
+    setBookings(prev => [newBooking, ...prev]);
+    return newBooking;
+  };
+
+  const updateBooking = (id: string, updates: Partial<Booking>) => {
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+    showToast('Booking record updated', 'success');
   };
 
   const handleLogout = () => {
@@ -250,11 +256,14 @@ const AppContent: React.FC = () => {
                 locations={locations} 
                 classSlots={classSlots}
                 products={products}
+                bookings={bookings}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
                 onLogout={handleLogout}
                 onDeleteUser={deleteUser}
+                onAddBooking={onAddBooking}
+                onUpdateBooking={updateBooking}
               />
             } 
           />
@@ -290,6 +299,8 @@ const AppContent: React.FC = () => {
                 users={users}
                 onUpdateUser={updateUser}
                 onDeleteUser={deleteUser}
+                bookings={bookings}
+                onUpdateBooking={updateBooking}
               />
             } 
           />

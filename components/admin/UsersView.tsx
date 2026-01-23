@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Search, User, Mail, Phone, Ban, Trash2, CheckCircle } from 'lucide-react';
 import { User as UserType } from '../../types';
+import ConfirmationModal from './ConfirmationModal';
 
 interface UsersViewProps {
   users: UserType[];
@@ -13,12 +14,28 @@ interface UsersViewProps {
 
 const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser, onOpenSidebar }) => {
   const [search, setSearch] = useState('');
+  const [blockingUser, setBlockingUser] = useState<UserType | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserType | null>(null);
   const navigate = useNavigate();
 
   const filteredUsers = users.filter(u => 
     u.fullName.toLowerCase().includes(search.toLowerCase()) || 
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const confirmBlock = () => {
+    if (blockingUser) {
+      onUpdateUser(blockingUser.id, { status: blockingUser.status === 'active' ? 'blocked' : 'active' });
+      setBlockingUser(null);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (deletingUser) {
+      onDeleteUser(deletingUser.id);
+      setDeletingUser(null);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen text-left">
@@ -112,7 +129,7 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
                     <td className="px-8 py-6 text-right">
                       <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
                         <button 
-                          onClick={() => onUpdateUser(u.id, { status: u.status === 'active' ? 'blocked' : 'active' })}
+                          onClick={() => setBlockingUser(u)}
                           className={`p-2 rounded-xl transition-all ${
                             u.status === 'active' ? 'text-slate-400 hover:text-red-600 hover:bg-red-50' : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
                           }`}
@@ -120,7 +137,7 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
                         >
                           <Ban className="w-4 h-4" />
                         </button>
-                        <button onClick={() => onDeleteUser(u.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Account">
+                        <button onClick={() => setDeletingUser(u)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Account">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -136,6 +153,28 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
           </div>
         </div>
       </div>
+
+      {blockingUser && (
+        <ConfirmationModal
+          title={blockingUser.status === 'active' ? "Block User?" : "Unblock User?"}
+          message={`Are you sure you want to ${blockingUser.status === 'active' ? 'block access for' : 'restore access for'} ${blockingUser.fullName}?`}
+          variant={blockingUser.status === 'active' ? "warning" : "primary"}
+          confirmText={blockingUser.status === 'active' ? "Block User" : "Restore User"}
+          onConfirm={confirmBlock}
+          onCancel={() => setBlockingUser(null)}
+        />
+      )}
+
+      {deletingUser && (
+        <ConfirmationModal
+          title="Permanently Delete Account?"
+          message={`Are you sure you want to completely remove "${deletingUser.fullName}" and all their records from the platform? This cannot be undone.`}
+          variant="danger"
+          confirmText="Delete Account"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingUser(null)}
+        />
+      )}
     </div>
   );
 };

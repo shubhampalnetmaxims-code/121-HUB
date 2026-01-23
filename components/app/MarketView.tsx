@@ -87,8 +87,8 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
                       Explore All <ChevronRight className="w-3 h-3" />
                     </button>
                   </div>
-                  <div className="flex overflow-x-auto gap-4 pb-4 px-2 scrollbar-hide">
-                    {group.products.slice(0, 4).map(p => (
+                  <div className="flex flex-nowrap overflow-x-auto gap-4 pb-4 px-2 scrollbar-hide">
+                    {group.products.map(p => (
                       <ProductCard key={p.id} product={p} onClick={() => setViewingProduct(p)} />
                     ))}
                   </div>
@@ -120,27 +120,33 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
   );
 };
 
-const ProductCard = ({ product, onClick, isGrid = false }: { product: Product, onClick: () => void, isGrid?: boolean }) => (
+const ProductCard: React.FC<{ product: Product; onClick: () => void; isGrid?: boolean }> = ({ product, onClick, isGrid = false }) => (
   <div 
     onClick={onClick}
-    className={`${isGrid ? 'w-full' : 'w-44'} bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer flex flex-col`}
+    className={`${isGrid ? 'w-full' : 'w-40 shrink-0'} bg-white rounded-[60px] border border-slate-100 overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer flex flex-col aspect-[4/7]`}
   >
-    <div className="aspect-square relative bg-slate-50">
+    <div className="relative h-2/5 w-full bg-slate-50 overflow-hidden">
       {product.images?.[0] ? (
         <img src={product.images[0]} className="w-full h-full object-cover" alt={product.name} />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-slate-200"><ShoppingBag className="w-8 h-8" /></div>
       )}
-      <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur rounded-xl shadow-sm text-slate-400 active:text-red-500">
+      <button 
+        className="absolute top-4 right-4 p-2 bg-white/40 backdrop-blur rounded-full text-white hover:text-red-500 transition-colors"
+        onClick={(e) => { e.stopPropagation(); }}
+      >
         <Heart className="w-4 h-4" />
       </button>
     </div>
-    <div className="p-4 flex-1 flex flex-col text-left">
-      <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">{product.category || 'Gear'}</p>
-      <h4 className="font-bold text-slate-900 text-sm line-clamp-1 mb-2">{product.name}</h4>
-      <div className="mt-auto flex justify-between items-center">
-        <span className="font-black text-slate-900 text-sm">${product.price.toFixed(2)}</span>
-        <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white">
+    <div className="p-4 flex-1 flex flex-col text-left justify-between items-center">
+      <div className="w-full text-center space-y-1">
+        <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{product.category || 'Gear'}</p>
+        <h4 className="font-bold text-slate-900 text-xs line-clamp-2 px-1">{product.name}</h4>
+      </div>
+      
+      <div className="w-full flex justify-between items-center mt-2 px-1">
+        <span className="font-black text-slate-900 text-xs">${product.price.toFixed(2)}</span>
+        <div className="w-8 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white">
           <Plus className="w-4 h-4" />
         </div>
       </div>

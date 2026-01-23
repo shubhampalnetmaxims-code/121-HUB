@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Dumbbell, ChevronRight, Edit3, Trash2, Menu, Bell } from 'lucide-react';
+import { Plus, Search, Dumbbell, ChevronRight, Edit3, Menu, Bell, XCircle, RefreshCw, ShoppingCart } from 'lucide-react';
 import { Facility } from '../../types';
 import { useNotifications } from '../NotificationContext';
 import FacilityFormModal from './FacilityFormModal';
 import AdminNotifications from './AdminNotifications';
+import ConfirmationModal from './ConfirmationModal';
 
 interface FacilitiesViewProps {
   facilities: Facility[];
@@ -93,7 +94,7 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
               <thead>
                 <tr className="bg-slate-50 text-slate-400 text-xs font-bold uppercase tracking-wider">
                   <th className="px-6 md:px-8 py-5">Facility Details</th>
-                  <th className="px-6 md:px-8 py-5 hidden md:table-cell">Modules</th>
+                  <th className="px-6 md:px-8 py-5 hidden md:table-cell">Policies</th>
                   <th className="px-6 md:px-8 py-5">Visibility</th>
                   <th className="px-6 md:px-8 py-5 text-right">Actions</th>
                 </tr>
@@ -110,17 +111,21 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
                         )}
                         <div className="text-left">
                           <div className="font-bold text-base md:text-lg text-slate-900 group-hover:text-blue-600 transition-colors">{f.name}</div>
-                          <div className="text-[10px] text-slate-400 flex items-center gap-1 font-semibold uppercase tracking-tight">Configure Features <ChevronRight className="w-3 h-3" /></div>
+                          <div className="text-[10px] text-slate-400 flex items-center gap-1 font-semibold uppercase tracking-tight">Configure Settings <ChevronRight className="w-3 h-3" /></div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 md:px-8 py-6 hidden md:table-cell">
-                      <div className="flex gap-1.5 flex-wrap max-w-[240px]">
-                        {f.features?.length > 0 ? f.features.map(feat => (
-                          <span key={feat} className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 uppercase" title={feat}>
-                            {feat.charAt(0)}
-                          </span>
-                        )) : <span className="text-slate-300 text-xs italic">Minimal Hub</span>}
+                      <div className="flex gap-3">
+                        <div title="Booking Cancellation" className={`p-1.5 rounded-lg border ${f.settings?.canCancelBooking ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
+                           <XCircle className="w-4 h-4" />
+                        </div>
+                        <div title="Booking Rescheduling" className={`p-1.5 rounded-lg border ${f.settings?.canRescheduleBooking ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
+                           <RefreshCw className="w-4 h-4" />
+                        </div>
+                        <div title="Order Cancellation" className={`p-1.5 rounded-lg border ${f.settings?.canCancelOrder ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-300'}`}>
+                           <ShoppingCart className="w-4 h-4" />
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 md:px-8 py-6">
@@ -130,8 +135,7 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
                     </td>
                     <td className="px-6 md:px-8 py-6 text-right">
                       <div className="flex justify-end gap-2 md:gap-3 lg:opacity-0 lg:group-hover:opacity-100 transition-all transform lg:translate-x-2 lg:group-hover:translate-x-0">
-                        <button onClick={() => handleEdit(f)} className="p-2 md:p-2.5 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Edit3 className="w-4 h-4 md:w-5 md:h-5" /></button>
-                        <button onClick={() => onDelete(f.id)} className="p-2 md:p-2.5 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 className="w-4 h-4 md:w-5 md:h-5" /></button>
+                        <button onClick={() => handleEdit(f)} className="p-2 md:p-2.5 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Edit Facility"><Edit3 className="w-4 h-4 md:w-5 md:h-5" /></button>
                       </div>
                     </td>
                   </tr>
