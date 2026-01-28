@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Menu, ShoppingBag, Edit3, Trash2, Tag, Layers, Search, ChevronRight } from 'lucide-react';
+import { Plus, Menu, ShoppingBag, Edit3, Trash2, Tag, Layers, Search, ChevronRight, Percent } from 'lucide-react';
 import { Facility, Product } from '../../types';
 import ProductFormModal from './ProductFormModal';
 import ConfirmationModal from './ConfirmationModal';
@@ -108,11 +108,15 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-200"><ShoppingBag className="w-10 h-10" /></div>
                   )}
-                  <div className="absolute top-4 left-4 flex gap-1.5">
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5">
                     <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm ${p.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                       {p.status}
                     </span>
-                    {p.category && <span className="px-2 py-1 bg-white/90 backdrop-blur rounded-lg text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm">{p.category}</span>}
+                    {p.discountPercent && p.discountPercent > 0 && (
+                      <span className="px-2 py-1 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                        <Percent className="w-2.5 h-2.5" /> {p.discountPercent}% OFF
+                      </span>
+                    )}
                   </div>
                   <div className="absolute top-4 right-4 flex gap-2">
                     <button onClick={() => handleEdit(p)} className="p-2.5 bg-white/90 backdrop-blur rounded-xl text-blue-600 hover:bg-white shadow-xl transition-all"><Edit3 className="w-4 h-4" /></button>
@@ -122,12 +126,30 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-bold text-slate-900 line-clamp-1">{p.name}</h4>
-                    <span className="font-black text-blue-600 text-sm">${p.price.toFixed(2)}</span>
+                    <div className="text-right">
+                      {p.discountedPrice && p.discountedPrice < p.price ? (
+                        <>
+                          <div className="text-[10px] text-slate-400 line-through font-bold">${p.price.toFixed(2)}</div>
+                          <div className="font-black text-blue-600 text-sm">${p.discountedPrice.toFixed(2)}</div>
+                        </>
+                      ) : (
+                        <span className="font-black text-blue-600 text-sm">${p.price.toFixed(2)}</span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-slate-500 line-clamp-2 flex-1 mb-4">{p.description}</p>
-                  <div className="pt-4 border-t border-slate-50 flex items-center justify-between text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    <div className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" /> Stock: {p.quantity}</div>
-                    {(p.size || p.color) && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Variants</div>}
+                  
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {p.sizeStocks?.map(ss => (
+                      <div key={ss.size} className="px-2 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-black text-slate-400 uppercase">
+                        {ss.size}: <span className={ss.quantity === 0 ? 'text-red-500' : 'text-slate-900'}>{ss.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-slate-50 flex items-center justify-between text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    <div className="flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" /> Total Stock: {p.quantity}</div>
+                    {p.category && <div className="flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> {p.category}</div>}
                   </div>
                 </div>
               </div>

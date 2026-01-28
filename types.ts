@@ -83,19 +83,53 @@ export interface Booking {
   createdAt: number;
 }
 
+export interface ProductSizeStock {
+  size: string;
+  quantity: number;
+}
+
 export interface Product {
   id: string;
   facilityId: string;
   name: string;
-  price: number;
-  quantity: number;
+  price: number; // Original Price
+  discountPercent?: number;
+  discountedPrice?: number;
+  quantity: number; // Computed Total quantity
+  sizeStocks: ProductSizeStock[];
   category: string;
   status: 'active' | 'inactive';
   createdAt: number;
   description: string;
   images: string[];
-  size?: string;
   color?: string;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  name: string;
+  price: number;
+  size: string;
+  quantity: number;
+  image: string;
+  facilityId: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  facilityId: string;
+  items: CartItem[];
+  subtotal: number;
+  vat: number;
+  serviceCharge: number;
+  total: number;
+  status: 'placed' | 'picked-up';
+  createdAt: number;
 }
 
 export interface PaymentCard {
@@ -431,48 +465,48 @@ export const DEFAULT_BOOKINGS: Booking[] = [
 
 export const DEFAULT_PRODUCTS: Product[] = [
   // 121 Fitness Products (20+)
-  { id: 'p1', facilityId: '1', name: 'Ultra Whey Isolate', price: 54.99, quantity: 25, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Premium grass-fed whey isolate.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'], size: '2kg', color: 'Vanilla' },
-  { id: 'p2', facilityId: '1', name: 'Performance Tech Tee', price: 29.99, quantity: 50, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Moisture-wicking fabric.', images: ['https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=400&auto=format&fit=crop'], size: 'S, M, L, XL', color: 'Midnight Black' },
-  { id: 'p3', facilityId: '1', name: 'Leather Lift Straps', price: 15.00, quantity: 30, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Heavy-duty lifting straps.', images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400&auto=format&fit=crop'], color: 'Tan Brown' },
-  { id: 'p4', facilityId: '1', name: 'Insulated Shaker Bottle', price: 22.50, quantity: 40, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Double-walled shaker.', images: ['https://images.unsplash.com/photo-1603504313271-9f9390236a99?q=80&w=400&auto=format&fit=crop'], color: 'Slate Grey' },
-  { id: 'p5', facilityId: '1', name: 'Ignite Pre-Workout', price: 39.99, quantity: 20, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Explosive energy formula.', images: ['https://images.unsplash.com/photo-1579722820308-d74e5719d54e?q=80&w=400&auto=format&fit=crop'], size: '30 Servings', color: 'Fruit Punch' },
-  { id: 'p6', facilityId: '1', name: 'High-Density Foam Roller', price: 34.00, quantity: 15, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Extra firm roller.', images: ['https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=400&auto=format&fit=crop'], color: 'Deep Blue' },
-  { id: 'p7', facilityId: '1', name: 'Training Shorts 7"', price: 35.00, quantity: 35, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Unrestricted movement.', images: ['https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=400&auto=format&fit=crop'], size: 'M, L, XL', color: 'Charcoal' },
-  { id: 'p8', facilityId: '1', name: 'Raw Energy Bar', price: 3.50, quantity: 100, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Quick energy bite.', images: ['https://images.unsplash.com/photo-1622467820321-4245646194b6?q=80&w=400&auto=format&fit=crop'], size: '60g' },
-  { id: 'p9', facilityId: '1', name: 'Anti-Slip Gym Towel', price: 18.00, quantity: 60, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Compact microfiber towel.', images: ['https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=400&auto=format&fit=crop'], color: 'Neon Lime' },
-  { id: 'p10', facilityId: '1', name: 'Speed Jump Rope', price: 12.00, quantity: 45, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Adjustable steel wire rope.', images: ['https://images.unsplash.com/photo-1598289431512-b97b0917a63e?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
-  { id: 'p11', facilityId: '1', name: 'Creatine Monohydrate', price: 24.99, quantity: 30, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Pure performance boost.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'], size: '500g' },
-  { id: 'p12', facilityId: '1', name: 'Wrist Wraps', price: 18.50, quantity: 25, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Maximum wrist support.', images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400&auto=format&fit=crop'], color: 'Camo' },
-  { id: 'p13', facilityId: '1', name: 'Compression Socks', price: 14.00, quantity: 40, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Improve circulation.', images: ['https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=400&auto=format&fit=crop'], size: 'L' },
-  { id: 'p14', facilityId: '1', name: 'Gym Duffel Bag', price: 55.00, quantity: 15, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Durable and spacious.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
-  { id: 'p15', facilityId: '1', name: 'Lifting Belt', price: 45.00, quantity: 10, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Genuine leather support.', images: ['https://images.unsplash.com/photo-1541534741688-6078c64b52d2?q=80&w=400&auto=format&fit=crop'], size: 'M' },
-  { id: 'p16', facilityId: '1', name: 'Training Tank', price: 22.00, quantity: 30, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Maximum breathability.', images: ['https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=400&auto=format&fit=crop'], color: 'Grey' },
-  { id: 'p17', facilityId: '1', name: 'BCAA Recovery Mix', price: 32.00, quantity: 25, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Optimized hydration mix.', images: ['https://images.unsplash.com/photo-1579722820308-d74e5719d54e?q=80&w=400&auto=format&fit=crop'], color: 'Blue Raz' },
-  { id: 'p18', facilityId: '1', name: 'Resistance Band Set', price: 28.00, quantity: 20, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Set of 5 tension levels.', images: ['https://images.unsplash.com/photo-1598289431512-b97b0917a63e?q=80&w=400&auto=format&fit=crop'], color: 'Multicolor' },
-  { id: 'p19', facilityId: '1', name: 'Performance Headband', price: 8.50, quantity: 50, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Keep sweat away.', images: ['https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=400&auto=format&fit=crop'], color: 'White' },
-  { id: 'p20', facilityId: '1', name: 'Massage Ball', price: 12.50, quantity: 35, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Targeted trigger point relief.', images: ['https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
+  { id: 'p1', facilityId: '1', name: 'Ultra Whey Isolate', price: 69.99, discountPercent: 20, discountedPrice: 54.99, quantity: 25, sizeStocks: [{size: '2kg', quantity: 25}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Premium grass-fed whey isolate. High protein content with minimal carbs and fats for peak recovery.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'], color: 'Vanilla' },
+  { id: 'p2', facilityId: '1', name: 'Performance Tech Tee', price: 39.99, discountPercent: 25, discountedPrice: 29.99, quantity: 50, sizeStocks: [{size: 'S', quantity: 10}, {size: 'M', quantity: 15}, {size: 'L', quantity: 15}, {size: 'XL', quantity: 10}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Advanced moisture-wicking fabric for maximum breathability during intense training sessions. Ergonomic seams prevent chafing.', images: ['https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=400&auto=format&fit=crop'], color: 'Midnight Black' },
+  { id: 'p3', facilityId: '1', name: 'Leather Lift Straps', price: 15.00, quantity: 30, sizeStocks: [{size: 'One Size', quantity: 30}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Heavy-duty lifting straps. Durable leather provides superior grip for heavy pulling movements.', images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400&auto=format&fit=crop'], color: 'Tan Brown' },
+  { id: 'p4', facilityId: '1', name: 'Insulated Shaker Bottle', price: 22.50, quantity: 40, sizeStocks: [{size: 'One Size', quantity: 40}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Double-walled shaker. Keeps your pre-workout cold and your post-workout shake smooth with its unique mixing system.', images: ['https://images.unsplash.com/photo-1603504313271-9f9390236a99?q=80&w=400&auto=format&fit=crop'], color: 'Slate Grey' },
+  { id: 'p5', facilityId: '1', name: 'Ignite Pre-Workout', price: 49.99, discountPercent: 20, discountedPrice: 39.99, quantity: 20, sizeStocks: [{size: '30 Servings', quantity: 20}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Explosive energy formula. Designed to boost focus and muscular endurance when you need it most.', images: ['https://images.unsplash.com/photo-1579722820308-d74e5719d54e?q=80&w=400&auto=format&fit=crop'], color: 'Fruit Punch' },
+  { id: 'p6', facilityId: '1', name: 'High-Density Foam Roller', price: 34.00, quantity: 15, sizeStocks: [{size: 'One Size', quantity: 15}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Extra firm roller for deep tissue massage. Ideal for post-session recovery and myofascial release.', images: ['https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=400&auto=format&fit=crop'], color: 'Deep Blue' },
+  { id: 'p7', facilityId: '1', name: 'Training Shorts 7"', price: 35.00, quantity: 35, sizeStocks: [{size: 'M', quantity: 15}, {size: 'L', quantity: 10}, {size: 'XL', quantity: 10}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Unrestricted movement. Lightweight and flexible fabric with a secure waistband for maximum agility.', images: ['https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=400&auto=format&fit=crop'], color: 'Charcoal' },
+  { id: 'p8', facilityId: '1', name: 'Raw Energy Bar', price: 4.50, discountPercent: 22, discountedPrice: 3.50, quantity: 100, sizeStocks: [{size: '60g', quantity: 100}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Quick energy bite. Balanced macros with natural ingredients for a clean energy boost between sets.', images: ['https://images.unsplash.com/photo-1622467820321-4245646194b6?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p9', facilityId: '1', name: 'Anti-Slip Gym Towel', price: 18.00, quantity: 60, sizeStocks: [{size: 'One Size', quantity: 60}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Compact microfiber towel. Absorbs 5x its weight in water and stays in place on weight benches.', images: ['https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=400&auto=format&fit=crop'], color: 'Neon Lime' },
+  { id: 'p10', facilityId: '1', name: 'Speed Jump Rope', price: 12.00, quantity: 45, sizeStocks: [{size: 'One Size', quantity: 45}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Adjustable steel wire rope. Engineered for speed and efficiency during double-under drills.', images: ['https://images.unsplash.com/photo-1598289431512-b97b0917a63e?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
+  { id: 'p11', facilityId: '1', name: 'Creatine Monohydrate', price: 24.99, quantity: 30, sizeStocks: [{size: '500g', quantity: 30}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Pure performance boost. The most researched supplement for increasing strength and muscular power.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p12', facilityId: '1', name: 'Wrist Wraps', price: 18.50, quantity: 25, sizeStocks: [{size: 'One Size', quantity: 25}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Maximum wrist support. Designed for heavy pressing and stability during overhead movements.', images: ['https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400&auto=format&fit=crop'], color: 'Camo' },
+  { id: 'p13', facilityId: '1', name: 'Compression Socks', price: 14.00, quantity: 40, sizeStocks: [{size: 'L', quantity: 40}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Improve circulation and reduce muscle fatigue. Perfect for endurance athletes and post-workout recovery.', images: ['https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p14', facilityId: '1', name: 'Gym Duffel Bag', price: 75.00, discountPercent: 26, discountedPrice: 55.00, quantity: 15, sizeStocks: [{size: 'One Size', quantity: 15}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Durable and spacious. Features dedicated compartments for shoes and wet gear. Your perfect gym companion.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
+  { id: 'p15', facilityId: '1', name: 'Lifting Belt', price: 45.00, quantity: 10, sizeStocks: [{size: 'M', quantity: 10}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Genuine leather support. Provides stability for the lower back during heavy compound lifts.', images: ['https://images.unsplash.com/photo-1541534741688-6078c64b52d2?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p16', facilityId: '1', name: 'Training Tank', price: 22.00, quantity: 30, sizeStocks: [{size: 'M', quantity: 30}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Maximum breathability. Racerback design allows for full range of motion in the upper body.', images: ['https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=400&auto=format&fit=crop'], color: 'Grey' },
+  { id: 'p17', facilityId: '1', name: 'BCAA Recovery Mix', price: 32.00, quantity: 25, sizeStocks: [{size: 'One Size', quantity: 25}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Optimized hydration mix. Branched-chain amino acids to support muscle repair and reduce soreness.', images: ['https://images.unsplash.com/photo-1579722820308-d74e5719d54e?q=80&w=400&auto=format&fit=crop'], color: 'Blue Raz' },
+  { id: 'p18', facilityId: '1', name: 'Resistance Band Set', price: 35.00, discountPercent: 20, discountedPrice: 28.00, quantity: 20, sizeStocks: [{size: 'One Size', quantity: 20}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Set of 5 tension levels. Versatile tools for warming up, isolation work, and mobility training.', images: ['https://images.unsplash.com/photo-1598289431512-b97b0917a63e?q=80&w=400&auto=format&fit=crop'], color: 'Multicolor' },
+  { id: 'p19', facilityId: '1', name: 'Performance Headband', price: 8.50, quantity: 50, sizeStocks: [{size: 'One Size', quantity: 50}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Keep sweat away. Non-slip design stays in place even during the most dynamic movements.', images: ['https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=400&auto=format&fit=crop'], color: 'White' },
+  { id: 'p20', facilityId: '1', name: 'Massage Ball', price: 12.50, quantity: 35, sizeStocks: [{size: 'One Size', quantity: 35}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Targeted trigger point relief. Perfect for isolating small muscle groups and knots in the back and feet.', images: ['https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
 
   // 121 Zen Products (20+)
-  { id: 'z-p1', facilityId: '2', name: 'Natural Cork Yoga Mat', price: 85.00, quantity: 15, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Sustainable cork surface.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'], size: '6mm Thick', color: 'Natural' },
-  { id: 'z-p2', facilityId: '2', name: 'Bamboo Insulated Flask', price: 28.00, quantity: 20, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Eco-friendly bamboo.', images: ['https://images.unsplash.com/photo-1523362628744-0c1df961903f?q=80&w=400&auto=format&fit=crop'], color: 'Bamboo' },
-  { id: 'z-p3', facilityId: '2', name: 'Silk Lavender Eye Pillow', price: 18.00, quantity: 30, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Organic lavender scent.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Lilac' },
-  { id: 'z-p4', facilityId: '2', name: 'Seamless Flow Leggings', price: 55.00, quantity: 40, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'High-waisted compression.', images: ['https://images.unsplash.com/photo-1506629082955-511b1aa562c8?q=80&w=400&auto=format&fit=crop'], size: 'XS, S, M, L', color: 'Sage Green' },
-  { id: 'z-p5', facilityId: '2', name: 'Organic Sleep Tea Mix', price: 14.50, quantity: 50, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'A calming herbal blend.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'], size: '20 Bags' },
-  { id: 'z-p6', facilityId: '2', name: 'Buckwheat Zafu Cushion', price: 42.00, quantity: 12, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Ergonomic alignment.', images: ['https://images.unsplash.com/photo-1593810450967-f9c42742e326?q=80&w=400&auto=format&fit=crop'], color: 'Earthy Grey' },
-  { id: 'z-p7', facilityId: '2', name: 'D-Ring Yoga Strap', price: 12.00, quantity: 25, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Extra-long 8ft strap.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Off-White' },
-  { id: 'z-p8', facilityId: '2', name: 'Mindfulness Soy Candle', price: 24.00, quantity: 20, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Handpoured soy wax.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Glass White' },
-  { id: 'z-p9', facilityId: '2', name: 'Zen Oversized Hoodie', price: 65.00, quantity: 25, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Organic cotton comfort.', images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=400&auto=format&fit=crop'], size: 'One Size', color: 'Sand' },
-  { id: 'z-p10', facilityId: '2', name: 'Yoga Grip Socks', price: 15.00, quantity: 45, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Toe-less stability design.', images: ['https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=400&auto=format&fit=crop'], size: 'S/M', color: 'Slate' },
-  { id: 'z-p11', facilityId: '2', name: 'Essential Oil Set', price: 35.00, quantity: 15, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Lavender, Mint, Citrus.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'], size: '3 x 10ml' },
-  { id: 'z-p12', facilityId: '2', name: 'Meditation Journal', price: 18.00, quantity: 30, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Lined pages for reflection.', images: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop'], color: 'Earth Brown' },
-  { id: 'z-p13', facilityId: '2', name: 'Incense Burner', price: 22.00, quantity: 10, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Handcrafted ceramic.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
-  { id: 'z-p14', facilityId: '2', name: 'Silk Sleep Mask', price: 14.00, quantity: 40, category: 'Accessories', status: 'active', createdAt: Date.now(), description: '100% pure mulberry silk.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Peach' },
-  { id: 'z-p15', facilityId: '2', name: 'Cork Yoga Block', price: 16.00, quantity: 50, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Firm eco-friendly support.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'], color: 'Tan' },
-  { id: 'z-p16', facilityId: '2', name: 'Bamboo Tote Bag', price: 12.00, quantity: 60, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Sustainable carry-all.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Off-White' },
-  { id: 'z-p17', facilityId: '2', name: 'Tibetan Singing Bowl', price: 120.00, quantity: 5, category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Authentic resonance bowl.', images: ['https://images.unsplash.com/photo-1593810450967-f9c42742e326?q=80&w=400&auto=format&fit=crop'], color: 'Brass' },
-  { id: 'z-p18', facilityId: '2', name: 'Relaxation Spray', price: 12.50, quantity: 40, category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Lavender and chamomile mist.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'], size: '100ml' },
-  { id: 'z-p19', facilityId: '2', name: 'Linen Robe', price: 45.00, quantity: 20, category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Lightweight and breathable.', images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=400&auto=format&fit=crop'], color: 'Cloud Grey' },
-  { id: 'z-p20', facilityId: '2', name: 'Yoga Mat Bag', price: 25.00, quantity: 25, category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Fits any standard mat.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Forest Green' }
+  { id: 'z-p1', facilityId: '2', name: 'Natural Cork Yoga Mat', price: 105.00, discountPercent: 19, discountedPrice: 85.00, quantity: 15, sizeStocks: [{size: '6mm Thick', quantity: 15}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Sustainable cork surface. Naturally anti-microbial and provides superior grip that improves with sweat.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'], color: 'Natural' },
+  { id: 'z-p2', facilityId: '2', name: 'Bamboo Insulated Flask', price: 28.00, quantity: 20, sizeStocks: [{size: 'One Size', quantity: 20}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Eco-friendly bamboo exterior with a stainless steel interior. Keeps your herbal tea hot for up to 12 hours.', images: ['https://images.unsplash.com/photo-1523362628744-0c1df961903f?q=80&w=400&auto=format&fit=crop'], color: 'Bamboo' },
+  { id: 'z-p3', facilityId: '2', name: 'Silk Lavender Eye Pillow', price: 22.00, discountPercent: 18, discountedPrice: 18.00, quantity: 30, sizeStocks: [{size: 'One Size', quantity: 30}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Organic lavender scent. Weighted with flaxseeds to promote deep relaxation during Savasana or sleep.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Lilac' },
+  { id: 'z-p4', facilityId: '2', name: 'Seamless Flow Leggings', price: 55.00, quantity: 40, sizeStocks: [{size: 'XS', quantity: 10}, {size: 'S', quantity: 10}, {size: 'M', quantity: 10}, {size: 'L', quantity: 10}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'High-waisted compression with a buttery-soft feel. Designed to move with you through every posture.', images: ['https://images.unsplash.com/photo-1506629082955-511b1aa562c8?q=80&w=400&auto=format&fit=crop'], color: 'Sage Green' },
+  { id: 'z-p5', facilityId: '2', name: 'Organic Sleep Tea Mix', price: 14.50, quantity: 50, sizeStocks: [{size: '20 Bags', quantity: 50}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'A calming herbal blend of chamomile, valerian, and lavender to help you unwind after a long day.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'z-p6', facilityId: '2', name: 'Buckwheat Zafu Cushion', price: 52.00, discountPercent: 19, discountedPrice: 42.00, quantity: 12, sizeStocks: [{size: 'One Size', quantity: 12}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Ergonomic alignment. Buckwheat hull filling provides the perfect balance of support and comfort for meditation.', images: ['https://images.unsplash.com/photo-1593810450967-f9c42742e326?q=80&w=400&auto=format&fit=crop'], color: 'Earthy Grey' },
+  { id: 'z-p7', facilityId: '2', name: 'D-Ring Yoga Strap', price: 12.00, quantity: 25, sizeStocks: [{size: 'One Size', quantity: 25}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Extra-long 8ft strap. Solid metal D-rings allow for secure loops to assist in reaching deeper stretches safely.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Off-White' },
+  { id: 'z-p8', facilityId: '2', name: 'Mindfulness Soy Candle', price: 30.00, discountPercent: 20, discountedPrice: 24.00, quantity: 20, sizeStocks: [{size: 'One Size', quantity: 20}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Handpoured soy wax with essential oils. Clean-burning with a gentle scent designed for focused meditation.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Glass White' },
+  { id: 'z-p9', facilityId: '2', name: 'Zen Oversized Hoodie', price: 65.00, quantity: 25, sizeStocks: [{size: 'One Size', quantity: 25}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Organic cotton comfort. A relaxed fit designed for warming up or cozying down after your practice.', images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=400&auto=format&fit=crop'], color: 'Sand' },
+  { id: 'z-p10', facilityId: '2', name: 'Yoga Grip Socks', price: 18.00, discountPercent: 16, discountedPrice: 15.00, quantity: 45, sizeStocks: [{size: 'S/M', quantity: 45}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Toe-less stability design. Features silicone grip dots to prevent slipping on studio floors.', images: ['https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=400&auto=format&fit=crop'], color: 'Slate' },
+  { id: 'z-p11', facilityId: '2', name: 'Essential Oil Set', price: 35.00, quantity: 15, sizeStocks: [{size: '3 x 10ml', quantity: 15}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Lavender, Mint, and Citrus oils. Pure therapeutic grade for diffusion or topical application with carrier oils.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'z-p12', facilityId: '2', name: 'Meditation Journal', price: 24.00, discountPercent: 25, discountedPrice: 18.00, quantity: 30, sizeStocks: [{size: 'One Size', quantity: 30}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Lined pages for reflection. Includes daily prompts to help you track your journey and cultivate gratitude.', images: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop'], color: 'Earth Brown' },
+  { id: 'z-p13', facilityId: '2', name: 'Incense Burner', price: 22.00, quantity: 10, sizeStocks: [{size: 'One Size', quantity: 10}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Handcrafted ceramic. Designed to catch all ash while providing a beautiful aesthetic to your sacred space.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
+  { id: 'z-p14', facilityId: '2', name: 'Silk Sleep Mask', price: 14.00, quantity: 40, sizeStocks: [{size: 'One Size', quantity: 40}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: '100% pure mulberry silk. Gentle on the skin and completely blocks out light for a restorative rest.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Peach' },
+  { id: 'z-p15', facilityId: '2', name: 'Cork Yoga Block', price: 16.00, quantity: 50, sizeStocks: [{size: 'One Size', quantity: 50}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Firm eco-friendly support. Heavier than foam blocks for added stability during challenging balance poses.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'], color: 'Tan' },
+  { id: 'z-p16', facilityId: '2', name: 'Bamboo Tote Bag', price: 15.00, discountPercent: 20, discountedPrice: 12.00, quantity: 60, sizeStocks: [{size: 'One Size', quantity: 60}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Sustainable carry-all. Lightweight but strong, perfect for carrying your gear to and from the hub.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Off-White' },
+  { id: 'z-p17', facilityId: '2', name: 'Tibetan Singing Bowl', price: 120.00, quantity: 5, sizeStocks: [{size: 'One Size', quantity: 5}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Authentic resonance bowl. Hand-hammered for a rich, pure sound that aids in deep meditation and sound healing.', images: ['https://images.unsplash.com/photo-1593810450967-f9c42742e326?q=80&w=400&auto=format&fit=crop'], color: 'Brass' },
+  { id: 'z-p18', facilityId: '2', name: 'Relaxation Spray', price: 12.50, quantity: 40, sizeStocks: [{size: '100ml', quantity: 40}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Lavender and chamomile mist. Spritz on your mat or pillow to create a soothing sensory environment.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'z-p19', facilityId: '2', name: 'Linen Robe', price: 60.00, discountPercent: 25, discountedPrice: 45.00, quantity: 20, sizeStocks: [{size: 'One Size', quantity: 20}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Lightweight and breathable. Premium linen provides a cooling touch, making it ideal for post-bath or meditation lounging.', images: ['https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=400&auto=format&fit=crop'], color: 'Cloud Grey' },
+  { id: 'z-p20', facilityId: '2', name: 'Yoga Mat Bag', price: 25.00, quantity: 25, sizeStocks: [{size: 'One Size', quantity: 25}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Fits any standard mat. Durable canvas with an adjustable strap and a hidden pocket for your essentials.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Forest Green' }
 ];
 
 export const DEFAULT_USERS: User[] = [
@@ -497,5 +531,91 @@ export const DEFAULT_USERS: User[] = [
     status: 'active',
     createdAt: Date.now() - 1000000,
     paymentCards: []
+  },
+  {
+    id: 'u3',
+    email: 'shubham@gmail.com',
+    fullName: 'Shubham Kumar',
+    phone: '+91 9876543210',
+    gender: 'Male',
+    paymentMethod: 'added',
+    status: 'active',
+    createdAt: Date.now() - 2000000,
+    paymentCards: [
+       {
+         id: 'card1',
+         holderName: 'Shubham Kumar',
+         cardNumber: '•••• •••• •••• 4242',
+         brand: 'Visa',
+         expiryDate: '12/25',
+         isPrimary: true,
+         createdAt: Date.now() - 1000000
+       }
+    ]
+  }
+];
+
+export const DEFAULT_ORDERS: Order[] = [
+  {
+    id: 'ord1',
+    orderNumber: 'ORD-99BT-K12A',
+    userId: 'u3',
+    userName: 'Shubham Kumar',
+    userEmail: 'shubham@gmail.com',
+    facilityId: '2',
+    items: [
+      {
+        id: 'ci1',
+        productId: 'z-p1',
+        name: 'Natural Cork Yoga Mat',
+        price: 85.00,
+        size: '6mm Thick',
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop',
+        facilityId: '2'
+      }
+    ],
+    subtotal: 85.00,
+    vat: 4.25,
+    serviceCharge: 2.50,
+    total: 91.75,
+    status: 'placed',
+    createdAt: Date.now() - 86400000
+  },
+  {
+    id: 'ord2',
+    orderNumber: 'ORD-XH72-P991',
+    userId: 'u3',
+    userName: 'Shubham Kumar',
+    userEmail: 'shubham@gmail.com',
+    facilityId: '1',
+    items: [
+      {
+        id: 'ci2',
+        productId: 'p1',
+        name: 'Ultra Whey Isolate',
+        price: 54.99,
+        size: '2kg',
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop',
+        facilityId: '1'
+      },
+      {
+        id: 'ci3',
+        productId: 'p9',
+        name: 'Anti-Slip Gym Towel',
+        price: 18.00,
+        size: 'One Size',
+        quantity: 1,
+        image: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=400&auto=format&fit=crop',
+        facilityId: '1'
+      }
+    ],
+    subtotal: 72.99,
+    vat: 3.65,
+    serviceCharge: 2.50,
+    total: 79.14,
+    status: 'picked-up',
+    createdAt: Date.now() - 259200000
   }
 ];

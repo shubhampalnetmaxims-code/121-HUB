@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
-import { User as UserType, Booking, Facility, Class } from '../../types';
-import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ChevronRight, ShieldCheck, AlertTriangle, Clock, MapPin } from 'lucide-react';
+import { User as UserType, Booking, Facility, Class, Order } from '../../types';
+import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ChevronRight, ShieldCheck, AlertTriangle, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileViewProps {
@@ -9,12 +8,13 @@ interface ProfileViewProps {
   bookings: Booking[];
   facilities: Facility[];
   classes: Class[];
+  orders: Order[];
   onLogout: () => void;
   onDeleteAccount: (id: string) => void;
   onAuthTrigger: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facilities, classes, onLogout, onDeleteAccount, onAuthTrigger }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facilities, classes, orders, onLogout, onDeleteAccount, onAuthTrigger }) => {
   const navigate = useNavigate();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -36,25 +36,9 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
     );
   }
 
-  const userBookings = bookings.filter(b => b.userId === currentUser.id).sort((a, b) => b.bookingDate - a.bookingDate).slice(0, 3);
-
   const handleLogout = () => {
     onLogout();
     navigate('/app/home');
-  };
-
-  const handleDelete = () => {
-    onDeleteAccount(currentUser.id);
-    navigate('/app/home');
-  };
-
-  const handleBookingClick = (booking: Booking) => {
-    // Navigate to bookings tab with pre-selected state
-    navigate('/app/bookings', { 
-      state: { 
-        status: booking.status 
-      } 
-    });
   };
 
   const ProfileMenuItem = ({ icon: Icon, label, color = 'text-slate-900', sublabel = '', onClick }: { icon: any, label: string, color?: string, sublabel?: string, onClick?: () => void }) => (
@@ -74,6 +58,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
   );
 
   const primaryCard = currentUser.paymentCards?.find(c => c.isPrimary);
+  const userOrders = orders.filter(o => o.userId === currentUser.id);
 
   return (
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
@@ -82,7 +67,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-32 scrollbar-hide">
-        {/* User Card */}
         <section className="bg-white p-6 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden">
           <div className="flex items-center gap-5 relative z-10">
             <div className="w-16 h-16 rounded-[24px] bg-blue-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/20">
@@ -93,7 +77,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
               <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{currentUser.gender}</p>
             </div>
           </div>
-          
           <div className="mt-6 pt-6 border-t border-slate-50 space-y-3 relative z-10">
             <div className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-slate-300" />
@@ -104,111 +87,45 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
               <span className="text-sm font-bold text-slate-600">{currentUser.phone}</span>
             </div>
           </div>
-          
           <ShieldCheck className="absolute -right-4 -bottom-4 w-32 h-32 text-slate-50 rotate-12" />
         </section>
 
-        {/* Recent Activity / Booking History Preview */}
-        <section className="space-y-4">
-          <div className="flex justify-between items-center px-2">
-             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Recent Activity</h4>
-             <button onClick={() => navigate('/app/bookings')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest">See All</button>
-          </div>
-          <div className="space-y-3">
-             {userBookings.length > 0 ? userBookings.map(b => {
-               const cls = classes.find(c => c.id === b.classId);
-               const fac = facilities.find(f => f.id === b.facilityId);
-               return (
-                 <div 
-                  key={b.id} 
-                  onClick={() => handleBookingClick(b)}
-                  className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer group"
-                 >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                      b.status === 'upcoming' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-100' :
-                      b.status === 'delivered' ? 'bg-green-50 text-green-600 group-hover:bg-green-100' : 
-                      'bg-slate-100 text-slate-400 group-hover:bg-slate-200'
-                    }`}>
-                       <Calendar className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                       <h5 className="font-bold text-slate-900 text-sm tracking-tight truncate group-hover:text-blue-600 transition-colors">{cls?.name || 'Class'}</h5>
-                       <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-tight">
-                          <MapPin className="w-2.5 h-2.5" /> {fac?.name}
-                       </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                       <p className="text-[10px] font-black text-slate-900 uppercase">{new Date(b.bookingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
-                       <p className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full mt-1 inline-block ${
-                         b.status === 'upcoming' ? 'bg-blue-50 text-blue-600' :
-                         b.status === 'delivered' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                       }`}>
-                         {b.status}
-                       </p>
-                    </div>
-                 </div>
-               );
-             }) : (
-               <div className="p-8 text-center bg-slate-50 border-2 border-dashed border-slate-100 rounded-[32px]">
-                  <p className="text-xs font-bold text-slate-400">No recent sessions found.</p>
-               </div>
-             )}
-          </div>
+        <section className="space-y-3">
+          <h4 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Manage Activity</h4>
+          <ProfileMenuItem icon={Calendar} label="My Bookings" sublabel="Session History" onClick={() => navigate('/app/bookings')} />
+          <ProfileMenuItem icon={ShoppingBag} label="My Orders" sublabel={`${userOrders.length} previous purchases`} onClick={() => navigate('/app/profile/orders')} />
+          <ProfileMenuItem icon={FileText} label="Invoices" sublabel="Financial Receipts" onClick={() => navigate('/app/profile/orders', { state: { view: 'invoices' } })} />
         </section>
 
-        {/* Action Menu */}
         <section className="space-y-3">
-          <h4 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Manage Account</h4>
+          <h4 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Settings</h4>
           <ProfileMenuItem 
             icon={CreditCard} 
             label="My Payments" 
             sublabel={primaryCard ? `Default: ${primaryCard.brand} ${primaryCard.cardNumber.slice(-4)}` : 'Add Card'} 
             onClick={() => navigate('/app/profile/payments')}
           />
-          <ProfileMenuItem icon={Calendar} label="My Bookings" sublabel="Session History" onClick={() => navigate('/app/bookings')} />
-          <ProfileMenuItem icon={ShoppingBag} label="My Orders" sublabel="Digital Receipts" />
           <ProfileMenuItem icon={Ticket} label="Memberships & Passes" sublabel="Active Subscriptions" />
         </section>
 
-        {/* Dangerous Actions */}
         <section className="pt-4 space-y-3">
-          <button 
-            onClick={handleLogout}
-            className="w-full p-5 bg-white border border-slate-100 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all text-slate-400 font-bold hover:text-slate-900 shadow-sm"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center">
-              <LogOut className="w-5 h-5" />
-            </div>
+          <button onClick={handleLogout} className="w-full p-5 bg-white border border-slate-100 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all text-slate-400 font-bold hover:text-slate-900 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center"><LogOut className="w-5 h-5" /></div>
             <span>Logout from Hub</span>
           </button>
-
-          <button 
-            onClick={() => setIsDeleteConfirmOpen(true)}
-            className="w-full p-5 bg-white border border-red-50 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all text-red-300 font-bold hover:text-red-500 shadow-sm"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-red-50/30 flex items-center justify-center">
-              <Trash2 className="w-5 h-5" />
-            </div>
+          <button onClick={() => setIsDeleteConfirmOpen(true)} className="w-full p-5 bg-white border border-red-50 rounded-[28px] flex items-center gap-4 active:scale-[0.98] transition-all text-red-300 font-bold hover:text-red-500 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-red-50/30 flex items-center justify-center"><Trash2 className="w-5 h-5" /></div>
             <span>Delete Account Permanent</span>
           </button>
         </section>
       </div>
 
-      {/* Delete Confirmation Modal Overlay */}
       {isDeleteConfirmOpen && (
         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-           <div className="bg-white rounded-[40px] p-8 text-center space-y-6 max-w-xs shadow-2xl animate-in zoom-in-95 duration-300">
-             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mx-auto">
-               <AlertTriangle className="w-8 h-8" />
-             </div>
-             <div>
-               <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Are you sure?</h3>
-               <p className="text-slate-500 text-sm font-medium leading-relaxed">This action will permanently purge your profile, bookings, and digital records from 121 Platform.</p>
-             </div>
-             <div className="space-y-3 pt-2">
-               <button onClick={handleDelete} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-xl shadow-red-500/20 active:scale-95 transition-all">Yes, Purge Data</button>
-               <button onClick={() => setIsDeleteConfirmOpen(false)} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors">Cancel</button>
-             </div>
+           <div className="bg-white rounded-[40px] p-8 text-center space-y-6 max-w-xs shadow-2xl">
+             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mx-auto"><AlertTriangle className="w-8 h-8" /></div>
+             <div><h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Are you sure?</h3><p className="text-slate-500 text-sm font-medium leading-relaxed">This action will permanently purge your profile and all records.</p></div>
+             <div className="space-y-3 pt-2"><button onClick={onDeleteAccount.bind(null, currentUser.id)} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-xl">Yes, Purge Data</button><button onClick={() => setIsDeleteConfirmOpen(false)} className="w-full py-4 text-slate-400 font-bold">Cancel</button></div>
            </div>
         </div>
       )}

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { ShoppingBag, ChevronRight, Search, Heart, ShoppingCart, Plus } from 'lucide-react';
-import { Facility, Product, User } from '../../types';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ShoppingBag, ChevronRight, Search, Heart, ShoppingCart, Plus, Percent, Tag } from 'lucide-react';
+import { Facility, Product, User, CartItem } from '../../types';
 import ProductDetailModal from './ProductDetailModal';
 
 interface MarketViewProps {
@@ -10,10 +9,13 @@ interface MarketViewProps {
   products: Product[];
   onAuthTrigger: () => void;
   currentUser: User | null;
+  onAddToCart: (item: CartItem) => void;
+  cart: CartItem[];
 }
 
-const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTrigger, currentUser }) => {
+const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTrigger, currentUser, onAddToCart, cart }) => {
   const { id: urlFacilityId } = useParams();
+  const navigate = useNavigate();
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('all');
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [seeAll, setSeeAll] = useState(false);
@@ -47,9 +49,16 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
         </div>
         <div className="flex gap-2">
           <button className="p-3 rounded-2xl bg-slate-50 border border-slate-100"><Search className="w-5 h-5 text-slate-400" /></button>
-          <button className="p-3 rounded-2xl bg-slate-50 border border-slate-100 relative">
+          <button 
+            onClick={() => navigate('/app/cart')}
+            className="p-3 rounded-2xl bg-slate-50 border border-slate-100 relative"
+          >
             <ShoppingCart className="w-5 h-5 text-slate-400" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[8px] font-black rounded-full flex items-center justify-center">0</div>
+            {cart.length > 0 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                {cart.length}
+              </div>
+            )}
           </button>
         </div>
       </div>
@@ -114,44 +123,66 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
           onClose={() => setViewingProduct(null)} 
           onAuthTrigger={onAuthTrigger}
           currentUser={currentUser}
+          onAddToCart={onAddToCart}
         />
       )}
     </div>
   );
 };
 
-const ProductCard: React.FC<{ product: Product; onClick: () => void; isGrid?: boolean }> = ({ product, onClick, isGrid = false }) => (
-  <div 
-    onClick={onClick}
-    className={`${isGrid ? 'w-full' : 'w-40 shrink-0'} bg-white rounded-[60px] border border-slate-100 overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer flex flex-col aspect-[4/7]`}
-  >
-    <div className="relative h-2/5 w-full bg-slate-50 overflow-hidden">
-      {product.images?.[0] ? (
-        <img src={product.images[0]} className="w-full h-full object-cover" alt={product.name} />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-slate-200"><ShoppingBag className="w-8 h-8" /></div>
-      )}
-      <button 
-        className="absolute top-4 right-4 p-2 bg-white/40 backdrop-blur rounded-full text-white hover:text-red-500 transition-colors"
-        onClick={(e) => { e.stopPropagation(); }}
-      >
-        <Heart className="w-4 h-4" />
-      </button>
-    </div>
-    <div className="p-4 flex-1 flex flex-col text-left justify-between items-center">
-      <div className="w-full text-center space-y-1">
-        <p className="text-[8px] font-black text-blue-600 uppercase tracking-widest">{product.category || 'Gear'}</p>
-        <h4 className="font-bold text-slate-900 text-xs line-clamp-2 px-1">{product.name}</h4>
+const ProductCard: React.FC<{ product: Product; onClick: () => void; isGrid?: boolean }> = ({ product, onClick, isGrid = false }) => {
+  const hasDiscount = product.discountPercent && product.discountPercent > 0;
+  
+  return (
+    <div 
+      onClick={onClick}
+      className={`${isGrid ? 'w-full' : 'w-40 shrink-0'} bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm active:scale-95 transition-transform cursor-pointer flex flex-col aspect-[3/4.5] group`}
+    >
+      <div className="relative h-[30%] w-full bg-slate-50 overflow-hidden">
+        {product.images?.[0] ? (
+          <img src={product.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={product.name} />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-slate-200"><ShoppingBag className="w-6 h-6" /></div>
+        )}
+        
+        {hasDiscount && (
+          <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-red-600 text-white rounded-full text-[7px] font-black uppercase flex items-center gap-0.5 shadow-lg shadow-red-500/30">
+            -{product.discountPercent}%
+          </div>
+        )}
+
+        <button 
+          className="absolute top-2 right-2 p-1.5 bg-white/60 backdrop-blur rounded-full text-slate-400 hover:text-red-500 transition-colors shadow-sm"
+          onClick={(e) => { e.stopPropagation(); }}
+        >
+          <Heart className="w-3 h-3" />
+        </button>
       </div>
       
-      <div className="w-full flex justify-between items-center mt-2 px-1">
-        <span className="font-black text-slate-900 text-xs">${product.price.toFixed(2)}</span>
-        <div className="w-8 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white">
-          <Plus className="w-4 h-4" />
+      <div className="p-4 flex-1 flex flex-col text-left">
+        <div className="flex-1 space-y-0.5">
+          <p className="text-[7px] font-black text-blue-600 uppercase tracking-widest">{product.category || 'Gear'}</p>
+          <h4 className="font-bold text-slate-900 text-[10px] line-clamp-2 leading-tight uppercase tracking-tighter">{product.name}</h4>
+        </div>
+        
+        <div className="flex justify-between items-end mt-2">
+          <div className="flex flex-col">
+            {hasDiscount && product.discountedPrice ? (
+              <>
+                <span className="text-[8px] text-slate-400 line-through font-bold decoration-red-400/30">${product.price.toFixed(2)}</span>
+                <span className="font-black text-red-600 text-xs leading-none">${product.discountedPrice.toFixed(2)}</span>
+              </>
+            ) : (
+              <span className="font-black text-slate-900 text-xs leading-none">${product.price.toFixed(2)}</span>
+            )}
+          </div>
+          <div className="w-7 h-7 rounded-lg bg-black flex items-center justify-center text-white shrink-0 shadow-md group-hover:bg-blue-600 transition-colors">
+            <Plus className="w-3 h-3" />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default MarketView;

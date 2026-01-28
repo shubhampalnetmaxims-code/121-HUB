@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Mail, ShieldCheck, User, Phone, CreditCard, ArrowLeft, ArrowRight, Check, Plus, Trash2, Shield } from 'lucide-react';
@@ -7,18 +6,20 @@ import { useToast } from '../ToastContext';
 import CardFormModal from './CardFormModal';
 
 interface OnboardingFlowProps {
-  onComplete: (data: Omit<UserType, 'id' | 'status' | 'createdAt'>) => void;
+  users: UserType[];
+  onComplete: (data: any) => void;
   onCancel: () => void;
 }
 
 type OnboardingStep = 'email' | 'otp' | 'details' | 'payment';
 
-const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel }) => {
+const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCancel }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [step, setStep] = useState<OnboardingStep>('email');
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     fullName: '',
@@ -36,6 +37,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
         showToast('Please enter a valid email address', 'error');
         return;
       }
+      
+      const existing = users.find(u => u.email.toLowerCase() === formData.email.toLowerCase());
+      if (existing) {
+        setIsExistingUser(true);
+      }
       setStep('otp');
     }
     else if (step === 'otp') {
@@ -44,7 +50,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
         return;
       }
       showToast('Verification successful', 'success');
-      setStep('details');
+      
+      if (isExistingUser) {
+        const user = users.find(u => u.email.toLowerCase() === formData.email.toLowerCase());
+        if (user) {
+          onComplete(user); // Pass full user back to registerUser which will handle login
+          navigate(returnTo, { replace: true });
+        }
+      } else {
+        setStep('details');
+      }
     }
     else if (step === 'details') {
       if (!formData.fullName || !formData.phone) {
@@ -128,6 +143,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
             <div>
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Start Your Journey</h2>
               <p className="text-slate-500 font-medium leading-relaxed">Enter your email to join the 121 community.</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-4">Try: shubham@gmail.com</p>
             </div>
             <div className="space-y-4">
               <div className="relative">
@@ -176,7 +192,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel })
                 disabled={formData.otp.length < 4}
                 className="w-full bg-black text-white py-5 rounded-[24px] font-black text-lg flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
               >
-                Verify Code
+                {isExistingUser ? 'Login' : 'Verify Code'}
               </button>
               <button 
                 type="button"

@@ -1,9 +1,12 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home as HomeIcon, Compass, Calendar, User, ShoppingBag } from 'lucide-react';
+import { Home as HomeIcon, Compass, Calendar, User, ShoppingBag, ShoppingCart } from 'lucide-react';
 
-const BottomNav: React.FC = () => {
+interface BottomNavProps {
+  cartCount?: number;
+}
+
+const BottomNav: React.FC<BottomNavProps> = ({ cartCount = 0 }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -19,9 +22,14 @@ const BottomNav: React.FC = () => {
         <ShoppingBag className="w-6 h-6" />
         <span className="text-[9px] font-bold uppercase tracking-widest">Market</span>
       </button>
-      <button className="flex flex-col items-center gap-1.5 text-slate-400">
-        <Compass className="w-6 h-6" />
-        <span className="text-[9px] font-bold uppercase tracking-widest">Explore</span>
+      <button onClick={() => navigate('/app/cart')} className={`flex flex-col items-center gap-1.5 transition-colors relative ${isActive('/cart') ? 'text-blue-600' : 'text-slate-400'}`}>
+        <ShoppingCart className="w-6 h-6" />
+        <span className="text-[9px] font-bold uppercase tracking-widest">Cart</span>
+        {cartCount > 0 && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+            {cartCount}
+          </div>
+        )}
       </button>
       <button onClick={() => navigate('/app/bookings')} className={`flex flex-col items-center gap-1.5 transition-colors ${isActive('/bookings') ? 'text-blue-600' : 'text-slate-400'}`}>
         <Calendar className="w-6 h-6" />

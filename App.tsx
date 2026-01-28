@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -58,6 +57,8 @@ const AppContent: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -83,6 +84,8 @@ const AppContent: React.FC = () => {
     setProducts(safeHydrate('121_products', DEFAULT_PRODUCTS));
     setUsers(safeHydrate('121_users', DEFAULT_USERS));
     setBookings(safeHydrate('121_bookings', DEFAULT_BOOKINGS));
+    setCart(safeHydrate('121_cart', []));
+    setOrders(safeHydrate('121_orders', DEFAULT_ORDERS));
     setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
@@ -97,13 +100,15 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_products', JSON.stringify(products));
       localStorage.setItem('121_users', JSON.stringify(users));
       localStorage.setItem('121_bookings', JSON.stringify(bookings));
+      localStorage.setItem('121_cart', JSON.stringify(cart));
+      localStorage.setItem('121_orders', JSON.stringify(orders));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, currentUser, isLoading]);
 
   // Actions
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
@@ -184,7 +189,62 @@ const AppContent: React.FC = () => {
     showToast('Product unlisted', 'info');
   };
 
+  const onAddToCart = (item: CartItem) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.productId === item.productId && i.size === item.size);
+      if (existing) {
+        return prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + item.quantity } : i);
+      }
+      return [...prev, item];
+    });
+  };
+
+  const updateCartQuantity = (id: string, delta: number) => {
+    setCart(prev => prev.map(i => {
+      if (i.id === id) {
+        const product = products.find(p => p.id === i.productId);
+        const stock = product?.sizeStocks.find(ss => ss.size === i.size)?.quantity || 0;
+        const newQty = Math.max(1, Math.min(i.quantity + delta, stock));
+        if (i.quantity + delta > stock) showToast(`Only ${stock} items available in stock`, 'warning');
+        return { ...i, quantity: newQty };
+      }
+      return i;
+    }));
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(i => i.id !== id));
+  };
+
+  const addOrder = (order: Omit<Order, 'id' | 'createdAt'>) => {
+    const newOrder: Order = {
+      ...order,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: Date.now()
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    setCart([]); // Clear cart after order
+    return newOrder;
+  };
+
+  const updateOrder = (id: string, updates: Partial<Order>) => {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+    const order = orders.find(o => o.id === id);
+    if (updates.status === 'picked-up' && order) {
+      addNotification('Order Picked Up', `Your order ${order.orderNumber} has been marked as picked up.`, 'success', order.userId);
+      showToast('Order marked as picked up', 'success');
+    }
+  };
+
   const registerUser = (userData: Omit<User, 'id' | 'status' | 'createdAt'>) => {
+    // Check if user already exists by email
+    const existing = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+    if (existing) {
+      setCurrentUser(existing);
+      showToast(`Welcome back, ${existing.fullName}!`, 'success');
+      return;
+    }
+
     const newUser: User = {
       ...userData,
       id: Math.random().toString(36).substr(2, 9),
@@ -235,6 +295,7 @@ const AppContent: React.FC = () => {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setCart([]);
     showToast('Logged out of Hub', 'info');
   };
 
@@ -257,6 +318,9 @@ const AppContent: React.FC = () => {
                 classSlots={classSlots}
                 products={products}
                 bookings={bookings}
+                cart={cart}
+                orders={orders}
+                users={users}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
@@ -264,6 +328,10 @@ const AppContent: React.FC = () => {
                 onDeleteUser={deleteUser}
                 onAddBooking={onAddBooking}
                 onUpdateBooking={updateBooking}
+                onAddToCart={onAddToCart}
+                updateCartQuantity={updateCartQuantity}
+                removeFromCart={removeFromCart}
+                onAddOrder={addOrder}
               />
             } 
           />
@@ -301,6 +369,8 @@ const AppContent: React.FC = () => {
                 onDeleteUser={deleteUser}
                 bookings={bookings}
                 onUpdateBooking={updateBooking}
+                orders={orders}
+                onUpdateOrder={updateOrder}
               />
             } 
           />

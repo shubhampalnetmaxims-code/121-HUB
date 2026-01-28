@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order } from '../types';
 import { LayoutDashboard } from 'lucide-react';
 import EntryView from './app/EntryView';
 import HomeView from './app/HomeView';
@@ -14,6 +14,8 @@ import OnboardingFlow from './app/OnboardingFlow';
 import ProfileView from './app/ProfileView';
 import MyPaymentsView from './app/MyPaymentsView';
 import MyBookingsView from './app/MyBookingsView';
+import CartView from './app/CartView';
+import MyOrdersView from './app/MyOrdersView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -31,6 +33,9 @@ interface AppHubProps {
   classSlots: ClassSlot[];
   products: Product[];
   bookings: Booking[];
+  cart: CartItem[];
+  orders: Order[];
+  users: User[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
@@ -38,17 +43,23 @@ interface AppHubProps {
   onDeleteUser: (id: string) => void;
   onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
   onUpdateBooking: (id: string, updates: Partial<Booking>) => void;
+  onAddToCart: (item: CartItem) => void;
+  updateCartQuantity: (id: string, delta: number) => void;
+  removeFromCart: (id: string) => void;
+  onAddOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
-  facilities, classes, trainers, locations, classSlots, products, bookings,
-  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, onUpdateBooking
+  facilities, classes, trainers, locations, classSlots, products, bookings, cart, orders, users,
+  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, onUpdateBooking,
+  onAddToCart, updateCartQuantity, removeFromCart, onAddOrder
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedInfoFacility, setSelectedInfoFacility] = useState<Facility | null>(null);
 
-  const showBottomNav = !['/app', '/app/', '/app/onboarding'].includes(location.pathname);
+  // Hide bottom nav on Entry, Onboarding, and Cart pages
+  const showBottomNav = !['/app', '/app/', '/app/onboarding', '/app/cart'].includes(location.pathname);
 
   const handleAuthTrigger = () => {
     // Capture current path to return after login
@@ -62,15 +73,16 @@ const AppHub: React.FC<AppHubProps> = ({
         <div className="h-full">
           <Routes>
             <Route index element={<EntryView />} />
-            <Route path="onboarding" element={<OnboardingFlow onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />
+            <Route path="onboarding" element={<OnboardingFlow users={users} onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />
             <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
-            <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
-            {/* Fix: Pass missing required props to ProfileView */}
-            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
+            <Route path="cart" element={<CartView cart={cart} updateQuantity={updateCartQuantity} remove={removeFromCart} currentUser={currentUser} onAddOrder={onAddOrder} onAuthTrigger={handleAuthTrigger} onUpdateUser={onUpdateUser} />} />
+            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
+            <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
             <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} trainers={trainers} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
-            <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
+            <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route 
               path="facility/:id/timetable" 
@@ -96,7 +108,7 @@ const AppHub: React.FC<AppHubProps> = ({
           </Routes>
         </div>
 
-        {showBottomNav && <BottomNav />}
+        {showBottomNav && <BottomNav cartCount={cart.length} />}
 
         {selectedInfoFacility && (
           <FacilityInfoModal 
