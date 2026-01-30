@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package } from 'lucide-react';
-import { User as UserType, Booking, Class, Facility, Order, UserPass } from '../../types';
+import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package, CheckCircle2 } from 'lucide-react';
+import { User as UserType, Booking, Class, Facility, Order, UserPass, BlockBooking, BlockWeeklyPayment, Block } from '../../types';
 import { useToast } from '../ToastContext';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -12,18 +13,21 @@ interface UserDetailViewProps {
   facilities: Facility[];
   orders: Order[];
   userPasses: UserPass[];
+  blockBookings: BlockBooking[];
+  blockPayments: BlockWeeklyPayment[];
+  blocks: Block[];
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
   onDeleteUser: (id: string) => void;
   onOpenSidebar: () => void;
 }
 
 const UserDetailView: React.FC<UserDetailViewProps> = ({ 
-  users, bookings, classes, facilities, orders, userPasses, onUpdateUser, onDeleteUser, onOpenSidebar 
+  users, bookings, classes, facilities, orders, userPasses, blockBookings, blockPayments, blocks, onUpdateUser, onDeleteUser, onOpenSidebar 
 }) => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes' | 'blocks'>('profile');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const user = users.find(u => u.id === userId);
@@ -40,6 +44,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   const userBookings = bookings.filter(b => b.userId === user.id).sort((a, b) => b.bookingDate - a.bookingDate);
   const userOrders = orders.filter(o => o.userId === user.id).sort((a, b) => b.createdAt - a.createdAt);
   const userPurchasedPasses = userPasses.filter(up => up.userId === user.id).sort((a, b) => b.purchasedAt - a.purchasedAt);
+  const userBBookings = blockBookings.filter(bb => bb.userId === user.id).sort((a, b) => b.createdAt - a.createdAt);
 
   const handleDelete = () => {
     onDeleteUser(user.id);
@@ -50,7 +55,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   const TabButton = ({ id, label, icon: Icon }: { id: typeof activeTab, label: string, icon: any }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-6 py-4 text-sm font-bold border-b-2 transition-all ${
+      className={`flex items-center gap-2 px-6 py-4 text-sm font-bold border-b-2 transition-all shrink-0 ${
         activeTab === id ? 'border-black text-black' : 'border-transparent text-slate-400 hover:text-slate-600'
       }`}
     >
@@ -84,7 +89,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-slate-900">{user.fullName}</h3>
+            <h3 className="text-2xl font-bold text-slate-900 leading-tight uppercase">{user.fullName}</h3>
             <div className="flex items-center gap-3 mt-1">
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                 user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
@@ -97,13 +102,13 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
           <div className="flex gap-2">
             <button 
               onClick={() => onUpdateUser(user.id, { status: user.status === 'active' ? 'blocked' : 'active' })}
-              className="px-4 py-2 border border-slate-200 text-sm font-bold rounded hover:bg-slate-50"
+              className="px-4 py-2 border border-slate-200 text-sm font-bold rounded hover:bg-slate-50 transition-colors"
             >
               {user.status === 'active' ? 'Block User' : 'Unblock User'}
             </button>
             <button 
               onClick={() => setIsDeleteConfirmOpen(true)}
-              className="px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded hover:bg-red-100"
+              className="px-4 py-2 bg-red-50 text-red-600 text-sm font-bold rounded hover:bg-red-100 transition-colors"
             >
               Delete
             </button>
@@ -114,6 +119,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
         <div className="flex border-b border-slate-200 mb-8 overflow-x-auto scrollbar-hide">
           <TabButton id="profile" label="Profile" icon={UserCheck} />
           <TabButton id="bookings" label="Bookings" icon={Calendar} />
+          <TabButton id="blocks" label="Blocks" icon={Layers} />
           <TabButton id="orders" label="Orders" icon={ShoppingBag} />
           <TabButton id="passes" label="Passes" icon={Ticket} />
         </div>
@@ -142,7 +148,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
               </div>
               
               <div className="pt-8 border-t border-slate-100">
-                <h4 className="text-sm font-bold text-slate-900 mb-4">Account Metadata</h4>
+                <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-tight">Account Metadata</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="p-4 bg-slate-50 border border-slate-200">
                     <p className="text-[10px] text-slate-400 font-bold uppercase">System User ID</p>
@@ -174,16 +180,16 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                     <tr key={b.id} className="hover:bg-slate-50 transition-colors text-sm">
                       <td className="px-6 py-4 font-mono text-xs text-slate-400">{b.id.substr(0, 8)}</td>
                       <td className="px-6 py-4">
-                        <p className="font-bold text-slate-900">{classes.find(c => c.id === b.classId)?.name || 'Bulk Credit'}</p>
-                        <p className="text-xs text-slate-400">{facilities.find(f => f.id === b.facilityId)?.name}</p>
+                        <p className="font-bold text-slate-900 uppercase tracking-tight">{classes.find(c => c.id === b.classId)?.name || 'Bulk Credit'}</p>
+                        <p className="text-xs text-slate-400 font-medium">{facilities.find(f => f.id === b.facilityId)?.name}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium">{new Date(b.bookingDate).toLocaleDateString()}</p>
-                        <p className="text-xs text-slate-400">{b.startTime}</p>
+                        <p className="font-medium text-slate-700">{new Date(b.bookingDate).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase">{b.startTime}</p>
                       </td>
-                      <td className="px-6 py-4 font-bold text-slate-900">${b.amount.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-black text-slate-900">${b.amount.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
                           b.status === 'upcoming' ? 'bg-blue-50 text-blue-700' :
                           b.status === 'delivered' ? 'bg-green-50 text-green-700' :
                           'bg-red-50 text-red-700'
@@ -193,10 +199,97 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={5} className="py-20 text-center text-slate-400">No bookings found.</td></tr>
+                    <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-bold italic uppercase text-xs tracking-widest">No regular bookings found.</td></tr>
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {activeTab === 'blocks' && (
+            <div className="p-8 space-y-12 animate-in fade-in duration-300">
+              {userBBookings.length > 0 ? userBBookings.map(bb => {
+                const block = blocks.find(b => b.id === bb.blockId);
+                const fac = facilities.find(f => f.id === bb.facilityId);
+                const payments = blockPayments.filter(p => p.blockBookingId === bb.id).sort((a, b) => a.weekNumber - b.weekNumber);
+                const totalPaid = payments.filter(p => p.status === 'paid').length;
+                const progress = block ? (totalPaid / block.numWeeks) * 100 : 0;
+
+                return (
+                  <div key={bb.id} className="bg-slate-50 border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+                    <div className="p-8 bg-white border-b border-slate-200 flex justify-between items-start">
+                       <div>
+                          <div className="flex items-center gap-2 mb-2">
+                             <Layers className="w-5 h-5 text-blue-600" />
+                             <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">{fac?.name}</span>
+                          </div>
+                          <h4 className="text-2xl font-black text-slate-900 tracking-tight uppercase leading-none">{block?.name}</h4>
+                          <p className="text-sm font-bold text-slate-400 mt-2">Enrolled: {new Date(bb.createdAt).toLocaleDateString()}</p>
+                       </div>
+                       <div className="text-right">
+                          <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${bb.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                             {bb.status}
+                          </span>
+                       </div>
+                    </div>
+
+                    <div className="p-8 grid grid-cols-1 xl:grid-cols-2 gap-12">
+                       <section className="space-y-6">
+                          <div>
+                            <div className="flex justify-between items-end mb-3">
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Program Progression</p>
+                               <p className="text-xl font-black text-slate-900 uppercase">Week {totalPaid} <span className="text-sm text-slate-300">/ {block?.numWeeks}</span></p>
+                            </div>
+                            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                               <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${progress}%` }} />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 pt-4">
+                             <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Start Date</p>
+                                <p className="font-bold text-slate-900">{new Date(bb.startDate).toLocaleDateString()}</p>
+                             </div>
+                             <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Participants</p>
+                                <p className="font-bold text-slate-900">{bb.participantNames.length}</p>
+                             </div>
+                          </div>
+                       </section>
+
+                       <section className="space-y-4">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Payment Ledger</p>
+                          <div className="max-h-[240px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
+                             {payments.map(p => (
+                               <div key={p.id} className="bg-white p-4 rounded-xl border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-all">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-black text-[10px] text-slate-400">W{p.weekNumber}</div>
+                                     <div>
+                                        <p className="text-sm font-bold text-slate-900">Installment</p>
+                                        <p className="text-[10px] font-medium text-slate-400">Due: {new Date(p.dueDate).toLocaleDateString()}</p>
+                                     </div>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="font-black text-slate-900 text-sm">${p.amount.toFixed(2)}</p>
+                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${p.status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                        {p.status}
+                                     </span>
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+                       </section>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className="py-20 text-center space-y-4">
+                   <div className="w-16 h-16 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto border border-slate-100">
+                      <Layers className="w-8 h-8" />
+                   </div>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No enrolled transformation blocks found.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -207,6 +300,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                   <tr className="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase border-b border-slate-200">
                     <th className="px-6 py-4">Order Number</th>
                     <th className="px-6 py-4">Facility</th>
+                    <th className="px-6 py-4">Items Count</th>
                     <th className="px-6 py-4">Total</th>
                     <th className="px-6 py-4">Status</th>
                   </tr>
@@ -214,19 +308,20 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                 <tbody className="divide-y divide-slate-100">
                   {userOrders.length > 0 ? userOrders.map(o => (
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors text-sm">
-                      <td className="px-6 py-4 font-bold text-slate-900">{o.orderNumber}</td>
-                      <td className="px-6 py-4 text-slate-500">{facilities.find(f => f.id === o.facilityId)?.name}</td>
-                      <td className="px-6 py-4 font-bold text-slate-900">${o.total.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-black text-slate-900 uppercase tracking-tighter">{o.orderNumber}</td>
+                      <td className="px-6 py-4 text-slate-500 font-medium">{facilities.find(f => f.id === o.facilityId)?.name}</td>
+                      <td className="px-6 py-4 text-slate-900 font-bold">{o.items.length} Units</td>
+                      <td className="px-6 py-4 font-black text-blue-600">${o.total.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
                           o.status === 'placed' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
                         }`}>
-                          {o.status === 'placed' ? 'Placed' : 'Picked Up'}
+                          {o.status === 'placed' ? 'Placed' : 'Fulfilled'}
                         </span>
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} className="py-20 text-center text-slate-400">No orders found.</td></tr>
+                    <tr><td colSpan={5} className="py-20 text-center text-slate-400 font-bold italic uppercase text-xs tracking-widest">No order history found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -240,18 +335,18 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                   <tr className="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase border-b border-slate-200">
                     <th className="px-6 py-4">Pass Name</th>
                     <th className="px-6 py-4">Facility</th>
-                    <th className="px-6 py-4">Credits Remaining</th>
+                    <th className="px-6 py-4">Credits Ledger</th>
                     <th className="px-6 py-4">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {userPurchasedPasses.length > 0 ? userPurchasedPasses.map(up => (
                     <tr key={up.id} className="hover:bg-slate-50 transition-colors text-sm">
-                      <td className="px-6 py-4 font-bold text-slate-900">{up.name}</td>
-                      <td className="px-6 py-4 text-slate-500">{facilities.find(f => f.id === up.facilityId)?.name}</td>
-                      <td className="px-6 py-4 font-bold text-blue-600">{up.remainingCredits} / {up.totalCredits}</td>
+                      <td className="px-6 py-4 font-bold text-slate-900 uppercase tracking-tight">{up.name}</td>
+                      <td className="px-6 py-4 text-slate-500 font-medium">{facilities.find(f => f.id === up.facilityId)?.name}</td>
+                      <td className="px-6 py-4 font-black text-blue-600">{up.remainingCredits} <span className="text-[10px] text-slate-300">/ {up.totalCredits}</span></td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
                           up.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                         }`}>
                           {up.status}
@@ -259,7 +354,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} className="py-20 text-center text-slate-400">No passes found.</td></tr>
+                    <tr><td colSpan={4} className="py-20 text-center text-slate-400 font-bold italic uppercase text-xs tracking-widest">No bulk passes owned.</td></tr>
                   )}
                 </tbody>
               </table>

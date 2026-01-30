@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -61,6 +61,9 @@ const AppContent: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [passes, setPasses] = useState<Pass[]>([]);
   const [userPasses, setUserPasses] = useState<UserPass[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [blockBookings, setBlockBookings] = useState<BlockBooking[]>([]);
+  const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -89,6 +92,9 @@ const AppContent: React.FC = () => {
     setOrders(safeHydrate('121_orders', DEFAULT_ORDERS));
     setPasses(safeHydrate('121_passes', DEFAULT_PASSES));
     setUserPasses(safeHydrate('121_user_passes', []));
+    setBlocks(safeHydrate('121_blocks', DEFAULT_BLOCKS));
+    setBlockBookings(safeHydrate('121_block_bookings', DEFAULT_BLOCK_BOOKINGS));
+    setBlockPayments(safeHydrate('121_block_payments', DEFAULT_BLOCK_PAYMENTS));
     setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
@@ -107,13 +113,16 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_orders', JSON.stringify(orders));
       localStorage.setItem('121_passes', JSON.stringify(passes));
       localStorage.setItem('121_user_passes', JSON.stringify(userPasses));
+      localStorage.setItem('121_blocks', JSON.stringify(blocks));
+      localStorage.setItem('121_block_bookings', JSON.stringify(blockBookings));
+      localStorage.setItem('121_block_payments', JSON.stringify(blockPayments));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, blocks, blockBookings, blockPayments, currentUser, isLoading]);
 
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
     setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
@@ -139,6 +148,70 @@ const AppContent: React.FC = () => {
   const deleteClass = (id: string) => {
     setClasses(prev => prev.filter(c => c.id !== id));
     showToast('Class deleted', 'info');
+  };
+
+  const addBlock = (data: Omit<Block, 'id' | 'createdAt'>) => {
+    setBlocks(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
+    showToast('Block created', 'success');
+  };
+  const updateBlock = (id: string, updates: Partial<Block>) => {
+    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+    showToast('Block updated', 'success');
+  };
+  const deleteBlock = (id: string) => {
+    const hasBookings = blockBookings.some(bb => bb.blockId === id);
+    if (hasBookings) {
+      showToast('Cannot delete block with active bookings', 'error');
+      return;
+    }
+    setBlocks(prev => prev.filter(b => b.id !== id));
+    showToast('Block deleted', 'info');
+  };
+
+  const bookBlock = (block: Block, participantNames: string[]) => {
+    if (!currentUser) return;
+    const newBB: BlockBooking = {
+      id: Math.random().toString(36).substr(2, 9),
+      blockId: block.id,
+      userId: currentUser.id,
+      userName: currentUser.fullName,
+      userEmail: currentUser.email,
+      facilityId: block.facilityId,
+      trainerId: block.trainerId,
+      startDate: block.startDate,
+      participantNames,
+      bookingAmountPaid: true,
+      status: 'upcoming',
+      createdAt: Date.now()
+    };
+    
+    // Generate weekly payments
+    const newPayments: BlockWeeklyPayment[] = [];
+    for (let i = 1; i <= block.numWeeks; i++) {
+      newPayments.push({
+        id: Math.random().toString(36).substr(2, 9),
+        blockBookingId: newBB.id,
+        userId: currentUser.id,
+        weekNumber: i,
+        amount: block.weeklyAmount,
+        dueDate: block.startDate + (i - 1) * 7 * 86400000,
+        status: 'pending'
+      });
+    }
+
+    setBlockBookings(prev => [...prev, newBB]);
+    setBlockPayments(prev => [...prev, ...newPayments]);
+    showToast('Block joined successfully!', 'success');
+    addNotification('Block Joined', `You joined ${block.name}. Booking amount paid.`, 'success', currentUser.id);
+  };
+
+  const payWeeklyBlock = (paymentId: string) => {
+    setBlockPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status: 'paid', paidAt: Date.now() } : p));
+    showToast('Weekly installment paid', 'success');
+  };
+
+  const updateBlockBooking = (id: string, updates: Partial<BlockBooking>) => {
+    setBlockBookings(prev => prev.map(bb => bb.id === id ? { ...bb, ...updates } : bb));
   };
 
   const addTrainer = (data: Omit<Trainer, 'id' | 'createdAt'>) => {
@@ -280,7 +353,7 @@ const AppContent: React.FC = () => {
 
   const updateOrder = (id: string, updates: Partial<Order>) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
-    const order = orders.find(o => o.id === id);
+    const order = orders.find(o => i => o.id === id);
     if (updates.status === 'picked-up' && order) {
       addNotification('Order Picked Up', `Your order ${order.orderNumber} is ready.`, 'success', order.userId);
       showToast('Order marked as picked up', 'success');
@@ -371,6 +444,9 @@ const AppContent: React.FC = () => {
                 users={users}
                 passes={passes}
                 userPasses={userPasses}
+                blocks={blocks}
+                blockBookings={blockBookings}
+                blockPayments={blockPayments}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
@@ -384,6 +460,8 @@ const AppContent: React.FC = () => {
                 onAddOrder={addOrder}
                 onBuyPass={buyPass}
                 onUsePass={usePass}
+                onBookBlock={bookBlock}
+                onPayWeeklyBlock={payWeeklyBlock}
               />
             } 
           />
@@ -420,6 +498,10 @@ const AppContent: React.FC = () => {
                 onAddPass={addPass}
                 onUpdatePass={updatePass}
                 onDeletePass={deletePass}
+                blocks={blocks}
+                onAddBlock={addBlock}
+                onUpdateBlock={updateBlock}
+                onDeleteBlock={deleteBlock}
                 users={users}
                 onUpdateUser={updateUser}
                 onDeleteUser={deleteUser}
@@ -427,6 +509,8 @@ const AppContent: React.FC = () => {
                 onUpdateBooking={updateBooking}
                 orders={orders}
                 onUpdateOrder={updateOrder}
+                blockBookings={blockBookings}
+                blockPayments={blockPayments}
                 userPasses={userPasses}
               />
             } 

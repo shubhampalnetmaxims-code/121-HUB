@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment } from '../types';
 import { LayoutDashboard } from 'lucide-react';
 import EntryView from './app/EntryView';
 import HomeView from './app/HomeView';
@@ -16,9 +16,11 @@ import MyPaymentsView from './app/MyPaymentsView';
 import MyBookingsView from './app/MyBookingsView';
 import CartView from './app/CartView';
 import MyOrdersView from './app/MyOrdersView';
-// Fix: Added missing pass-related view imports
 import MyPassesView from './app/MyPassesView';
 import PassListView from './app/PassListView';
+// Fix: Corrected import paths for block views
+import BlockListView from './app/BlockListView';
+import BlockDetailView from './app/BlockDetailView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -28,6 +30,7 @@ const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render
   return <>{render(f)}</>;
 };
 
+// Fix: Added missing block-related properties to AppHubProps interface
 interface AppHubProps {
   facilities: Facility[];
   classes: Class[];
@@ -39,9 +42,11 @@ interface AppHubProps {
   cart: CartItem[];
   orders: Order[];
   users: User[];
-  // Fix: Added missing pass-related data props to interface
   passes: Pass[];
   userPasses: UserPass[];
+  blocks: Block[];
+  blockBookings: BlockBooking[];
+  blockPayments: BlockWeeklyPayment[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
@@ -53,16 +58,16 @@ interface AppHubProps {
   updateCartQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
   onAddOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
-  // Fix: Added missing pass-related callback props to interface
   onBuyPass: (pass: Pass) => void;
   onUsePass: (userPassId: string, credits: number) => void;
+  onBookBlock: (block: Block, participants: string[]) => void;
+  onPayWeeklyBlock: (paymentId: string) => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
   facilities, classes, trainers, locations, classSlots, products, bookings, cart, orders, users,
-  // Fix: Destructured pass-related props
-  passes, userPasses, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, onUpdateBooking,
-  onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass
+  passes, userPasses, blocks, blockBookings, blockPayments, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
+  onUpdateBooking, onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass, onBookBlock, onPayWeeklyBlock
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,14 +94,15 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
-            {/* Fix: Added profile/passes route */}
             <Route path="profile/passes" element={<MyPassesView currentUser={currentUser} userPasses={userPasses} facilities={facilities} classes={classes} />} />
-            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} trainers={trainers} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} />} />
+            {/* Fix: Added missing properties to MyBookingsView route element */}
+            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
-            {/* Fix: Added facility-specific passes route and onUpdateUser prop */}
             <Route path="facility/:id/passes" element={<PassListView facilities={facilities} passes={passes} onBuyPass={onBuyPass} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
+            <Route path="facility/:id/blocks" element={<BlockListView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
+            <Route path="facility/:id/block/:blockId" element={<BlockDetailView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onBookBlock={onBookBlock} onUpdateUser={onUpdateUser} />} />
             <Route 
               path="facility/:id/timetable" 
               element={
@@ -113,7 +119,6 @@ const AppHub: React.FC<AppHubProps> = ({
                       currentUser={currentUser}
                       onAddBooking={onAddBooking}
                       onUpdateUser={onUpdateUser}
-                      // Fix: Passed down missing pass-related props to AppTimetableView
                       userPasses={userPasses}
                       availablePasses={passes}
                       onBuyPass={onBuyPass}

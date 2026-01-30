@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, LayoutDashboard, Activity, Info, Users, ChevronRight, CalendarDays } from 'lucide-react';
@@ -28,6 +29,29 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
   const hasPasses = facility.features?.includes('passes');
   
   const facilityTrainers = trainers.filter(t => t.facilityIds.includes(facility.id));
+
+  // Helper to handle navigation for dynamic modules
+  const handleModuleNavigation = (moduleId: string) => {
+    switch (moduleId) {
+      case 'classes':
+        navigate(`/app/facility/${id}/classes`);
+        break;
+      case 'blocks':
+        navigate(`/app/facility/${id}/blocks`);
+        break;
+      case 'timetable':
+        navigate(`/app/facility/${id}/timetable`);
+        break;
+      case 'marketplace':
+        navigate(`/app/facility/${id}/market`);
+        break;
+      case 'passes':
+        navigate(`/app/facility/${id}/passes`);
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left">
@@ -82,12 +106,13 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
             )}
 
             {activeModules.map(module => {
+              // Skip modules we already rendered manually above
               if (['timetable', 'marketplace', 'passes'].includes(module.id)) return null;
               const ModuleIcon = IconMap[module.icon] || ShoppingBag;
               return (
                 <button 
                   key={module.id}
-                  onClick={() => module.id === 'classes' ? navigate(`/app/facility/${id}/classes`) : null}
+                  onClick={() => handleModuleNavigation(module.id)}
                   className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
                 >
                   <div className="w-14 h-14 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">

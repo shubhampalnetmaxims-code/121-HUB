@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, Order, Pass, UserPass } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment } from '../types';
 import Sidebar from './admin/Sidebar';
 import FacilitiesView from './admin/FacilitiesView';
 import ClassesView from './admin/ClassesView';
@@ -8,6 +9,7 @@ import StaffView from './admin/StaffView';
 import TimetableView from './admin/TimetableView';
 import MarketplaceView from './admin/MarketplaceView';
 import PassesView from './admin/PassesView';
+import BlocksView from './admin/BlocksView';
 import UsersView from './admin/UsersView';
 import UserDetailView from './admin/UserDetailView';
 import FacilityDetailView from './admin/FacilityDetailView';
@@ -43,6 +45,10 @@ interface AdminPanelProps {
   onAddPass: (p: Omit<Pass, 'id' | 'createdAt'>) => void;
   onUpdatePass: (id: string, updates: Partial<Pass>) => void;
   onDeletePass: (id: string) => void;
+  blocks: Block[];
+  onAddBlock: (b: Omit<Block, 'id' | 'createdAt'>) => void;
+  onUpdateBlock: (id: string, updates: Partial<Block>) => void;
+  onDeleteBlock: (id: string) => void;
   users: User[];
   onUpdateUser: (id: string, updates: Partial<User>) => void;
   onDeleteUser: (id: string) => void;
@@ -50,6 +56,8 @@ interface AdminPanelProps {
   onUpdateBooking: (id: string, updates: Partial<Booking>) => void;
   orders: Order[];
   onUpdateOrder: (id: string, updates: Partial<Order>) => void;
+  blockBookings: BlockBooking[];
+  blockPayments: BlockWeeklyPayment[];
   userPasses: UserPass[];
 }
 
@@ -61,9 +69,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   classSlots, onAddClassSlot, onUpdateClassSlot, onDeleteClassSlot,
   products, onAddProduct, onUpdateProduct, onDeleteProduct,
   passes, onAddPass, onUpdatePass, onDeletePass,
+  blocks, onAddBlock, onUpdateBlock, onDeleteBlock,
   users, onUpdateUser, onDeleteUser,
   bookings, onUpdateBooking,
   orders, onUpdateOrder,
+  blockBookings, blockPayments,
   userPasses
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -74,18 +84,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
       <main className="flex-1 lg:ml-64 bg-slate-50 min-h-screen">
         <Routes>
-          {/* Fix: use 'onDelete' prop instead of 'deleteFacility' which was undefined */}
           <Route index element={<FacilitiesView facilities={facilities} onAdd={onAdd} onUpdate={onUpdate} onDelete={onDelete} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="facility/:id" element={<FacilityDetailView facilities={facilities} onUpdate={onUpdate} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="classes" element={<ClassesView facilities={facilities} classes={classes} onAddClass={onAddClass} onUpdateClass={onUpdateClass} onDeleteClass={onDeleteClass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="staff" element={<StaffView facilities={facilities} trainers={trainers} onAddTrainer={onAddTrainer} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} locations={locations} onAddLocation={onAddLocation} onUpdateLocation={onUpdateLocation} onDeleteLocation={onDeleteLocation} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="users" element={<UsersView users={users} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="user/:userId" element={<UserDetailView users={users} bookings={bookings} classes={classes} facilities={facilities} orders={orders} userPasses={userPasses} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          <Route path="user/:userId" element={<UserDetailView users={users} bookings={bookings} classes={classes} facilities={facilities} orders={orders} userPasses={userPasses} blockBookings={blockBookings} blockPayments={blockPayments} blocks={blocks} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="timetable" element={<TimetableView facilities={facilities} classes={classes} trainers={trainers} locations={locations} classSlots={classSlots} onAddSlot={onAddClassSlot} onUpdateSlot={onUpdateClassSlot} onDeleteSlot={onDeleteClassSlot} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="marketplace" element={<MarketplaceView facilities={facilities} products={products} onAddProduct={onAddProduct} onUpdateProduct={onUpdateProduct} onDeleteProduct={onDeleteProduct} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="passes" element={<PassesView facilities={facilities} classes={classes} passes={passes} onAddPass={onAddPass} onUpdatePass={onUpdatePass} onDeletePass={onDeletePass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="bookings-orders" element={<BookingsOrdersView facilities={facilities} classes={classes} trainers={trainers} locations={locations} bookings={bookings} orders={orders} onUpdateBooking={onUpdateBooking} onUpdateOrder={onUpdateOrder} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="blocks" element={<UnderDevelopment title="Blocks Module" />} />
+          <Route path="blocks" element={<BlocksView facilities={facilities} trainers={trainers} blocks={blocks} onAddBlock={onAddBlock} onUpdateBlock={onUpdateBlock} onDeleteBlock={onDeleteBlock} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          {/* Fix: Added missing blocks={blocks} prop required by BookingsOrdersViewProps defined in components/admin/BookingsOrdersView.tsx */}
+          <Route path="bookings-orders" element={<BookingsOrdersView facilities={facilities} classes={classes} trainers={trainers} locations={locations} bookings={bookings} orders={orders} blockBookings={blockBookings} blockPayments={blockPayments} blocks={blocks} onUpdateBooking={onUpdateBooking} onUpdateOrder={onUpdateOrder} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="memberships" element={<UnderDevelopment title="Memberships Module" />} />
         </Routes>
       </main>

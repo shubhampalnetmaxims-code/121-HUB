@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment } from '../types';
 import { LayoutDashboard } from 'lucide-react';
 import EntryView from './app/EntryView';
 import HomeView from './app/HomeView';
@@ -18,6 +19,8 @@ import CartView from './app/CartView';
 import MyOrdersView from './app/MyOrdersView';
 import MyPassesView from './app/MyPassesView';
 import PassListView from './app/PassListView';
+import BlockListView from './app/BlockListView';
+import BlockDetailView from './app/BlockDetailView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -40,6 +43,9 @@ interface AppHubProps {
   users: User[];
   passes: Pass[];
   userPasses: UserPass[];
+  blocks: Block[];
+  blockBookings: BlockBooking[];
+  blockPayments: BlockWeeklyPayment[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
@@ -53,12 +59,14 @@ interface AppHubProps {
   onAddOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
   onBuyPass: (pass: Pass) => void;
   onUsePass: (userPassId: string, credits: number) => void;
+  onBookBlock: (block: Block, participants: string[]) => void;
+  onPayWeeklyBlock: (paymentId: string) => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
   facilities, classes, trainers, locations, classSlots, products, bookings, cart, orders, users,
-  passes, userPasses, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
-  onUpdateBooking, onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass
+  passes, userPasses, blocks, blockBookings, blockPayments, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
+  onUpdateBooking, onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass, onBookBlock, onPayWeeklyBlock
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,15 +90,17 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
             <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="cart" element={<CartView cart={cart} updateQuantity={updateCartQuantity} remove={removeFromCart} currentUser={currentUser} onAddOrder={onAddOrder} onAuthTrigger={handleAuthTrigger} onUpdateUser={onUpdateUser} />} />
-            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
             <Route path="profile/passes" element={<MyPassesView currentUser={currentUser} userPasses={userPasses} facilities={facilities} classes={classes} />} />
-            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} trainers={trainers} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
-            <Route path="facility/:id/passes" element={<PassListView facilities={facilities} passes={passes} onBuyPass={onBuyPass} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
+            <Route path="facility/:id/passes" element={<PassListView facilities={facilities} passes={passes} onBuyPass={onBuyPass} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
+            <Route path="facility/:id/blocks" element={<BlockListView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
+            <Route path="facility/:id/block/:blockId" element={<BlockDetailView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onBookBlock={onBookBlock} onUpdateUser={onUpdateUser} />} />
             <Route 
               path="facility/:id/timetable" 
               element={
