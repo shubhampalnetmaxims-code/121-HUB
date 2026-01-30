@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
-import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck, DollarSign } from 'lucide-react';
-import { ClassSlot, Class, Trainer, Location, User as UserType, Booking } from '../../types';
+import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck, DollarSign, Ticket, Check } from 'lucide-react';
+import { ClassSlot, Class, Trainer, Location, User as UserType, Booking, UserPass, Pass } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
 import BookingPreviewModal from './BookingPreviewModal';
@@ -16,6 +15,10 @@ interface AppClassSlotViewModalProps {
   currentUser: UserType | null;
   onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
+  userPasses: UserPass[];
+  availablePasses: Pass[];
+  onBuyPass: (p: Pass) => void;
+  onUsePass: (userPassId: string, credits: number) => void;
 }
 
 const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel: () => void }) => (
@@ -35,7 +38,8 @@ const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel
 );
 
 const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({ 
-  slot, cls, trainer, location, onClose, onAuthTrigger, currentUser, onAddBooking, onUpdateUser
+  slot, cls, trainer, location, onClose, onAuthTrigger, currentUser, onAddBooking, onUpdateUser,
+  userPasses, availablePasses, onBuyPass, onUsePass
 }) => {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
@@ -45,8 +49,27 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
   
-  // Simulated per-person limit
+  // Pass Selection States
+  const [selectedUserPassId, setSelectedUserPassId] = useState<string>('');
+  const [selectedNewPassId, setSelectedNewPassId] = useState<string>('');
+  
   const MAX_PER_PERSON = 4;
+
+  const validUserPasses = userPasses.filter(up => {
+    if (up.userId !== currentUser?.id) return false;
+    if (up.facilityId !== slot.facilityId) return false;
+    if (up.status !== 'active' || up.remainingCredits < personCount) return false;
+    if (!up.isAllClasses && !up.allowedClassIds.includes(slot.classId)) return false;
+    if (up.personsPerBooking < personCount) return false;
+    return true;
+  });
+
+  const validAvailablePasses = availablePasses.filter(p => {
+    if (p.facilityId !== slot.facilityId || p.status !== 'active') return false;
+    if (!p.isAllClasses && !p.allowedClassIds.includes(slot.classId)) return false;
+    if (p.personsPerBooking < personCount) return false;
+    return true;
+  });
 
   const handlePersonCountChange = (count: number) => {
     const newCount = Math.max(1, Math.min(count, MAX_PER_PERSON));
@@ -58,6 +81,10 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
       newNames.length = newCount;
     }
     setNames(newNames);
+    
+    // Reset pass selections as they might now be invalid due to person count
+    setSelectedUserPassId('');
+    setSelectedNewPassId('');
   };
 
   const handlePreview = () => {
@@ -140,7 +167,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
             <p className="font-extrabold text-slate-900 leading-none mb-1">{location?.name || 'TBA'}</p>
             <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">On-site</p>
           </div>
-          {cls?.pricePerSession !== undefined && (
+          {cls?.pricePerSession !== undefined && !selectedUserPassId && !selectedNewPassId && (
             <div className="p-5 bg-blue-50 border border-blue-100 rounded-[28px] col-span-2">
               <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="w-4 h-4 text-blue-600" />
@@ -151,6 +178,69 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
             </div>
           )}
         </div>
+
+        {/* Pass Suggestions Selection */}
+        {currentUser && (validUserPasses.length > 0 || validAvailablePasses.length > 0) && (
+          <section className="space-y-4">
+             <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Payment Method Selection</h5>
+             
+             {/* Use Existing Pass */}
+             {validUserPasses.length > 0 && (
+               <div className="space-y-2">
+                 <p className="text-[8px] font-black text-slate-300 uppercase px-1">Use Existing Credits</p>
+                 {validUserPasses.map(up => (
+                   <button 
+                    key={up.id} 
+                    onClick={() => { setSelectedUserPassId(up.id); setSelectedNewPassId(''); }}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${selectedUserPassId === up.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white'}`}
+                   >
+                     <div className="flex items-center gap-3">
+                        <Ticket className="w-5 h-5 text-blue-600" />
+                        <div className="text-left">
+                          <p className="font-bold text-sm text-slate-900 leading-none mb-1">{up.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase">Credits: {up.remainingCredits} / {up.totalCredits}</p>
+                        </div>
+                     </div>
+                     {selectedUserPassId === up.id && <Check className="w-4 h-4 text-blue-600" />}
+                   </button>
+                 ))}
+               </div>
+             )}
+
+             {/* Buy New Pass */}
+             {validAvailablePasses.length > 0 && (
+               <div className="space-y-2">
+                 <p className="text-[8px] font-black text-slate-300 uppercase px-1">Buy New Pass & Book</p>
+                 {validAvailablePasses.map(p => (
+                   <button 
+                    key={p.id} 
+                    onClick={() => { setSelectedNewPassId(p.id); setSelectedUserPassId(''); }}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${selectedNewPassId === p.id ? 'border-green-600 bg-green-50' : 'border-slate-100 bg-white'}`}
+                   >
+                     <div className="flex items-center gap-3">
+                        <Ticket className="w-5 h-5 text-green-600" />
+                        <div className="text-left">
+                          <p className="font-bold text-sm text-slate-900 leading-none mb-1">{p.name}</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase">{p.credits} Credits • ${p.price}</p>
+                        </div>
+                     </div>
+                     {selectedNewPassId === p.id && <Check className="w-4 h-4 text-green-600" />}
+                   </button>
+                 ))}
+               </div>
+             )}
+
+             {/* Standard Pay Button */}
+             {(selectedUserPassId || selectedNewPassId) && (
+                <button 
+                  onClick={() => { setSelectedUserPassId(''); setSelectedNewPassId(''); }}
+                  className="w-full py-2.5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center"
+                >
+                  Switch back to standard session price
+                </button>
+             )}
+          </section>
+        )}
 
         <section className="bg-slate-50 border border-slate-100 rounded-[32px] p-5">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 leading-none">Your Coach</p>
@@ -164,7 +254,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
             </div>
             <div className="text-left">
               <h6 className="font-extrabold text-slate-900 tracking-tight leading-none mb-1">{trainer?.name || 'TBA'}</h6>
-              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Professional</p>
+              <p className="text-[9px] font-bold text-slate-50 uppercase tracking-widest">Professional</p>
             </div>
           </div>
         </section>
@@ -187,7 +277,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
                     <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input 
                       type="text" 
-                      placeholder={`Guest ${idx + 1} Name`} 
+                      placeholder={`Participant ${idx + 1} Name`} 
                       value={name}
                       onChange={(e) => {
                         const newNames = [...names];
@@ -199,10 +289,6 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
                   </div>
                 ))}
             </div>
-
-            <p className="text-[9px] font-bold text-slate-400 uppercase text-center leading-relaxed">
-              Booking policy: Max {MAX_PER_PERSON} guests per session. <br/> Cancellations must be made 24h prior.
-            </p>
           </section>
         ) : (
           <section className="pt-4 border-t border-slate-100">
@@ -218,9 +304,9 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
         <button 
           onClick={handlePreview}
           disabled={slot.status === 'full'}
-          className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl shadow-blue-600/20 active:scale-95 transition-all disabled:opacity-50"
+          className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
         >
-          {slot.status === 'full' ? 'Slot Fully Booked' : 'Preview'}
+          {slot.status === 'full' ? 'Slot Fully Booked' : 'Preview Booking'}
         </button>
       </div>
 
@@ -243,6 +329,10 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           onComplete={handleBookingComplete}
           onAddBooking={onAddBooking}
           onUpdateUser={onUpdateUser}
+          selectedUserPass={userPasses.find(up => up.id === selectedUserPassId)}
+          selectedNewPass={availablePasses.find(p => p.id === selectedNewPassId)}
+          onBuyPass={onBuyPass}
+          onUsePass={onUsePass}
         />
       )}
     </div>

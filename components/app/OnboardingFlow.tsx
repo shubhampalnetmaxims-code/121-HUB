@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Mail, ShieldCheck, User, Phone, CreditCard, ArrowLeft, ArrowRight, Check, Plus, Trash2, Shield } from 'lucide-react';
+import { Mail, ShieldCheck, User, Phone, CreditCard, ArrowLeft, ArrowRight, Check, Plus, Trash2, Shield, Camera, CloudUpload } from 'lucide-react';
 import { User as UserType, PaymentCard } from '../../types';
 import { useToast } from '../ToastContext';
 import CardFormModal from './CardFormModal';
@@ -17,6 +17,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
   const location = useLocation();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<OnboardingStep>('email');
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [isExistingUser, setIsExistingUser] = useState(false);
@@ -25,11 +26,24 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
     fullName: '',
     phone: '',
     gender: 'Other',
+    profilePicture: '',
     otp: ''
   });
   const [paymentCards, setPaymentCards] = useState<PaymentCard[]>([]);
 
   const returnTo = (location.state as any)?.returnTo || '/app/home';
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, profilePicture: reader.result as string }));
+        showToast('Profile picture added', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const nextStep = () => {
     if (step === 'email') {
@@ -54,7 +68,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
       if (isExistingUser) {
         const user = users.find(u => u.email.toLowerCase() === formData.email.toLowerCase());
         if (user) {
-          onComplete(user); // Pass full user back to registerUser which will handle login
+          onComplete(user);
           navigate(returnTo, { replace: true });
         }
       } else {
@@ -82,7 +96,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
       ...cardData,
       id: Math.random().toString(36).substring(2, 9),
       createdAt: Date.now(),
-      // Ensure exclusivity of primary card
       isPrimary: paymentCards.length === 0 ? true : cardData.isPrimary
     };
     
@@ -101,7 +114,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
   const removeCard = (id: string) => {
     setPaymentCards(prev => {
       const filtered = prev.filter(c => c.id !== id);
-      // Auto-primary if only one left
       if (filtered.length === 1) filtered[0].isPrimary = true;
       return filtered;
     });
@@ -113,6 +125,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
       fullName: formData.fullName,
       phone: formData.phone,
       gender: formData.gender,
+      profilePicture: formData.profilePicture,
       paymentMethod: (!skipPayment && paymentCards.length > 0) ? 'added' : 'skipped',
       paymentCards: skipPayment ? [] : paymentCards
     });
@@ -206,11 +219,29 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
         )}
 
         {step === 'details' && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500 pb-8">
             <div>
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">About You</h2>
               <p className="text-slate-500 font-medium leading-relaxed">Let's personalize your hub experience.</p>
             </div>
+
+            <div className="flex justify-center mb-4">
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-24 h-24 rounded-full bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-all"
+              >
+                {formData.profilePicture ? (
+                  <img src={formData.profilePicture} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <Camera className="w-6 h-6 text-slate-400" />
+                    <span className="text-[8px] font-black text-slate-400 uppercase">Photo</span>
+                  </div>
+                )}
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+              </div>
+            </div>
+
             <div className="space-y-4">
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />

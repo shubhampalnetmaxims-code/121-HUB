@@ -78,9 +78,40 @@ export interface Booking {
   persons: number;
   participantNames: string[];
   status: 'upcoming' | 'rescheduled' | 'cancelled' | 'delivered';
-  type: 'class' | 'block';
+  type: 'class' | 'block' | 'pass';
   amount: number;
   createdAt: number;
+  usedPassId?: string;
+}
+
+export interface Pass {
+  id: string;
+  facilityId: string;
+  name: string;
+  price: number;
+  credits: number;
+  personsPerBooking: number;
+  allowedClassIds: string[]; // empty array means "All Classes"
+  isAllClasses: boolean;
+  description: string;
+  quantity: number;
+  status: 'active' | 'inactive';
+  createdAt: number;
+}
+
+export interface UserPass {
+  id: string;
+  userId: string;
+  passId: string;
+  facilityId: string;
+  name: string;
+  remainingCredits: number;
+  totalCredits: number;
+  personsPerBooking: number;
+  isAllClasses: boolean;
+  allowedClassIds: string[];
+  purchasedAt: number;
+  status: 'active' | 'exhausted' | 'expired';
 }
 
 export interface ProductSizeStock {
@@ -148,6 +179,7 @@ export interface User {
   fullName: string;
   phone: string;
   gender: string;
+  profilePicture?: string;
   paymentMethod: 'added' | 'skipped';
   status: 'active' | 'blocked';
   createdAt: number;
@@ -177,8 +209,8 @@ export interface ToastMessage {
 export const FEATURE_MODULES = [
   { id: 'classes', name: 'Classes', icon: 'BookOpen' },
   { id: 'timetable', name: 'Timetable', icon: 'CalendarDays' },
-  { id: 'blocks', name: 'Blocks', icon: 'Layers' },
   { id: 'passes', name: 'Passes', icon: 'Ticket' },
+  { id: 'blocks', name: 'Blocks', icon: 'Layers' },
   { id: 'memberships', name: 'Memberships', icon: 'CreditCard' },
   { id: 'marketplace', name: 'Marketplace', icon: 'ShoppingBag' },
 ];
@@ -204,7 +236,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 100000,
-    features: ['classes', 'timetable', 'memberships', 'marketplace'],
+    features: ['classes', 'timetable', 'memberships', 'marketplace', 'passes'],
     settings: { ...DEFAULT_SETTINGS }
   },
   {
@@ -215,7 +247,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 50000,
-    features: ['classes', 'timetable', 'marketplace'],
+    features: ['classes', 'timetable', 'marketplace', 'passes'],
     settings: { ...DEFAULT_SETTINGS }
   },
   {
@@ -226,7 +258,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 25000,
-    features: ['classes', 'timetable', 'marketplace'],
+    features: ['classes', 'timetable', 'marketplace', 'passes'],
     settings: { ...DEFAULT_SETTINGS }
   }
 ];
@@ -240,7 +272,7 @@ export const DEFAULT_CLASSES: Class[] = [
   { id: 'c5', facilityId: '1', name: 'CrossFit Basics', shortDescription: 'Introduction to varied high-intensity movements.', duration: '1 hour', requirements: 'Towel, Water', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 25, status: 'active' },
   
   // 121 Zen Classes
-  { id: 'z1', facilityId: '2', name: 'Zen Flow', shortDescription: 'Gentle flow focusing on alignment and peace.', duration: '1 hour', requirements: 'Yoga mat', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 20, status: 'active' },
+  { id: 'z1', facilityId: '2', name: 'Zen Flow', shortDescription: 'Gentle flow focusing on alignment and peace.', duration: '1 hour', requirements: 'Yoga mat', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 20, status: 'active' },
   { id: 'z2', facilityId: '2', name: 'Vinyasa Flow', shortDescription: 'Stringing postures together so that you move from one to another.', duration: '1 hour', requirements: 'Yoga mat', level: 'Intermediate', imageUrl: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 22, status: 'active' },
   { id: 'z3', facilityId: '2', name: 'Pilates Core', shortDescription: 'Focus on core strength and full body toning.', duration: '45 mins', requirements: 'Pilates ball', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 18, status: 'active' },
   { id: 'z4', facilityId: '2', name: 'Sound Bath', shortDescription: 'Deep relaxation through acoustic sound healing.', duration: '1 hour', requirements: 'Comfortable wear', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1593810450967-f9c42742e326?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 30, status: 'active' },
@@ -248,6 +280,37 @@ export const DEFAULT_CLASSES: Class[] = [
 
   // 121 Gym Classes
   { id: 'g1', facilityId: '3', name: 'Recovery Room', shortDescription: 'Guided physical recovery using foam rollers and dynamic stretching.', duration: '45 mins', requirements: 'Comfortable gym wear', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1599447421416-3414500d18a5?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 10, status: 'active' }
+];
+
+export const DEFAULT_PASSES: Pass[] = [
+  {
+    id: 'pass1',
+    facilityId: '1',
+    name: 'Fitness 10-Session Pass',
+    price: 120,
+    credits: 10,
+    personsPerBooking: 1,
+    allowedClassIds: [],
+    isAllClasses: true,
+    description: 'Access to any standard class at 121 Fitness. Save 20% over individual bookings.',
+    quantity: 100,
+    status: 'active',
+    createdAt: Date.now()
+  },
+  {
+    id: 'pass2',
+    facilityId: '2',
+    name: 'Zen Duo Yoga Pass',
+    price: 350,
+    credits: 10,
+    personsPerBooking: 2,
+    allowedClassIds: ['z1', 'z2'],
+    isAllClasses: false,
+    description: 'Perfect for partners. 10 sessions of Zen Flow or Vinyasa Flow for 2 persons.',
+    quantity: 50,
+    status: 'active',
+    createdAt: Date.now()
+  }
 ];
 
 export const DEFAULT_TRAINERS: Trainer[] = [
@@ -499,7 +562,7 @@ export const DEFAULT_PRODUCTS: Product[] = [
   { id: 'z-p10', facilityId: '2', name: 'Yoga Grip Socks', price: 18.00, discountPercent: 16, discountedPrice: 15.00, quantity: 45, sizeStocks: [{size: 'S/M', quantity: 45}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Toe-less stability design. Features silicone grip dots to prevent slipping on studio floors.', images: ['https://images.unsplash.com/photo-1562157873-818bc0726f68?q=80&w=400&auto=format&fit=crop'], color: 'Slate' },
   { id: 'z-p11', facilityId: '2', name: 'Essential Oil Set', price: 35.00, quantity: 15, sizeStocks: [{size: '3 x 10ml', quantity: 15}], category: 'Consumables', status: 'active', createdAt: Date.now(), description: 'Lavender, Mint, and Citrus oils. Pure therapeutic grade for diffusion or topical application with carrier oils.', images: ['https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=400&auto=format&fit=crop'] },
   { id: 'z-p12', facilityId: '2', name: 'Meditation Journal', price: 24.00, discountPercent: 25, discountedPrice: 18.00, quantity: 30, sizeStocks: [{size: 'One Size', quantity: 30}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Lined pages for reflection. Includes daily prompts to help you track your journey and cultivate gratitude.', images: ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&auto=format&fit=crop'], color: 'Earth Brown' },
-  { id: 'z-p13', facilityId: '2', name: 'Incense Burner', price: 22.00, quantity: 10, sizeStocks: [{size: 'One Size', quantity: 10}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Handcrafted ceramic. Designed to catch all ash while providing a beautiful aesthetic to your sacred space.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
+  { id: 'z-p13', facilityId: '2', name: 'Incense Burner', price: 22.00, quantity: 10, sizeStocks: [{size: 'One Size', quantity: 10}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Hand handcrafted ceramic. Designed to catch all ash while providing a beautiful aesthetic to your sacred space.', images: ['https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop'], color: 'Black' },
   { id: 'z-p14', facilityId: '2', name: 'Silk Sleep Mask', price: 14.00, quantity: 40, sizeStocks: [{size: 'One Size', quantity: 40}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: '100% pure mulberry silk. Gentle on the skin and completely blocks out light for a restorative rest.', images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=400&auto=format&fit=crop'], color: 'Peach' },
   { id: 'z-p15', facilityId: '2', name: 'Cork Yoga Block', price: 16.00, quantity: 50, sizeStocks: [{size: 'One Size', quantity: 50}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Firm eco-friendly support. Heavier than foam blocks for added stability during challenging balance poses.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'], color: 'Tan' },
   { id: 'z-p16', facilityId: '2', name: 'Bamboo Tote Bag', price: 15.00, discountPercent: 20, discountedPrice: 12.00, quantity: 60, sizeStocks: [{size: 'One Size', quantity: 60}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Sustainable carry-all. Lightweight but strong, perfect for carrying your gear to and from the hub.', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=400&auto=format&fit=crop'], color: 'Off-White' },

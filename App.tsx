@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -16,31 +16,31 @@ const GlobalHeader: React.FC = () => {
   if (isLanding) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md border-b border-slate-200 z-[100] flex items-center justify-between px-6 shadow-sm text-left">
+    <div className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-slate-200 z-[100] flex items-center justify-between px-6 shadow-sm">
       <div className="flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:text-blue-600 transition-colors">
-          <div className="bg-black text-white px-2 py-0.5 rounded text-sm">121</div>
+        <Link to="/" className="flex items-center gap-2 font-bold text-lg hover:text-blue-600 transition-colors">
+          <div className="bg-black text-white px-1.5 py-0.5 rounded text-xs">121</div>
           <span className="hidden sm:inline">Platform</span>
         </Link>
-        <nav className="flex gap-1">
+        <nav className="flex gap-2">
           <Link 
             to="/app" 
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${location.pathname.startsWith('/app') ? 'bg-black text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${location.pathname.startsWith('/app') ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
           >
             <Layout className="w-4 h-4" />
             User App
           </Link>
           <Link 
             to="/admin" 
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${location.pathname.startsWith('/admin') ? 'bg-black text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${location.pathname.startsWith('/admin') ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
           >
             <ShieldCheck className="w-4 h-4" />
             Admin
           </Link>
         </nav>
       </div>
-      <div className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-        Development Environment
+      <div className="hidden md:flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        Dashboard
       </div>
     </div>
   );
@@ -59,10 +59,11 @@ const AppContent: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [passes, setPasses] = useState<Pass[]>([]);
+  const [userPasses, setUserPasses] = useState<UserPass[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper for safe data hydration
   const safeHydrate = <T,>(key: string, fallback: T): T => {
     try {
       const stored = localStorage.getItem(key);
@@ -86,6 +87,8 @@ const AppContent: React.FC = () => {
     setBookings(safeHydrate('121_bookings', DEFAULT_BOOKINGS));
     setCart(safeHydrate('121_cart', []));
     setOrders(safeHydrate('121_orders', DEFAULT_ORDERS));
+    setPasses(safeHydrate('121_passes', DEFAULT_PASSES));
+    setUserPasses(safeHydrate('121_user_passes', []));
     setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
@@ -102,22 +105,23 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_bookings', JSON.stringify(bookings));
       localStorage.setItem('121_cart', JSON.stringify(cart));
       localStorage.setItem('121_orders', JSON.stringify(orders));
+      localStorage.setItem('121_passes', JSON.stringify(passes));
+      localStorage.setItem('121_user_passes', JSON.stringify(userPasses));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, currentUser, isLoading]);
 
-  // Actions
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
     setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
-    showToast('Facility added successfully', 'success');
+    showToast('Facility added', 'success');
   };
   const updateFacility = (id: string, updates: Partial<Facility>) => {
     setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
-    showToast('Facility profile updated', 'success');
+    showToast('Facility updated', 'success');
   };
   const deleteFacility = (id: string) => {
     setFacilities(prev => prev.filter(f => f.id !== id));
@@ -126,7 +130,7 @@ const AppContent: React.FC = () => {
 
   const addClass = (data: Omit<Class, 'id' | 'createdAt'>) => {
     setClasses(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Class created successfully', 'success');
+    showToast('Class created', 'success');
   };
   const updateClass = (id: string, updates: Partial<Class>) => {
     setClasses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
@@ -139,11 +143,11 @@ const AppContent: React.FC = () => {
 
   const addTrainer = (data: Omit<Trainer, 'id' | 'createdAt'>) => {
     setTrainers(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Trainer profile added', 'success');
+    showToast('Trainer added', 'success');
   };
   const updateTrainer = (id: string, updates: Partial<Trainer>) => {
     setTrainers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    showToast('Trainer profile updated', 'success');
+    showToast('Trainer updated', 'success');
   };
   const deleteTrainer = (id: string) => {
     setTrainers(prev => prev.filter(t => t.id !== id));
@@ -152,20 +156,20 @@ const AppContent: React.FC = () => {
 
   const addLocation = (data: Omit<StaffLocation, 'id' | 'createdAt'>) => {
     setLocations(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Area infrastructure saved', 'success');
+    showToast('Location saved', 'success');
   };
   const updateLocation = (id: string, updates: Partial<StaffLocation>) => {
     setLocations(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
-    showToast('Area updated', 'success');
+    showToast('Location updated', 'success');
   };
   const deleteLocation = (id: string) => {
     setLocations(prev => prev.filter(l => l.id !== id));
-    showToast('Area removed', 'info');
+    showToast('Location removed', 'info');
   };
 
   const addClassSlot = (data: Omit<ClassSlot, 'id'>) => {
     setClassSlots(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9) }]);
-    showToast('Timetable slot added', 'success');
+    showToast('Slot added', 'success');
   };
   const updateClassSlot = (id: string, updates: Partial<ClassSlot>) => {
     setClassSlots(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
@@ -178,15 +182,63 @@ const AppContent: React.FC = () => {
 
   const addProduct = (data: Omit<Product, 'id' | 'createdAt'>) => {
     setProducts(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Product listed in market', 'success');
+    showToast('Product added', 'success');
   };
   const updateProduct = (id: string, updates: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    showToast('Product details updated', 'success');
+    showToast('Product updated', 'success');
   };
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
-    showToast('Product unlisted', 'info');
+    showToast('Product removed', 'info');
+  };
+
+  const addPass = (data: Omit<Pass, 'id' | 'createdAt'>) => {
+    setPasses(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
+    showToast('Pass created', 'success');
+  };
+  const updatePass = (id: string, updates: Partial<Pass>) => {
+    setPasses(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    showToast('Pass updated', 'success');
+  };
+  const deletePass = (id: string) => {
+    setPasses(prev => prev.filter(p => p.id !== id));
+    showToast('Pass removed', 'info');
+  };
+
+  const buyPass = (pass: Pass) => {
+    if (!currentUser) return;
+    const newUserPass: UserPass = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId: currentUser.id,
+      passId: pass.id,
+      facilityId: pass.facilityId,
+      name: pass.name,
+      totalCredits: pass.credits,
+      remainingCredits: pass.credits,
+      personsPerBooking: pass.personsPerBooking,
+      isAllClasses: pass.isAllClasses,
+      allowedClassIds: pass.allowedClassIds,
+      purchasedAt: Date.now(),
+      status: 'active'
+    };
+    setUserPasses(prev => [...prev, newUserPass]);
+    showToast('Pass purchased!', 'success');
+    addNotification('Pass Purchased', `You bought ${pass.name}. Ready to use!`, 'success', currentUser.id);
+  };
+
+  const usePass = (userPassId: string, credits: number) => {
+    setUserPasses(prev => prev.map(p => {
+      if (p.id === userPassId) {
+        const remaining = p.remainingCredits - credits;
+        return { 
+          ...p, 
+          remainingCredits: remaining,
+          status: remaining <= 0 ? 'exhausted' : p.status
+        };
+      }
+      return p;
+    }));
   };
 
   const onAddToCart = (item: CartItem) => {
@@ -205,7 +257,6 @@ const AppContent: React.FC = () => {
         const product = products.find(p => p.id === i.productId);
         const stock = product?.sizeStocks.find(ss => ss.size === i.size)?.quantity || 0;
         const newQty = Math.max(1, Math.min(i.quantity + delta, stock));
-        if (i.quantity + delta > stock) showToast(`Only ${stock} items available in stock`, 'warning');
         return { ...i, quantity: newQty };
       }
       return i;
@@ -223,7 +274,7 @@ const AppContent: React.FC = () => {
       createdAt: Date.now()
     };
     setOrders(prev => [newOrder, ...prev]);
-    setCart([]); // Clear cart after order
+    setCart([]);
     return newOrder;
   };
 
@@ -231,17 +282,16 @@ const AppContent: React.FC = () => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
     const order = orders.find(o => o.id === id);
     if (updates.status === 'picked-up' && order) {
-      addNotification('Order Picked Up', `Your order ${order.orderNumber} has been marked as picked up.`, 'success', order.userId);
+      addNotification('Order Picked Up', `Your order ${order.orderNumber} is ready.`, 'success', order.userId);
       showToast('Order marked as picked up', 'success');
     }
   };
 
   const registerUser = (userData: Omit<User, 'id' | 'status' | 'createdAt'>) => {
-    // Check if user already exists by email
     const existing = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
     if (existing) {
       setCurrentUser(existing);
-      showToast(`Welcome back, ${existing.fullName}!`, 'success');
+      showToast(`Welcome back, ${existing.fullName}`, 'success');
       return;
     }
 
@@ -254,8 +304,8 @@ const AppContent: React.FC = () => {
     };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
-    showToast(`Welcome to 121, ${userData.fullName}!`, 'success');
-    addNotification('New User Registered', `${userData.fullName} has joined the platform via app onboarding.`, 'success', 'admin');
+    showToast(`Welcome, ${userData.fullName}`, 'success');
+    addNotification('New Member', `${userData.fullName} joined the platform.`, 'success', 'admin');
   };
 
   const updateUser = (id: string, updates: Partial<User>) => {
@@ -263,18 +313,16 @@ const AppContent: React.FC = () => {
     if (currentUser?.id === id) {
       setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
     }
-    if (updates.status === 'blocked') showToast('User access restricted', 'warning');
-    else if (updates.status === 'active') showToast('User access restored', 'success');
-    else showToast('User details updated', 'success');
+    showToast('Profile updated', 'success');
   };
 
   const deleteUser = (id: string) => {
     setUsers(prev => prev.filter(u => u.id !== id));
     if (currentUser?.id === id) {
       setCurrentUser(null);
-      showToast('Account permanently deleted', 'info');
+      showToast('Account deleted', 'info');
     } else {
-      showToast('Member account removed', 'info');
+      showToast('Member removed', 'info');
     }
   };
 
@@ -290,16 +338,16 @@ const AppContent: React.FC = () => {
 
   const updateBooking = (id: string, updates: Partial<Booking>) => {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-    showToast('Booking record updated', 'success');
+    showToast('Booking updated', 'success');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setCart([]);
-    showToast('Logged out of Hub', 'info');
+    showToast('Logged out', 'info');
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-semibold text-slate-400">Loading...</div>;
 
   return (
     <HashRouter>
@@ -321,6 +369,8 @@ const AppContent: React.FC = () => {
                 cart={cart}
                 orders={orders}
                 users={users}
+                passes={passes}
+                userPasses={userPasses}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
@@ -332,6 +382,8 @@ const AppContent: React.FC = () => {
                 updateCartQuantity={updateCartQuantity}
                 removeFromCart={removeFromCart}
                 onAddOrder={addOrder}
+                onBuyPass={buyPass}
+                onUsePass={usePass}
               />
             } 
           />
@@ -364,6 +416,10 @@ const AppContent: React.FC = () => {
                 onAddProduct={addProduct}
                 onUpdateProduct={updateProduct}
                 onDeleteProduct={deleteProduct}
+                passes={passes}
+                onAddPass={addPass}
+                onUpdatePass={updatePass}
+                onDeletePass={deletePass}
                 users={users}
                 onUpdateUser={updateUser}
                 onDeleteUser={deleteUser}
@@ -371,6 +427,7 @@ const AppContent: React.FC = () => {
                 onUpdateBooking={updateBooking}
                 orders={orders}
                 onUpdateOrder={updateOrder}
+                userPasses={userPasses}
               />
             } 
           />

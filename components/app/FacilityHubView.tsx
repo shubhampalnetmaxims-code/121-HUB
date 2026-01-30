@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, LayoutDashboard, Activity, Info, Users, ChevronRight, CalendarDays } from 'lucide-react';
@@ -26,6 +25,7 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
   const activeModules = FEATURE_MODULES.filter(m => facility.features?.includes(m.id));
   const hasTimetable = facility.features?.includes('timetable');
   const hasMarketplace = facility.features?.includes('marketplace');
+  const hasPasses = facility.features?.includes('passes');
   
   const facilityTrainers = trainers.filter(t => t.facilityIds.includes(facility.id));
 
@@ -69,8 +69,20 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
               </button>
             )}
 
+            {hasPasses && (
+              <button 
+                onClick={() => navigate(`/app/facility/${id}/passes`)}
+                className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
+              >
+                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Ticket className="w-7 h-7" />
+                </div>
+                <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Passes</span>
+              </button>
+            )}
+
             {activeModules.map(module => {
-              if (module.id === 'timetable' || module.id === 'marketplace') return null;
+              if (['timetable', 'marketplace', 'passes'].includes(module.id)) return null;
               const ModuleIcon = IconMap[module.icon] || ShoppingBag;
               return (
                 <button 
@@ -78,23 +90,13 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                   onClick={() => module.id === 'classes' ? navigate(`/app/facility/${id}/classes`) : null}
                   className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
                 >
-                  <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-14 h-14 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     <ModuleIcon className="w-7 h-7" />
                   </div>
                   <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">{module.name}</span>
                 </button>
               );
             })}
-            
-            {activeModules.length === 0 && !hasTimetable && !hasMarketplace && (
-               <div className="col-span-2 bg-white rounded-[40px] p-12 text-center border border-slate-100">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-200">
-                  <LayoutDashboard className="w-8 h-8" />
-                </div>
-                <p className="font-bold text-slate-400">Hub is quiet...</p>
-                <p className="text-xs text-slate-400 mt-1">Visit later for new digital services at this location.</p>
-              </div>
-            )}
           </div>
         </section>
 
@@ -129,16 +131,6 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
              </div>
           </section>
         )}
-
-        <section>
-           <div className="bg-slate-900 rounded-[32px] p-6 text-white overflow-hidden relative text-left min-h-[140px] flex flex-col justify-center">
-             <div className="relative z-10">
-               <h4 className="font-bold text-lg mb-1 tracking-tight">Personal Training</h4>
-               <p className="text-white/60 text-xs leading-relaxed max-w-[200px]">Unlock new possibilities with 1-on-1 coaching at this hub.</p>
-             </div>
-             <Activity className="absolute -right-6 -bottom-6 w-32 h-32 text-white/5 rotate-12" />
-           </div>
-        </section>
       </div>
 
       <button 

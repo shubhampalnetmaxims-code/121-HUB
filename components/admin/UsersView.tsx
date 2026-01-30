@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search, User, Mail, Phone, Ban, Trash2, CheckCircle } from 'lucide-react';
+import { Menu, Search, User, Mail, Phone, Ban, Trash2, CheckCircle, ChevronRight } from 'lucide-react';
 import { User as UserType } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -46,106 +45,93 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
               <Menu className="w-6 h-6" />
             </button>
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900">Platform Users</h2>
-              <p className="text-slate-500 text-xs md:text-sm">Manage member access and profiles.</p>
+              <h2 className="text-xl font-bold text-slate-900">Platform Users</h2>
+              <p className="text-slate-500 text-xs">View and manage all registered members.</p>
             </div>
           </div>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search members..." 
+              placeholder="Search by name or email..." 
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none w-full md:w-80"
+              className="pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none w-full md:w-80"
             />
           </div>
         </div>
       </header>
 
       <div className="p-4 md:p-8 pb-24">
-        <div className="bg-white rounded-[40px] border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-white border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                  <th className="px-8 py-5">User Profile</th>
-                  <th className="px-8 py-5">Contact Info</th>
-                  <th className="px-8 py-5">Status</th>
-                  <th className="px-8 py-5">Payment</th>
-                  <th className="px-8 py-5 text-right">Actions</th>
+                <tr className="bg-slate-50 text-slate-500 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                  <th className="px-6 py-4">User</th>
+                  <th className="px-6 py-4">Contact</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-200">
                 {filteredUsers.length > 0 ? filteredUsers.map(u => (
                   <tr 
                     key={u.id} 
-                    className="hover:bg-slate-50/50 transition-colors group cursor-pointer" 
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group" 
                     onClick={() => navigate(`/admin/user/${u.id}`)}
                   >
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                          <User className="w-6 h-6" />
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center shrink-0 border border-slate-200">
+                          {u.profilePicture ? (
+                            <img src={u.profilePicture} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <User className="w-5 h-5 text-slate-300" />
+                          )}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900">{u.fullName}</p>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{u.gender}</p>
+                          <p className="font-semibold text-slate-900 leading-tight">{u.fullName}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{u.gender}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Mail className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-sm font-medium text-slate-600">{u.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-slate-300" />
-                        <span className="text-xs text-slate-400 font-bold">{u.phone}</span>
-                      </div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-slate-600">{u.email}</div>
+                      <div className="text-xs text-slate-400 font-medium mt-0.5">{u.phone}</div>
                     </td>
-                    <td className="px-8 py-6">
-                      <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${
-                        u.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                        u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                       }`}>
                         {u.status}
                       </span>
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2">
-                        {u.paymentMethod === 'added' ? (
-                          <>
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                            <span className="text-xs font-bold text-slate-500">Method Added</span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-4 h-4 rounded-full border-2 border-slate-200" />
-                            <span className="text-xs font-bold text-slate-300 italic">Skipped</span>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 text-right">
-                      <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <button 
                           onClick={() => setBlockingUser(u)}
-                          className={`p-2 rounded-xl transition-all ${
-                            u.status === 'active' ? 'text-slate-400 hover:text-red-600 hover:bg-red-50' : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
-                          }`}
-                          title={u.status === 'active' ? 'Block User' : 'Unblock User'}
+                          className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded transition-all"
+                          title={u.status === 'active' ? 'Block' : 'Unblock'}
                         >
                           <Ban className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setDeletingUser(u)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all" title="Delete Account">
+                        <button 
+                          onClick={() => setDeletingUser(u)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded transition-all"
+                          title="Delete"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                        <div className="p-2 text-slate-300 group-hover:text-slate-900 transition-colors">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
                       </div>
                     </td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={5} className="py-20 text-center text-slate-400 font-bold italic">No members found.</td>
+                    <td colSpan={4} className="py-20 text-center text-slate-400 text-sm font-medium">No members found.</td>
                   </tr>
                 )}
               </tbody>
@@ -159,7 +145,7 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
           title={blockingUser.status === 'active' ? "Block User?" : "Unblock User?"}
           message={`Are you sure you want to ${blockingUser.status === 'active' ? 'block access for' : 'restore access for'} ${blockingUser.fullName}?`}
           variant={blockingUser.status === 'active' ? "warning" : "primary"}
-          confirmText={blockingUser.status === 'active' ? "Block User" : "Restore User"}
+          confirmText={blockingUser.status === 'active' ? "Block" : "Restore"}
           onConfirm={confirmBlock}
           onCancel={() => setBlockingUser(null)}
         />
@@ -167,10 +153,10 @@ const UsersView: React.FC<UsersViewProps> = ({ users, onUpdateUser, onDeleteUser
 
       {deletingUser && (
         <ConfirmationModal
-          title="Permanently Delete Account?"
-          message={`Are you sure you want to completely remove "${deletingUser.fullName}" and all their records from the platform? This cannot be undone.`}
+          title="Delete Account?"
+          message={`Delete "${deletingUser.fullName}"? All records will be removed. This cannot be undone.`}
           variant="danger"
-          confirmText="Delete Account"
+          confirmText="Delete"
           onConfirm={confirmDelete}
           onCancel={() => setDeletingUser(null)}
         />

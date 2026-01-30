@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Filter, Calendar as CalendarIcon, Layout, ArrowLeft, Tag, Eye, CheckCircle2 } from 'lucide-react';
-import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK, User, Booking } from '../../types';
+import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK, User, Booking, UserPass, Pass } from '../../types';
 import AppClassSlotViewModal from './AppClassSlotViewModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -15,10 +14,15 @@ interface AppTimetableViewProps {
   currentUser: User | null;
   onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
+  userPasses: UserPass[];
+  availablePasses: Pass[];
+  onBuyPass: (p: Pass) => void;
+  onUsePass: (userPassId: string, credits: number) => void;
 }
 
 const AppTimetableView: React.FC<AppTimetableViewProps> = ({
-  facility, classes, trainers, locations, classSlots, onAuthTrigger, currentUser, onAddBooking, onUpdateUser
+  facility, classes, trainers, locations, classSlots, onAuthTrigger, currentUser, onAddBooking, onUpdateUser,
+  userPasses, availablePasses, onBuyPass, onUsePass
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -228,6 +232,10 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
           currentUser={currentUser}
           onAddBooking={onAddBooking}
           onUpdateUser={onUpdateUser}
+          userPasses={userPasses}
+          availablePasses={availablePasses}
+          onBuyPass={onBuyPass}
+          onUsePass={onUsePass}
         />
       )}
     </div>

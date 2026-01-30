@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Dumbbell, Info, MapPin, ArrowRight } from 'lucide-react';
@@ -22,21 +21,21 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
   const unreadCount = userNotifs.filter(n => !n.isRead).length;
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
-      <div className="p-6 pt-12 flex justify-between items-center border-b border-slate-50">
-        <div className="text-left">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Experience</h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">121 Active Network</p>
+    <div className="h-full flex flex-col bg-white overflow-hidden text-left">
+      <div className="p-6 pt-10 flex justify-between items-center border-b border-slate-100">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">Facilities</h2>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Active Locations</p>
         </div>
         <div className="flex gap-2">
-          <button className="p-3 rounded-2xl bg-slate-50 border border-slate-100"><Search className="w-5 h-5 text-slate-400" /></button>
+          <button className="p-2.5 rounded-lg bg-slate-50 border border-slate-200"><Search className="w-4 h-4 text-slate-400" /></button>
           <button 
             onClick={() => setIsNotifOpen(true)}
-            className="p-3 rounded-2xl bg-slate-50 border border-slate-100 relative"
+            className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 relative"
           >
-            <Bell className="w-5 h-5 text-slate-400" />
+            <Bell className="w-4 h-4 text-slate-400" />
             {unreadCount > 0 && (
-              <div className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center border-2 border-white">
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                 {unreadCount}
               </div>
             )}
@@ -44,65 +43,57 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 pb-28 space-y-8">
-        <section>
-          <div className="flex justify-between items-center mb-5 px-1">
-            <h3 className="font-bold text-xl text-slate-900">Our Facilities</h3>
-          </div>
-          
-          <div className="flex flex-col gap-8">
-            {filteredFacilities.map(f => (
-              <div 
-                key={f.id} 
-                className="bg-white rounded-[40px] overflow-hidden shadow-2xl shadow-slate-200 border border-slate-100 group transition-all"
-              >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
-                  {f.imageUrl ? (
-                    <img 
-                      src={f.imageUrl} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      alt={f.name}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-blue-600 bg-blue-50">
-                      <Dumbbell className="w-12 h-12" />
-                    </div>
-                  )}
-                  
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-
-                  <button 
-                    className="absolute top-5 right-5 p-4 rounded-full bg-white shadow-2xl text-blue-600 hover:bg-slate-50 transition-all z-10 active:scale-90"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onShowInfo(f);
-                    }}
-                  >
-                    <Info className="w-6 h-6" />
-                  </button>
-
-                  <div className="absolute bottom-6 left-8 text-left">
-                    <h4 className="text-white font-extrabold text-3xl drop-shadow-lg tracking-tight">{f.name}</h4>
-                    <div className="flex items-center gap-1.5 text-white/70 text-[10px] font-bold uppercase tracking-[0.2em]">
-                       <MapPin className="w-3 h-3" /> Digital Member Hub
-                    </div>
-                  </div>
+      <div className="flex-1 overflow-y-auto p-5 pb-24 space-y-6 scrollbar-hide">
+        {filteredFacilities.map(f => (
+          <div 
+            key={f.id} 
+            className="bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm"
+          >
+            <div className="relative aspect-video w-full bg-slate-100">
+              {f.imageUrl ? (
+                <img 
+                  src={f.imageUrl} 
+                  className="w-full h-full object-cover" 
+                  alt={f.name}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-blue-600 bg-blue-50/50">
+                  <Dumbbell className="w-10 h-10" />
                 </div>
+              )}
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
 
-                <div className="p-6 flex justify-between items-center bg-white">
-                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Touch ⓘ for profile</span>
-                   <button 
-                    onClick={() => navigate(`/app/facility/${f.id}`)}
-                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3.5 rounded-[20px] font-extrabold text-sm shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
-                   >
-                     Go Inside
-                     <ArrowRight className="w-4 h-4" />
-                   </button>
+              <button 
+                className="absolute top-4 right-4 p-2.5 rounded-lg bg-white/90 backdrop-blur shadow-md text-slate-900 transition-all active:scale-90"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowInfo(f);
+                }}
+              >
+                <Info className="w-4 h-4" />
+              </button>
+
+              <div className="absolute bottom-4 left-6">
+                <h4 className="text-white font-bold text-xl tracking-tight leading-none mb-1">{f.name}</h4>
+                <div className="flex items-center gap-1.5 text-white/80 text-[9px] font-bold uppercase tracking-wider">
+                   <MapPin className="w-2.5 h-2.5" /> 121 Wellness Network
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="p-4 flex justify-between items-center bg-white">
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Digital Hub</span>
+               <button 
+                onClick={() => navigate(`/app/facility/${f.id}`)}
+                className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-black transition-all"
+               >
+                 Open Hub
+                 <ArrowRight className="w-4 h-4" />
+               </button>
+            </div>
           </div>
-        </section>
+        ))}
       </div>
 
       {isNotifOpen && (

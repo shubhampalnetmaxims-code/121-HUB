@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User as UserType, Booking, Facility, Class, Order } from '../../types';
-import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ChevronRight, ShieldCheck, AlertTriangle, FileText } from 'lucide-react';
+import { User as UserType, Booking, Facility, Class, Order, UserPass } from '../../types';
+import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ChevronRight, ShieldCheck, AlertTriangle, FileText, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileViewProps {
@@ -12,9 +12,13 @@ interface ProfileViewProps {
   onLogout: () => void;
   onDeleteAccount: (id: string) => void;
   onAuthTrigger: () => void;
+  userPasses?: UserPass[];
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facilities, classes, orders, onLogout, onDeleteAccount, onAuthTrigger }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ 
+  currentUser, bookings, facilities, classes, orders, onLogout, onDeleteAccount, onAuthTrigger,
+  userPasses = [] 
+}) => {
   const navigate = useNavigate();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
@@ -59,6 +63,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
 
   const primaryCard = currentUser.paymentCards?.find(c => c.isPrimary);
   const userOrders = orders.filter(o => o.userId === currentUser.id);
+  const activePassesCount = userPasses.filter(p => p.userId === currentUser.id && p.status === 'active').length;
 
   return (
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
@@ -69,8 +74,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
       <div className="flex-1 overflow-y-auto p-5 space-y-8 pb-32 scrollbar-hide">
         <section className="bg-white p-6 rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden">
           <div className="flex items-center gap-5 relative z-10">
-            <div className="w-16 h-16 rounded-[24px] bg-blue-600 text-white flex items-center justify-center shadow-xl shadow-blue-500/20">
-              <span className="text-2xl font-black uppercase">{currentUser.fullName.charAt(0)}</span>
+            <div className="w-16 h-16 rounded-[24px] bg-slate-100 overflow-hidden flex items-center justify-center shadow-xl">
+              {currentUser.profilePicture ? (
+                <img src={currentUser.profilePicture} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-black uppercase text-slate-400">{currentUser.fullName.charAt(0)}</span>
+              )}
             </div>
             <div className="flex-1 overflow-hidden">
               <h3 className="text-xl font-black text-slate-900 tracking-tight truncate leading-tight">{currentUser.fullName}</h3>
@@ -105,7 +114,12 @@ const ProfileView: React.FC<ProfileViewProps> = ({ currentUser, bookings, facili
             sublabel={primaryCard ? `Default: ${primaryCard.brand} ${primaryCard.cardNumber.slice(-4)}` : 'Add Card'} 
             onClick={() => navigate('/app/profile/payments')}
           />
-          <ProfileMenuItem icon={Ticket} label="Memberships & Passes" sublabel="Active Subscriptions" />
+          <ProfileMenuItem 
+            icon={Ticket} 
+            label="Memberships & Passes" 
+            sublabel={activePassesCount > 0 ? `${activePassesCount} Active Passes` : "No active passes"} 
+            onClick={() => navigate('/app/profile/passes')}
+          />
         </section>
 
         <section className="pt-4 space-y-3">
