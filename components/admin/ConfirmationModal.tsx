@@ -22,37 +22,37 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   variant = 'primary'
 }) => {
   const variantStyles = {
-    danger: 'bg-red-600 hover:bg-red-700 shadow-red-500/20',
-    primary: 'bg-black hover:bg-slate-800 shadow-black/10',
-    warning: 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
+    danger: 'bg-red-600 hover:bg-red-700 shadow-red-600/10',
+    primary: 'bg-slate-900 hover:bg-black shadow-black/10',
+    warning: 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/10'
   };
 
   const iconStyles = {
-    danger: 'bg-red-50 text-red-600',
-    primary: 'bg-blue-50 text-blue-600',
-    warning: 'bg-amber-50 text-amber-500'
+    danger: 'bg-red-50 text-red-600 border-red-100',
+    primary: 'bg-blue-50 text-blue-600 border-blue-100',
+    warning: 'bg-amber-50 text-amber-600 border-amber-100'
   };
 
   return (
     <div className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
-      <div className="bg-white rounded-[40px] p-8 text-center space-y-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto ${iconStyles[variant]}`}>
-          <AlertTriangle className="w-8 h-8" />
+      <div className="bg-white rounded-lg p-8 text-center space-y-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-200">
+        <div className={`w-14 h-14 rounded-md border flex items-center justify-center mx-auto ${iconStyles[variant]} shadow-sm`}>
+          <AlertTriangle className="w-6 h-6" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h3>
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase">{title}</h3>
           <p className="text-slate-500 text-sm font-medium leading-relaxed">{message}</p>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2 pt-2">
           <button 
             onClick={onConfirm} 
-            className={`w-full py-4 text-white rounded-2xl font-black shadow-xl transition-all active:scale-95 ${variantStyles[variant]}`}
+            className={`w-full py-3 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-md transition-all active:scale-95 ${variantStyles[variant]}`}
           >
             {confirmText}
           </button>
           <button 
             onClick={onCancel} 
-            className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors"
+            className="w-full py-3 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-600 transition-colors"
           >
             {cancelText}
           </button>
