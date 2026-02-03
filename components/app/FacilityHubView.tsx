@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, LayoutDashboard, Activity, Info, Users, ChevronRight, CalendarDays } from 'lucide-react';
@@ -27,10 +26,10 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
   const hasTimetable = facility.features?.includes('timetable');
   const hasMarketplace = facility.features?.includes('marketplace');
   const hasPasses = facility.features?.includes('passes');
+  const hasMemberships = facility.features?.includes('memberships');
   
   const facilityTrainers = trainers.filter(t => t.facilityIds.includes(facility.id));
 
-  // Helper to handle navigation for dynamic modules
   const handleModuleNavigation = (moduleId: string) => {
     switch (moduleId) {
       case 'classes':
@@ -48,13 +47,16 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
       case 'passes':
         navigate(`/app/facility/${id}/passes`);
         break;
+      case 'memberships':
+        navigate(`/app/facility/${id}/memberships`);
+        break;
       default:
         break;
     }
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left">
+    <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 flex items-center gap-4">
         <button onClick={() => navigate('/app/home')} className="p-2 hover:bg-slate-100 rounded-xl">
           <ArrowLeft className="w-5 h-5" />
@@ -93,12 +95,24 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
               </button>
             )}
 
+            {hasMemberships && (
+              <button 
+                onClick={() => navigate(`/app/facility/${id}/memberships`)}
+                className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
+              >
+                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CreditCard className="w-7 h-7" />
+                </div>
+                <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Memberships</span>
+              </button>
+            )}
+
             {hasPasses && (
               <button 
                 onClick={() => navigate(`/app/facility/${id}/passes`)}
                 className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
               >
-                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Ticket className="w-7 h-7" />
                 </div>
                 <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Passes</span>
@@ -107,7 +121,7 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
 
             {activeModules.map(module => {
               // Skip modules we already rendered manually above
-              if (['timetable', 'marketplace', 'passes'].includes(module.id)) return null;
+              if (['timetable', 'marketplace', 'passes', 'memberships'].includes(module.id)) return null;
               const ModuleIcon = IconMap[module.icon] || ShoppingBag;
               return (
                 <button 

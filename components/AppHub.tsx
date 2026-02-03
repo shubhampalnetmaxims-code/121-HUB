@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog } from '../types';
 import { LayoutDashboard } from 'lucide-react';
 import EntryView from './app/EntryView';
 import HomeView from './app/HomeView';
@@ -18,9 +19,15 @@ import CartView from './app/CartView';
 import MyOrdersView from './app/MyOrdersView';
 import MyPassesView from './app/MyPassesView';
 import PassListView from './app/PassListView';
-// Fix: Corrected import paths for block views
+import MembershipListView from './app/MembershipListView';
+import MyMembershipsView from './app/MyMembershipsView';
 import BlockListView from './app/BlockListView';
 import BlockDetailView from './app/BlockDetailView';
+import UnderDevelopmentApp from './app/UnderDevelopmentApp';
+import ActivityView from './app/ActivityView';
+// Fix: Import missing health tracking view components
+import MeasurementsView from './app/MeasurementsView';
+import PhotoLogView from './app/PhotoLogView';
 
 // Helper component to find facility from URL params within the Hub
 const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
@@ -30,7 +37,6 @@ const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render
   return <>{render(f)}</>;
 };
 
-// Fix: Added missing block-related properties to AppHubProps interface
 interface AppHubProps {
   facilities: Facility[];
   classes: Class[];
@@ -44,9 +50,14 @@ interface AppHubProps {
   users: User[];
   passes: Pass[];
   userPasses: UserPass[];
+  memberships: Membership[];
+  userMemberships: UserMembership[];
   blocks: Block[];
   blockBookings: BlockBooking[];
   blockPayments: BlockWeeklyPayment[];
+  // Fix: Added missing health data props to interface
+  measurements: Measurement[];
+  photoLogs: PhotoLog[];
   currentUser: User | null;
   onRegisterUser: (data: Omit<User, 'id' | 'status' | 'createdAt'>) => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
@@ -54,6 +65,10 @@ interface AppHubProps {
   onDeleteUser: (id: string) => void;
   onAddBooking: (b: Omit<Booking, 'id' | 'createdAt'>) => Booking;
   onUpdateBooking: (id: string, updates: Partial<Booking>) => void;
+  // Fix: Added missing update callback props
+  onUpdateBlockBooking: (id: string, updates: Partial<BlockBooking>) => void;
+  onUpdateOrder: (id: string, updates: Partial<Order>) => void;
+  onUpdateUserMembership: (id: string, updates: Partial<UserMembership>) => void;
   onAddToCart: (item: CartItem) => void;
   updateCartQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
@@ -62,12 +77,19 @@ interface AppHubProps {
   onUsePass: (userPassId: string, credits: number) => void;
   onBookBlock: (block: Block, participants: string[]) => void;
   onPayWeeklyBlock: (paymentId: string) => void;
+  onBuyMembership: (m: Membership) => void;
+  // Fix: Added missing health tracking callback props
+  onAddMeasurement: (m: Omit<Measurement, 'id'>) => void;
+  onAddPhotoLog: (p: Omit<PhotoLog, 'id'>) => void;
+  onDeletePhotoLog: (id: string) => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
   facilities, classes, trainers, locations, classSlots, products, bookings, cart, orders, users,
-  passes, userPasses, blocks, blockBookings, blockPayments, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
-  onUpdateBooking, onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass, onBookBlock, onPayWeeklyBlock
+  passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
+  onUpdateBooking, onUpdateBlockBooking, onUpdateOrder, onUpdateUserMembership,
+  onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass, onBookBlock, onPayWeeklyBlock, onBuyMembership,
+  onAddMeasurement, onAddPhotoLog, onDeletePhotoLog
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -91,16 +113,24 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
             <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="cart" element={<CartView cart={cart} updateQuantity={updateCartQuantity} remove={removeFromCart} currentUser={currentUser} onAddOrder={onAddOrder} onAuthTrigger={handleAuthTrigger} onUpdateUser={onUpdateUser} />} />
-            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} />} />
+            <Route path="activity" element={<ActivityView />} />
+            {/* Fix: Use actual tracking views instead of under development placeholders */}
+            <Route path="measurements" element={<MeasurementsView currentUser={currentUser} measurements={measurements} onAddMeasurement={onAddMeasurement} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="photo-logs" element={<PhotoLogView currentUser={currentUser} photoLogs={photoLogs} onAddPhotoLog={onAddPhotoLog} onDeletePhotoLog={onDeletePhotoLog} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="rewards" element={<UnderDevelopmentApp title="Rewards" subtitle="Earn points for your activities and unlock exclusive benefits." />} />
+            {/* Fix: Pass missing userMemberships to ProfileView */}
+            <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} userMemberships={userMemberships} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
             <Route path="profile/passes" element={<MyPassesView currentUser={currentUser} userPasses={userPasses} facilities={facilities} classes={classes} />} />
-            {/* Fix: Added missing properties to MyBookingsView route element */}
-            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} onUpdateBooking={onUpdateBooking} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
+            <Route path="profile/memberships" element={<MyMembershipsView currentUser={currentUser} userMemberships={userMemberships} facilities={facilities} />} />
+            {/* Fix: Pass missing required props to MyBookingsView */}
+            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} userMemberships={userMemberships} orders={orders} onUpdateBooking={onUpdateBooking} onUpdateBlockBooking={onUpdateBlockBooking} onUpdateOrder={onUpdateOrder} onUpdateUserMembership={onUpdateUserMembership} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/passes" element={<PassListView facilities={facilities} passes={passes} onBuyPass={onBuyPass} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
+            <Route path="facility/:id/memberships" element={<MembershipListView facilities={facilities} memberships={memberships} onBuyMembership={onBuyMembership} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id/blocks" element={<BlockListView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/block/:blockId" element={<BlockDetailView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onBookBlock={onBookBlock} onUpdateUser={onUpdateUser} />} />
             <Route 
@@ -131,7 +161,7 @@ const AppHub: React.FC<AppHubProps> = ({
           </Routes>
         </div>
 
-        {showBottomNav && <BottomNav cartCount={cart.length} />}
+        {showBottomNav && <BottomNav />}
 
         {selectedInfoFacility && (
           <FacilityInfoModal 

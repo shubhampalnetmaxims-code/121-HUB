@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -52,10 +51,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <SidebarItem to="/admin/timetable" icon={CalendarDays} label="Timetable" onClick={onClose} />
           <SidebarItem to="/admin/marketplace" icon={ShoppingBag} label="Marketplace" onClick={onClose} />
           <SidebarItem to="/admin/passes" icon={Ticket} label="Passes" onClick={onClose} />
+          <SidebarItem to="/admin/memberships" icon={CreditCard} label="Memberships" onClick={onClose} />
           <SidebarItem to="/admin/blocks" icon={Layers} label="Blocks" onClick={onClose} />
           <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Bookings & Orders" onClick={onClose} />
-          <div className="pt-6 pb-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4">Development</div>
-          <SidebarItem to="/admin/memberships" icon={CreditCard} label="Memberships" disabled onClick={onClose} />
         </nav>
         <Link to="/" className="flex items-center gap-3 px-4 py-4 text-slate-500 hover:text-white transition-all text-sm font-bold border-t border-slate-800 mt-6 shrink-0">
           <ArrowLeft className="w-4 h-4" />

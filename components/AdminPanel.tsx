@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment } from '../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog } from '../types';
 import Sidebar from './admin/Sidebar';
 import FacilitiesView from './admin/FacilitiesView';
 import ClassesView from './admin/ClassesView';
@@ -9,6 +8,7 @@ import StaffView from './admin/StaffView';
 import TimetableView from './admin/TimetableView';
 import MarketplaceView from './admin/MarketplaceView';
 import PassesView from './admin/PassesView';
+import MembershipsView from './admin/MembershipsView';
 import BlocksView from './admin/BlocksView';
 import UsersView from './admin/UsersView';
 import UserDetailView from './admin/UserDetailView';
@@ -45,6 +45,10 @@ interface AdminPanelProps {
   onAddPass: (p: Omit<Pass, 'id' | 'createdAt'>) => void;
   onUpdatePass: (id: string, updates: Partial<Pass>) => void;
   onDeletePass: (id: string) => void;
+  memberships: Membership[];
+  onAddMembership: (m: Omit<Membership, 'id' | 'createdAt'>) => void;
+  onUpdateMembership: (id: string, updates: Partial<Membership>) => void;
+  onDeleteMembership: (id: string) => void;
   blocks: Block[];
   onAddBlock: (b: Omit<Block, 'id' | 'createdAt'>) => void;
   onUpdateBlock: (id: string, updates: Partial<Block>) => void;
@@ -59,6 +63,9 @@ interface AdminPanelProps {
   blockBookings: BlockBooking[];
   blockPayments: BlockWeeklyPayment[];
   userPasses: UserPass[];
+  userMemberships: UserMembership[];
+  measurements: Measurement[];
+  photoLogs: PhotoLog[];
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -69,12 +76,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   classSlots, onAddClassSlot, onUpdateClassSlot, onDeleteClassSlot,
   products, onAddProduct, onUpdateProduct, onDeleteProduct,
   passes, onAddPass, onUpdatePass, onDeletePass,
+  memberships, onAddMembership, onUpdateMembership, onDeleteMembership,
   blocks, onAddBlock, onUpdateBlock, onDeleteBlock,
   users, onUpdateUser, onDeleteUser,
   bookings, onUpdateBooking,
   orders, onUpdateOrder,
   blockBookings, blockPayments,
-  userPasses
+  userPasses, userMemberships,
+  measurements, photoLogs
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -89,14 +98,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           <Route path="classes" element={<ClassesView facilities={facilities} classes={classes} onAddClass={onAddClass} onUpdateClass={onUpdateClass} onDeleteClass={onDeleteClass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="staff" element={<StaffView facilities={facilities} trainers={trainers} onAddTrainer={onAddTrainer} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} locations={locations} onAddLocation={onAddLocation} onUpdateLocation={onUpdateLocation} onDeleteLocation={onDeleteLocation} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="users" element={<UsersView users={users} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="user/:userId" element={<UserDetailView users={users} bookings={bookings} classes={classes} facilities={facilities} orders={orders} userPasses={userPasses} blockBookings={blockBookings} blockPayments={blockPayments} blocks={blocks} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          <Route path="user/:userId" element={<UserDetailView users={users} bookings={bookings} classes={classes} facilities={facilities} orders={orders} userPasses={userPasses} userMemberships={userMemberships} blockBookings={blockBookings} blockPayments={blockPayments} blocks={blocks} measurements={measurements} photoLogs={photoLogs} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="timetable" element={<TimetableView facilities={facilities} classes={classes} trainers={trainers} locations={locations} classSlots={classSlots} onAddSlot={onAddClassSlot} onUpdateSlot={onUpdateClassSlot} onDeleteSlot={onDeleteClassSlot} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="marketplace" element={<MarketplaceView facilities={facilities} products={products} onAddProduct={onAddProduct} onUpdateProduct={onUpdateProduct} onDeleteProduct={onDeleteProduct} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="passes" element={<PassesView facilities={facilities} classes={classes} passes={passes} onAddPass={onAddPass} onUpdatePass={onUpdatePass} onDeletePass={onDeletePass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          <Route path="memberships" element={<MembershipsView facilities={facilities} memberships={memberships} onAddMembership={onAddMembership} onUpdateMembership={onUpdateMembership} onDeleteMembership={onDeleteMembership} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="blocks" element={<BlocksView facilities={facilities} trainers={trainers} blocks={blocks} onAddBlock={onAddBlock} onUpdateBlock={onUpdateBlock} onDeleteBlock={onDeleteBlock} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          {/* Fix: Added missing blocks={blocks} prop required by BookingsOrdersViewProps defined in components/admin/BookingsOrdersView.tsx */}
           <Route path="bookings-orders" element={<BookingsOrdersView facilities={facilities} classes={classes} trainers={trainers} locations={locations} bookings={bookings} orders={orders} blockBookings={blockBookings} blockPayments={blockPayments} blocks={blocks} onUpdateBooking={onUpdateBooking} onUpdateOrder={onUpdateOrder} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="memberships" element={<UnderDevelopment title="Memberships Module" />} />
         </Routes>
       </main>
     </div>

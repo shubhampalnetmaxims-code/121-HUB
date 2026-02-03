@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, FileText } from 'lucide-react';
 import { Facility, FEATURE_MODULES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
 
@@ -26,7 +25,13 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
   const currentSettings = facility.settings || {
     canCancelBooking: true,
     canRescheduleBooking: true,
-    canCancelOrder: true
+    canCancelOrder: true,
+    canCancelMembership: true,
+    canCancelBlock: true,
+    refundPolicyClasses: "",
+    refundPolicyOrders: "",
+    refundPolicyMemberships: "",
+    refundPolicyBlocks: ""
   };
 
   const toggleFeature = (featureId: string) => {
@@ -37,7 +42,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
     onUpdate(facility.id, { features: newFeatures });
   };
 
-  const updateSettings = (key: keyof NonNullable<Facility['settings']>, value: boolean) => {
+  const updateSettings = (key: keyof NonNullable<Facility['settings']>, value: any) => {
     onUpdate(facility.id, {
       settings: { ...currentSettings, [key]: value }
     });
@@ -89,8 +94,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Module Management */}
-        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col h-full">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xs font-black text-left flex items-center gap-3 uppercase tracking-[0.2em] text-slate-400">
               <Settings className="w-4 h-4" /> Enabled Modules
@@ -123,8 +127,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
           </div>
         </section>
 
-        {/* Policies & Actions */}
-        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col h-full">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xs font-black text-left flex items-center gap-3 uppercase tracking-[0.2em] text-slate-400">
               <ShieldCheck className="w-4 h-4" /> Hub Policies
@@ -148,17 +151,85 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
             <PolicyToggle 
               icon={ShoppingCart} 
               label="Cancel Order" 
-              description="Allow members to cancel marketplace item orders before pickup."
+              description="Allow members to cancel marketplace item orders."
               active={currentSettings.canCancelOrder}
               onChange={(v) => updateSettings('canCancelOrder', v)}
+            />
+            <PolicyToggle 
+              icon={CreditCard} 
+              label="Cancel Membership" 
+              description="Allow members to terminate their active subscription plans."
+              active={currentSettings.canCancelMembership}
+              onChange={(v) => updateSettings('canCancelMembership', v)}
+            />
+            <PolicyToggle 
+              icon={Layers} 
+              label="Cancel Block" 
+              description="Allow members to withdraw from transformation programs."
+              active={currentSettings.canCancelBlock}
+              onChange={(v) => updateSettings('canCancelBlock', v)}
             />
           </div>
         </section>
       </div>
 
+      {/* Refund Policies */}
+      <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+             <FileText className="w-4 h-4 text-slate-400" />
+             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Refund Framework</h3>
+          </div>
+          <div className="space-y-4 text-left">
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Class Sessions Refund Rule</label>
+                <textarea 
+                  value={currentSettings.refundPolicyClasses} 
+                  onChange={e => updateSettings('refundPolicyClasses', e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
+                  placeholder="e.g. 100% refund if cancelled 24h prior..."
+                />
+             </div>
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Marketplace Refund Rule</label>
+                <textarea 
+                  value={currentSettings.refundPolicyOrders} 
+                  onChange={e => updateSettings('refundPolicyOrders', e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
+                  placeholder="e.g. No refunds once items are collected..."
+                />
+             </div>
+          </div>
+        </section>
+        
+        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm space-y-6">
+          <div className="pt-10 opacity-0 hidden xl:block border-b border-transparent pb-4" /> {/* Spacer */}
+          <div className="space-y-4 text-left">
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Membership Refund Rule</label>
+                <textarea 
+                  value={currentSettings.refundPolicyMemberships} 
+                  onChange={e => updateSettings('refundPolicyMemberships', e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
+                  placeholder="e.g. Pro-rated refund based on remaining time..."
+                />
+             </div>
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Program Blocks Refund Rule</label>
+                <textarea 
+                  value={currentSettings.refundPolicyBlocks} 
+                  onChange={e => updateSettings('refundPolicyBlocks', e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
+                  placeholder="e.g. Full refund only if program hasn't started..."
+                />
+             </div>
+          </div>
+        </section>
+      </div>
+
       <div className="mt-12 bg-slate-900 rounded-lg p-10 text-white overflow-hidden relative shadow-md">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-           <div className="text-left">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 text-left">
+           <div>
              <h4 className="text-2xl font-black tracking-tight mb-2 uppercase">Global Visibility Control</h4>
              <p className="text-white/60 text-sm max-w-lg leading-relaxed font-medium uppercase tracking-tight">Hidden facilities are only visible to administrators. Toggle live to publish this hub to the global user network.</p>
            </div>

@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package, CheckCircle2, TrendingUp } from 'lucide-react';
-import { User as UserType, Booking, Class, Facility, Order, UserPass, BlockBooking, BlockWeeklyPayment, Block } from '../../types';
+import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package, CheckCircle2, TrendingUp, Activity, Image as ImageIcon } from 'lucide-react';
+import { User as UserType, Booking, Class, Facility, Order, UserPass, UserMembership, BlockBooking, BlockWeeklyPayment, Block, Measurement, PhotoLog } from '../../types';
 import { useToast } from '../ToastContext';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -13,21 +12,38 @@ interface UserDetailViewProps {
   facilities: Facility[];
   orders: Order[];
   userPasses: UserPass[];
+  userMemberships: UserMembership[];
   blockBookings: BlockBooking[];
   blockPayments: BlockWeeklyPayment[];
   blocks: Block[];
+  measurements: Measurement[];
+  photoLogs: PhotoLog[];
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
   onDeleteUser: (id: string) => void;
   onOpenSidebar: () => void;
 }
 
 const UserDetailView: React.FC<UserDetailViewProps> = ({ 
-  users, bookings, classes, facilities, orders, userPasses, blockBookings, blockPayments, blocks, onUpdateUser, onDeleteUser, onOpenSidebar 
+  users = [], 
+  bookings = [], 
+  classes = [], 
+  facilities = [], 
+  orders = [], 
+  userPasses = [], 
+  userMemberships = [], 
+  blockBookings = [], 
+  blockPayments = [], 
+  blocks = [], 
+  measurements = [], 
+  photoLogs = [], 
+  onUpdateUser, 
+  onDeleteUser, 
+  onOpenSidebar 
 }) => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes' | 'blocks'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes' | 'memberships' | 'blocks' | 'health'>('profile');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const user = users.find(u => u.id === userId);
@@ -44,7 +60,10 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   const userBookings = bookings.filter(b => b.userId === user.id).sort((a, b) => b.bookingDate - a.bookingDate);
   const userOrders = orders.filter(o => o.userId === user.id).sort((a, b) => b.createdAt - a.createdAt);
   const userPurchasedPasses = userPasses.filter(up => up.userId === user.id).sort((a, b) => b.purchasedAt - a.purchasedAt);
+  const userPurchasedMemberships = userMemberships.filter(um => um.userId === user.id).sort((a, b) => b.purchasedAt - a.purchasedAt);
   const userBBookings = blockBookings.filter(bb => bb.userId === user.id).sort((a, b) => b.createdAt - a.createdAt);
+  const userMeasurements = measurements.filter(m => m.userId === user.id).sort((a, b) => b.date - a.date);
+  const userPhotos = photoLogs.filter(p => p.userId === user.id).sort((a, b) => b.date - a.date);
 
   const handleDelete = () => {
     onDeleteUser(user.id);
@@ -116,9 +135,11 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
 
         <div className="flex border-b border-slate-200 mb-8 overflow-x-auto scrollbar-hide px-1">
           <TabButton id="profile" label="Details" icon={UserCheck} />
+          <TabButton id="health" label="Health Data" icon={Activity} />
           <TabButton id="bookings" label="Reservations" icon={Calendar} />
-          <TabButton id="blocks" label="Transformations" icon={Layers} />
-          <TabButton id="orders" label="Transactions" icon={ShoppingBag} />
+          <TabButton id="memberships" label="Memberships" icon={ShieldCheck} />
+          <TabButton id="blocks" label="Programs" icon={Layers} />
+          <TabButton id="orders" label="Marketplace" icon={ShoppingBag} />
           <TabButton id="passes" label="Bulk Passes" icon={Ticket} />
         </div>
 
@@ -143,24 +164,58 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                   <p className="text-lg font-bold text-slate-900 tracking-tight">{user.phone}</p>
                 </div>
               </div>
-              
-              <div className="pt-10 border-t border-slate-100">
-                <h4 className="text-[10px] font-black text-slate-900 mb-6 uppercase tracking-[0.3em]">Account Lifecycle Metadata</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-md shadow-xs">
-                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">Subscriber ID</p>
-                    <code className="text-[11px] font-mono font-bold text-slate-600 uppercase tracking-tighter">{user.id}</code>
-                  </div>
-                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-md shadow-xs">
-                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">Financial State</p>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{user.paymentMethod === 'added' ? 'Billing Active' : 'No Source'}</p>
-                  </div>
-                  <div className="p-5 bg-slate-50 border border-slate-200 rounded-md shadow-xs">
-                    <p className="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">Cards Linked</p>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{user.paymentCards?.length || 0} SECURE SOURCE</p>
-                  </div>
-                </div>
-              </div>
+            </div>
+          )}
+
+          {activeTab === 'health' && (
+            <div className="p-8 space-y-10 animate-in fade-in duration-300">
+               <div className="space-y-6">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-2">Measurement Ledger</h4>
+                  {userMeasurements.length > 0 ? (
+                    <div className="overflow-x-auto">
+                       <table className="w-full text-left">
+                          <thead>
+                             <tr className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <th className="px-6 py-4">Date</th>
+                                <th className="px-6 py-4">Weight/Height</th>
+                                <th className="px-6 py-4">BMI</th>
+                                <th className="px-6 py-4">Body Fat %</th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                             {userMeasurements.map(m => (
+                                <tr key={m.id} className="text-sm font-medium">
+                                   <td className="px-6 py-4 text-slate-500">{new Date(m.date).toLocaleDateString()}</td>
+                                   <td className="px-6 py-4">{m.weight}kg / {m.height}cm</td>
+                                   <td className="px-6 py-4 font-black text-blue-600">{m.bmi}</td>
+                                   <td className="px-6 py-4">{m.bodyFatPercentage || '--'}%</td>
+                                </tr>
+                             ))}
+                          </tbody>
+                       </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">No measurements recorded for this user.</p>
+                  )}
+               </div>
+
+               <div className="space-y-6">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-2">Photo Documentation</h4>
+                  {userPhotos.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                       {userPhotos.map(p => (
+                         <div key={p.id} className="aspect-[3/4] bg-slate-50 rounded-lg overflow-hidden border border-slate-100 relative group">
+                            <img src={p.imageUrl} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                               <p className="text-[8px] text-white font-bold uppercase">{new Date(p.date).toLocaleDateString()}</p>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">No photos uploaded by this user.</p>
+                  )}
+               </div>
             </div>
           )}
 
@@ -169,7 +224,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-200">
-                    <th className="px-8 py-5">Transaction Reference</th>
+                    <th className="px-8 py-5">Ref ID</th>
                     <th className="px-8 py-5">Hub Context</th>
                     <th className="px-8 py-5">Scheduled Phase</th>
                     <th className="px-8 py-5">Value</th>
@@ -178,7 +233,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {userBookings.length > 0 ? userBookings.map(b => (
-                    <tr key={b.id} className="hover:bg-slate-50/50 transition-colors text-sm">
+                    <tr key={b.id} className="hover:bg-slate-50/50 transition-colors text-sm text-left">
                       <td className="px-8 py-6 font-mono text-[10px] text-slate-400 tracking-tighter uppercase font-bold">{b.id.substr(0, 12)}</td>
                       <td className="px-8 py-6">
                         <p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{classes.find(c => c.id === b.classId)?.name || 'Credit Unit'}</p>
@@ -207,158 +262,68 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
             </div>
           )}
 
+          {activeTab === 'memberships' && (
+            <div className="overflow-x-auto animate-in fade-in duration-300">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-200">
+                    <th className="px-8 py-5">Plan Title</th>
+                    <th className="px-8 py-5">Hub Context</th>
+                    <th className="px-8 py-5">Validity Cycle</th>
+                    <th className="px-8 py-5">Economic Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  {userPurchasedMemberships.length > 0 ? userPurchasedMemberships.map(um => (
+                    <tr key={um.id} className="hover:bg-slate-50/50 transition-colors text-sm text-left">
+                      <td className="px-8 py-6">
+                        <p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{um.title}</p>
+                        <code className="text-[9px] font-mono text-slate-400 tracking-tighter uppercase">{um.id.substr(0,8)}</code>
+                      </td>
+                      <td className="px-8 py-6">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{facilities.find(f => f.id === um.facilityId)?.name}</p>
+                      </td>
+                      <td className="px-8 py-6">
+                        <p className="font-bold text-slate-700 text-xs uppercase tracking-tight">{new Date(um.startDate).toLocaleDateString()} - {new Date(um.endDate).toLocaleDateString()}</p>
+                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{um.allow24Hour ? '24/7' : `${um.startTime}-${um.endTime}`}</p>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${
+                          Date.now() < um.endDate ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                        }`}>
+                          {Date.now() < um.endDate ? 'Active' : 'Expired'}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={4} className="py-24 text-center text-slate-300 font-black uppercase text-[10px] tracking-[0.4em] italic bg-slate-50/20">Zero Subscription Records</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {activeTab === 'blocks' && (
             <div className="p-8 space-y-10 animate-in fade-in duration-300">
               {userBBookings.length > 0 ? userBBookings.map(bb => {
                 const block = blocks.find(b => b.id === bb.blockId);
-                const fac = facilities.find(f => f.id === bb.facilityId);
                 const payments = blockPayments.filter(p => p.blockBookingId === bb.id).sort((a, b) => a.weekNumber - b.weekNumber);
-                const totalPaid = payments.filter(p => p.status === 'paid').length;
-                const progress = block ? (totalPaid / block.numWeeks) * 100 : 0;
-
                 return (
-                  <div key={bb.id} className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-xs">
+                  <div key={bb.id} className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-xs text-left">
                     <div className="p-6 bg-white border-b border-slate-100 flex justify-between items-start">
                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                             <Layers className="w-4 h-4 text-blue-600" />
-                             <span className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">{fac?.name}</span>
-                          </div>
                           <h4 className="text-xl font-black text-slate-900 tracking-tight uppercase leading-none">{block?.name}</h4>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">ENROLLMENT: {new Date(bb.createdAt).toLocaleDateString()}</p>
                        </div>
-                       <div className="text-right">
-                          <span className={`px-2.5 py-1 rounded-sm text-[9px] font-black uppercase tracking-widest border ${bb.status === 'ongoing' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                             {bb.status}
-                          </span>
-                       </div>
-                    </div>
-
-                    <div className="p-6 grid grid-cols-1 xl:grid-cols-2 gap-10">
-                       <section className="space-y-6">
-                          <div>
-                            <div className="flex justify-between items-end mb-2.5">
-                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">CYCLE PROGRESSION</p>
-                               <p className="text-lg font-black text-slate-900 uppercase">WEEK {totalPaid} <span className="text-xs text-slate-300 font-bold">OF {block?.numWeeks}</span></p>
-                            </div>
-                            <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
-                               <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${progress}%` }} />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-3 pt-2">
-                             <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">COMMENCE</p>
-                                <p className="font-bold text-slate-900 text-xs uppercase tracking-tight">{new Date(bb.startDate).toLocaleDateString()}</p>
-                             </div>
-                             <div className="bg-white p-4 rounded-md border border-slate-200 shadow-xs">
-                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">PARTICIPANTS</p>
-                                <p className="font-bold text-slate-900 text-xs">{bb.participantNames.length} PERS</p>
-                             </div>
-                          </div>
-                       </section>
-
-                       <section className="space-y-3">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">FINANCIAL LEDGER</p>
-                          <div className="max-h-[220px] overflow-y-auto pr-1 space-y-2 scrollbar-hide">
-                             {payments.map(p => (
-                               <div key={p.id} className="bg-white p-3.5 rounded-md border border-slate-200 flex justify-between items-center hover:border-slate-300 transition-all shadow-xs">
-                                  <div className="flex items-center gap-3">
-                                     <div className="w-8 h-8 rounded-sm bg-slate-50 border border-slate-200 flex items-center justify-center font-black text-[9px] text-slate-400">W{p.weekNumber}</div>
-                                     <div>
-                                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">INSTALLMENT</p>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">DUE: {new Date(p.dueDate).toLocaleDateString()}</p>
-                                     </div>
-                                  </div>
-                                  <div className="text-right">
-                                     <p className="font-black text-slate-900 text-xs tracking-tighter">${p.amount.toFixed(2)}</p>
-                                     <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded-sm border ${p.status === 'paid' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                        {p.status}
-                                     </span>
-                                  </div>
-                               </div>
-                             ))}
-                          </div>
-                       </section>
+                       <span className="px-2 py-1 bg-green-50 text-green-700 text-[8px] font-black uppercase border border-green-200 rounded">{bb.status}</span>
                     </div>
                   </div>
                 );
               }) : (
                 <div className="py-24 text-center space-y-4">
-                   <div className="w-16 h-16 bg-slate-50 text-slate-200 rounded-md flex items-center justify-center mx-auto border border-slate-100">
-                      <Layers className="w-8 h-8" />
-                   </div>
                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] italic">Zero Program Enrollments</p>
                 </div>
               )}
-            </div>
-          )}
-
-          {activeTab === 'orders' && (
-            <div className="overflow-x-auto animate-in fade-in duration-300">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-200">
-                    <th className="px-8 py-5">Order Reference</th>
-                    <th className="px-8 py-5">Context</th>
-                    <th className="px-8 py-5">Units</th>
-                    <th className="px-8 py-5">Value</th>
-                    <th className="px-8 py-5">State</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {userOrders.length > 0 ? userOrders.map(o => (
-                    <tr key={o.id} className="hover:bg-slate-50/50 transition-colors text-sm">
-                      <td className="px-8 py-6 font-black text-slate-900 uppercase text-xs tracking-tight">{o.orderNumber}</td>
-                      <td className="px-8 py-6 text-slate-500 font-bold uppercase text-[10px] tracking-tight">{facilities.find(f => f.id === o.facilityId)?.name}</td>
-                      <td className="px-8 py-6 text-slate-900 font-bold text-xs">{o.items.length} ITEMS</td>
-                      <td className="px-8 py-6 font-black text-blue-600 tracking-tighter">${o.total.toFixed(2)}</td>
-                      <td className="px-8 py-6">
-                        <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${
-                          o.status === 'placed' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'
-                        }`}>
-                          {o.status === 'placed' ? 'PLACED' : 'FULFILLED'}
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={5} className="py-24 text-center text-slate-300 font-black uppercase text-[10px] tracking-[0.4em] italic bg-slate-50/20">Zero Purchase Records</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === 'passes' && (
-            <div className="overflow-x-auto animate-in fade-in duration-300">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-200">
-                    <th className="px-8 py-5">Pass Identity</th>
-                    <th className="px-8 py-5">Context</th>
-                    <th className="px-8 py-5">Credit Balance</th>
-                    <th className="px-8 py-5">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {userPurchasedPasses.length > 0 ? userPurchasedPasses.map(up => (
-                    <tr key={up.id} className="hover:bg-slate-50/50 transition-colors text-sm">
-                      <td className="px-8 py-6 font-bold text-slate-900 uppercase text-xs tracking-tight">{up.name}</td>
-                      <td className="px-8 py-6 text-slate-500 font-bold uppercase text-[10px] tracking-tight">{facilities.find(f => f.id === up.facilityId)?.name}</td>
-                      <td className="px-8 py-6 font-black text-blue-600 tracking-tighter">{up.remainingCredits} <span className="text-[9px] text-slate-300 font-bold">/ {up.totalCredits}</span></td>
-                      <td className="px-8 py-6">
-                        <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${
-                          up.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-                        }`}>
-                          {up.status}
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={4} className="py-24 text-center text-slate-300 font-black uppercase text-[10px] tracking-[0.4em] italic bg-slate-50/20">Zero bulk credits owned</td></tr>
-                  )}
-                </tbody>
-              </table>
             </div>
           )}
         </div>

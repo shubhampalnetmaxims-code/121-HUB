@@ -11,6 +11,12 @@ export interface Facility {
     canCancelBooking: boolean;
     canRescheduleBooking: boolean;
     canCancelOrder: boolean;
+    canCancelMembership: boolean;
+    canCancelBlock: boolean;
+    refundPolicyClasses?: string;
+    refundPolicyOrders?: string;
+    refundPolicyMemberships?: string;
+    refundPolicyBlocks?: string;
   };
 }
 
@@ -161,6 +167,64 @@ export interface UserPass {
   status: 'active' | 'exhausted' | 'expired';
 }
 
+export interface Membership {
+  id: string;
+  facilityId: string;
+  title: string;
+  description: string;
+  price: number;
+  durationDays: number;
+  allow24Hour: boolean;
+  startTime?: string;
+  endTime?: string;
+  daysAccess: 'all' | 'weekdays';
+  status: 'active' | 'inactive';
+  createdAt: number;
+}
+
+export interface UserMembership {
+  id: string;
+  userId: string;
+  membershipId: string;
+  facilityId: string;
+  title: string;
+  startDate: number;
+  endDate: number;
+  price: number;
+  allow24Hour: boolean;
+  startTime?: string;
+  endTime?: string;
+  daysAccess: 'all' | 'weekdays';
+  status: 'active' | 'expired' | 'cancelled';
+  purchasedAt: number;
+}
+
+export interface Measurement {
+  id: string;
+  userId: string;
+  date: number;
+  weight: number; // in kg
+  height: number; // in cm
+  age: number;
+  chest?: number;
+  waist?: number;
+  hips?: number;
+  biceps?: number;
+  triceps?: number;
+  thighs?: number;
+  bmi: number;
+  bodyFatPercentage?: number;
+  leanBodyMass?: number;
+}
+
+export interface PhotoLog {
+  id: string;
+  userId: string;
+  date: number;
+  imageUrl: string;
+  note?: string;
+}
+
 export interface ProductSizeStock {
   size: string;
   quantity: number;
@@ -206,7 +270,7 @@ export interface Order {
   vat: number;
   serviceCharge: number;
   total: number;
-  status: 'placed' | 'picked-up';
+  status: 'placed' | 'picked-up' | 'cancelled';
   createdAt: number;
 }
 
@@ -271,7 +335,13 @@ export const DAYS_OF_WEEK = [
 const DEFAULT_SETTINGS = {
   canCancelBooking: true,
   canRescheduleBooking: true,
-  canCancelOrder: true
+  canCancelOrder: true,
+  canCancelMembership: true,
+  canCancelBlock: true,
+  refundPolicyClasses: "Full refund if cancelled 24 hours before session.",
+  refundPolicyOrders: "Full refund if cancelled before pickup.",
+  refundPolicyMemberships: "Partial refund based on remaining duration.",
+  refundPolicyBlocks: "Refund only possible before program start date."
 };
 
 export const DEFAULT_FACILITIES: Facility[] = [
@@ -294,7 +364,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 50000,
-    features: ['classes', 'timetable', 'marketplace', 'passes', 'blocks'],
+    features: ['classes', 'timetable', 'marketplace', 'passes', 'blocks', 'memberships'],
     settings: { ...DEFAULT_SETTINGS }
   },
   {
@@ -305,7 +375,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop',
     isActive: true,
     createdAt: Date.now() - 25000,
-    features: ['classes', 'timetable', 'marketplace', 'passes', 'blocks'],
+    features: ['classes', 'timetable', 'marketplace', 'passes', 'blocks', 'memberships'],
     settings: { ...DEFAULT_SETTINGS }
   }
 ];
@@ -377,6 +447,16 @@ export const DEFAULT_PRODUCTS: Product[] = [
 export const DEFAULT_PASSES: Pass[] = [
   { id: 'pass1', facilityId: '1', name: 'Fitness 10-Session Pass', price: 120, credits: 10, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Access to any standard class at 121 Fitness. Save 20% over individual bookings.', quantity: 100, status: 'active', createdAt: Date.now() },
   { id: 'pass2', facilityId: '2', name: 'Zen 5-Pack', price: 90, credits: 5, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Relax and unwind with 5 sessions of your choice.', quantity: 50, status: 'active', createdAt: Date.now() }
+];
+
+export const DEFAULT_MEMBERSHIPS: Membership[] = [
+  { id: 'm1', facilityId: '1', title: 'Platinum Gym Access', description: 'Complete 24/7 access to all weight lifting and cardio zones.', price: 59.99, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
+  { id: 'm2', facilityId: '2', title: 'Morning Zen Weekly', description: 'Early morning access to meditation halls and open air deck.', price: 25, durationDays: 7, allow24Hour: false, startTime: '06:00', endTime: '10:00', daysAccess: 'weekdays', status: 'active', createdAt: Date.now() },
+  { id: 'm3', facilityId: '3', title: 'Iron Foundation Monthly', description: 'Standard 24/7 access to the main weight floor and cardio deck. Perfect for consistent training.', price: 45.00, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
+  { id: 'm4', facilityId: '3', title: 'Weekday Warrior', description: 'Professional access during standard working hours. Optimized for the mid-day grind.', price: 30.00, durationDays: 30, allow24Hour: false, startTime: '08:00', endTime: '18:00', daysAccess: 'weekdays', status: 'active', createdAt: Date.now() },
+  { id: 'm5', facilityId: '3', title: 'Performance Elite Annual', description: 'Full year of unrestricted access to all gym zones including the recovery suite. Best long-term value.', price: 450.00, durationDays: 365, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
+  { id: 'm6', facilityId: '3', title: 'Recovery Focus 30-Day', description: 'Unlimited access to the Recovery Zone and mobility floor. Ideal for athletes in deload phases.', price: 55.00, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
+  { id: 'm7', facilityId: '3', title: 'Strength Pro Quarterly', description: '90 days of high-intensity training access. Designed for those committed to a specific block.', price: 120.00, durationDays: 90, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() }
 ];
 
 export const DEFAULT_BLOCKS: Block[] = [

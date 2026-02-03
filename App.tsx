@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_MEMBERSHIPS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -61,9 +61,13 @@ const AppContent: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [passes, setPasses] = useState<Pass[]>([]);
   const [userPasses, setUserPasses] = useState<UserPass[]>([]);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
+  const [userMemberships, setUserMemberships] = useState<UserMembership[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [blockBookings, setBlockBookings] = useState<BlockBooking[]>([]);
   const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>([]);
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -92,9 +96,13 @@ const AppContent: React.FC = () => {
     setOrders(safeHydrate('121_orders', DEFAULT_ORDERS));
     setPasses(safeHydrate('121_passes', DEFAULT_PASSES));
     setUserPasses(safeHydrate('121_user_passes', []));
+    setMemberships(safeHydrate('121_memberships', DEFAULT_MEMBERSHIPS));
+    setUserMemberships(safeHydrate('121_user_memberships', []));
     setBlocks(safeHydrate('121_blocks', DEFAULT_BLOCKS));
     setBlockBookings(safeHydrate('121_block_bookings', DEFAULT_BLOCK_BOOKINGS));
     setBlockPayments(safeHydrate('121_block_payments', DEFAULT_BLOCK_PAYMENTS));
+    setMeasurements(safeHydrate('121_measurements', []));
+    setPhotoLogs(safeHydrate('121_photo_logs', []));
     setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
@@ -113,16 +121,20 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_orders', JSON.stringify(orders));
       localStorage.setItem('121_passes', JSON.stringify(passes));
       localStorage.setItem('121_user_passes', JSON.stringify(userPasses));
+      localStorage.setItem('121_memberships', JSON.stringify(memberships));
+      localStorage.setItem('121_user_memberships', JSON.stringify(userMemberships));
       localStorage.setItem('121_blocks', JSON.stringify(blocks));
       localStorage.setItem('121_block_bookings', JSON.stringify(blockBookings));
       localStorage.setItem('121_block_payments', JSON.stringify(blockPayments));
+      localStorage.setItem('121_measurements', JSON.stringify(measurements));
+      localStorage.setItem('121_photo_logs', JSON.stringify(photoLogs));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, blocks, blockBookings, blockPayments, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, currentUser, isLoading]);
 
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
     setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
@@ -148,6 +160,47 @@ const AppContent: React.FC = () => {
   const deleteClass = (id: string) => {
     setClasses(prev => prev.filter(c => c.id !== id));
     showToast('Class deleted', 'info');
+  };
+
+  const addMembership = (data: Omit<Membership, 'id' | 'createdAt'>) => {
+    setMemberships(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
+    showToast('Membership created', 'success');
+  };
+  const updateMembership = (id: string, updates: Partial<Membership>) => {
+    setMemberships(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
+    showToast('Membership updated', 'success');
+  };
+  const deleteMembership = (id: string) => {
+    setMemberships(prev => prev.filter(m => m.id !== id));
+    showToast('Membership removed', 'info');
+  };
+
+  const buyMembership = (m: Membership) => {
+    if (!currentUser) return;
+    const newUserMembership: UserMembership = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId: currentUser.id,
+      membershipId: m.id,
+      facilityId: m.facilityId,
+      title: m.title,
+      startDate: Date.now(),
+      endDate: Date.now() + (m.durationDays * 86400000),
+      price: m.price,
+      allow24Hour: m.allow24Hour,
+      startTime: m.startTime,
+      endTime: m.endTime,
+      daysAccess: m.daysAccess,
+      status: 'active',
+      purchasedAt: Date.now()
+    };
+    setUserMemberships(prev => [...prev, newUserMembership]);
+    showToast('Membership activated!', 'success');
+    addNotification('Membership Active', `Your ${m.title} is now active.`, 'success', currentUser.id);
+  };
+
+  // Fix: Added updateUserMembership for status handling
+  const updateUserMembership = (id: string, updates: Partial<UserMembership>) => {
+    setUserMemberships(prev => prev.map(um => um.id === id ? { ...um, ...updates } : um));
   };
 
   const addBlock = (data: Omit<Block, 'id' | 'createdAt'>) => {
@@ -353,7 +406,7 @@ const AppContent: React.FC = () => {
 
   const updateOrder = (id: string, updates: Partial<Order>) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
-    const order = orders.find(o => i => o.id === id);
+    const order = orders.find(o => o.id === id);
     if (updates.status === 'picked-up' && order) {
       addNotification('Order Picked Up', `Your order ${order.orderNumber} is ready.`, 'success', order.userId);
       showToast('Order marked as picked up', 'success');
@@ -414,6 +467,21 @@ const AppContent: React.FC = () => {
     showToast('Booking updated', 'success');
   };
 
+  const onAddMeasurement = (m: Omit<Measurement, 'id'>) => {
+    setMeasurements(prev => [...prev, { ...m, id: Math.random().toString(36).substr(2, 9) }]);
+    showToast('Measurement logged', 'success');
+  };
+
+  const onAddPhotoLog = (p: Omit<PhotoLog, 'id'>) => {
+    setPhotoLogs(prev => [...prev, { ...p, id: Math.random().toString(36).substr(2, 9) }]);
+    showToast('Photo added to log', 'success');
+  };
+
+  const onDeletePhotoLog = (id: string) => {
+    setPhotoLogs(prev => prev.filter(p => p.id !== id));
+    showToast('Photo removed', 'info');
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
     setCart([]);
@@ -444,9 +512,13 @@ const AppContent: React.FC = () => {
                 users={users}
                 passes={passes}
                 userPasses={userPasses}
+                memberships={memberships}
+                userMemberships={userMemberships}
                 blocks={blocks}
                 blockBookings={blockBookings}
                 blockPayments={blockPayments}
+                measurements={measurements}
+                photoLogs={photoLogs}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
@@ -454,6 +526,10 @@ const AppContent: React.FC = () => {
                 onDeleteUser={deleteUser}
                 onAddBooking={onAddBooking}
                 onUpdateBooking={updateBooking}
+                // Fix: Added missing props to AppHub instantiation
+                onUpdateBlockBooking={updateBlockBooking}
+                onUpdateOrder={updateOrder}
+                onUpdateUserMembership={updateUserMembership}
                 onAddToCart={onAddToCart}
                 updateCartQuantity={updateCartQuantity}
                 removeFromCart={removeFromCart}
@@ -462,6 +538,10 @@ const AppContent: React.FC = () => {
                 onUsePass={usePass}
                 onBookBlock={bookBlock}
                 onPayWeeklyBlock={payWeeklyBlock}
+                onBuyMembership={buyMembership}
+                onAddMeasurement={onAddMeasurement}
+                onAddPhotoLog={onAddPhotoLog}
+                onDeletePhotoLog={onDeletePhotoLog}
               />
             } 
           />
@@ -498,6 +578,10 @@ const AppContent: React.FC = () => {
                 onAddPass={addPass}
                 onUpdatePass={updatePass}
                 onDeletePass={deletePass}
+                memberships={memberships}
+                onAddMembership={addMembership}
+                onUpdateMembership={updateMembership}
+                onDeleteMembership={deleteMembership}
                 blocks={blocks}
                 onAddBlock={addBlock}
                 onUpdateBlock={updateBlock}
@@ -512,6 +596,9 @@ const AppContent: React.FC = () => {
                 blockBookings={blockBookings}
                 blockPayments={blockPayments}
                 userPasses={userPasses}
+                userMemberships={userMemberships}
+                measurements={measurements}
+                photoLogs={photoLogs}
               />
             } 
           />
