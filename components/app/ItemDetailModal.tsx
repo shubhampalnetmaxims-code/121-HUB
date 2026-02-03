@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, Clock, MapPin, DollarSign, ShieldCheck, Tag, Info, CheckCircle2, Ticket, CreditCard, Layers, Package, User } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, DollarSign, ShieldCheck, Tag, Info, CheckCircle2, Ticket, CreditCard, Layers, Package, User, RefreshCcw } from 'lucide-react';
 import { Booking, Order, UserPass, UserMembership, Facility, Class, Trainer } from '../../types';
 
 interface ItemDetailModalProps {
@@ -25,6 +25,13 @@ const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility,
       case 'cancelled': case 'expired': return 'bg-red-50 text-red-600 border-red-100';
       default: return 'bg-slate-50 text-slate-600 border-slate-100';
     }
+  };
+
+  const getPaymentStatusLabel = (status?: string) => {
+    if (status === 'refunded') return 'Refunded to Source';
+    if (status === 'processing') return 'Refund Processing';
+    if (status === 'paid') return 'Paid Successfully';
+    return 'Payment Recorded';
   };
 
   const amount = item.amount || item.price || item.total || 0;
@@ -58,6 +65,22 @@ const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility,
            </div>
            {isBooking && <span className="text-[9px] font-black uppercase tracking-widest">{item.type} session</span>}
         </div>
+
+        {/* Payment & Refund Status Visibility */}
+        {(item.paymentStatus || isBooking || isOrder) && (
+           <section className="space-y-4">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Financial State</label>
+              <div className={`p-5 rounded-[28px] border flex items-center gap-4 ${item.paymentStatus === 'refunded' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-blue-50 border-blue-100 text-blue-600'}`}>
+                 <div className="p-3 bg-white rounded-2xl shadow-sm">
+                    {item.paymentStatus === 'refunded' ? <RefreshCcw className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                 </div>
+                 <div className="text-left">
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Economic Status</p>
+                    <p className="font-extrabold text-sm">{getPaymentStatusLabel(item.paymentStatus || 'paid')}</p>
+                 </div>
+              </div>
+           </section>
+        )}
 
         {/* Logistic Section */}
         <section className="space-y-4">
@@ -96,7 +119,7 @@ const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility,
         {/* Economic Section */}
         <section className="space-y-4">
            <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Economic Breakdown</label>
-           <div className="bg-slate-900 p-8 rounded-[40px] text-white relative overflow-hidden shadow-xl">
+           <div className={`p-8 rounded-[40px] text-white relative overflow-hidden shadow-xl ${item.paymentStatus === 'refunded' ? 'bg-slate-600' : 'bg-slate-900'}`}>
               <div className="relative z-10 space-y-4">
                  <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest opacity-40">
                     <span>Valuation Matrix</span>
@@ -104,20 +127,30 @@ const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility,
                  </div>
                  <div className="space-y-2 pt-2">
                     <div className="flex justify-between items-center">
-                       <span className="text-xs font-bold text-white/50">Base Price</span>
+                       <span className="text-xs font-bold text-white/50">{item.paymentStatus === 'refunded' ? 'Original Price' : 'Base Price'}</span>
                        <span className="font-mono font-bold">${amount.toFixed(2)}</span>
                     </div>
+                    {item.paymentStatus === 'refunded' && (
+                       <div className="flex justify-between items-center text-red-300">
+                          <span className="text-xs font-bold">Total Refunded</span>
+                          <span className="font-mono font-bold">-${amount.toFixed(2)}</span>
+                       </div>
+                    )}
                     <div className="flex justify-between items-center">
                        <span className="text-xs font-bold text-white/50">Taxes & Fees (Included)</span>
                        <span className="font-mono font-bold">$0.00</span>
                     </div>
                  </div>
                  <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Economic Total</p>
-                    <p className="text-2xl font-black">${amount.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{item.paymentStatus === 'refunded' ? 'Closing Balance' : 'Economic Total'}</p>
+                    <p className="text-2xl font-black">${item.paymentStatus === 'refunded' ? '0.00' : amount.toFixed(2)}</p>
                  </div>
               </div>
-              <DollarSign className="absolute -right-8 -bottom-8 w-32 h-32 text-white/5 rotate-12" />
+              {item.paymentStatus === 'refunded' ? (
+                 <RefreshCcw className="absolute -right-8 -bottom-8 w-32 h-32 text-white/5 rotate-12" />
+              ) : (
+                 <DollarSign className="absolute -right-8 -bottom-8 w-32 h-32 text-white/5 rotate-12" />
+              )}
            </div>
         </section>
 

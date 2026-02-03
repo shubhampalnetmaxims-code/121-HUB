@@ -126,7 +126,8 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                </div>
                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 mb-1 opacity-40"><Calendar className="w-3 h-3" /><span className="text-[9px] font-black uppercase">Schedule</span></div>
-                  <p className="font-black text-slate-900 text-xs">{plan.daysAccess === 'all' ? 'All Days' : 'Weekdays'}</p>
+                  {/* Fix: check daysOfWeek length instead of non-existent daysAccess property */}
+                  <p className="font-black text-slate-900 text-xs">{plan.daysOfWeek.length === 7 ? 'All Days' : 'Limited Days'}</p>
                </div>
              </div>
 

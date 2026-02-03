@@ -189,7 +189,7 @@ const AppContent: React.FC = () => {
       allow24Hour: m.allow24Hour,
       startTime: m.startTime,
       endTime: m.endTime,
-      daysAccess: m.daysAccess,
+      daysOfWeek: m.daysOfWeek,
       status: 'active',
       purchasedAt: Date.now()
     };
@@ -198,7 +198,6 @@ const AppContent: React.FC = () => {
     addNotification('Membership Active', `Your ${m.title} is now active.`, 'success', currentUser.id);
   };
 
-  // Fix: Added updateUserMembership for status handling
   const updateUserMembership = (id: string, updates: Partial<UserMembership>) => {
     setUserMemberships(prev => prev.map(um => um.id === id ? { ...um, ...updates } : um));
   };
@@ -397,6 +396,7 @@ const AppContent: React.FC = () => {
     const newOrder: Order = {
       ...order,
       id: Math.random().toString(36).substr(2, 9),
+      paymentStatus: 'paid',
       createdAt: Date.now()
     };
     setOrders(prev => [newOrder, ...prev]);
@@ -456,6 +456,7 @@ const AppContent: React.FC = () => {
     const newBooking: Booking = {
       ...booking,
       id: Math.random().toString(36).substr(2, 9),
+      paymentStatus: 'paid',
       createdAt: Date.now()
     };
     setBookings(prev => [newBooking, ...prev]);
@@ -526,7 +527,6 @@ const AppContent: React.FC = () => {
                 onDeleteUser={deleteUser}
                 onAddBooking={onAddBooking}
                 onUpdateBooking={updateBooking}
-                // Fix: Added missing props to AppHub instantiation
                 onUpdateBlockBooking={updateBlockBooking}
                 onUpdateOrder={updateOrder}
                 onUpdateUserMembership={updateUserMembership}

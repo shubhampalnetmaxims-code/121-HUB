@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, CreditCard, Clock, Calendar, DollarSign, Info, Check, Plus, Bold, Italic, List } from 'lucide-react';
-import { Facility, Membership } from '../../types';
+import { Facility, Membership, DAYS_OF_WEEK } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
 interface MembershipFormModalProps {
@@ -21,7 +21,7 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
     allow24Hour: membership?.allow24Hour ?? true,
     startTime: membership?.startTime || '09:00',
     endTime: membership?.endTime || '18:00',
-    daysAccess: membership?.daysAccess || 'all',
+    daysOfWeek: membership?.daysOfWeek || [0, 1, 2, 3, 4, 5, 6] as number[],
     status: membership?.status || 'active'
   });
   
@@ -37,13 +37,24 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
   const finalSave = () => {
     onSave({
       ...formData,
-      description: editorRef.current?.innerHTML || formData.description
+      description: editorRef.current?.innerHTML || formData.description,
+      // Default to all days if none selected
+      daysOfWeek: formData.daysOfWeek.length === 0 ? [0, 1, 2, 3, 4, 5, 6] : formData.daysOfWeek
     });
     setIsConfirmingSave(false);
   };
 
   const execCommand = (command: string) => {
     document.execCommand(command, false, '');
+  };
+
+  const toggleDay = (idx: number) => {
+    setFormData(prev => ({
+      ...prev,
+      daysOfWeek: prev.daysOfWeek.includes(idx)
+        ? prev.daysOfWeek.filter(d => d !== idx)
+        : [...prev.daysOfWeek, idx]
+    }));
   };
 
   const durationOptions = [7, 15, 30, 60, 90];
@@ -55,7 +66,7 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
         <div className="relative h-full w-full max-w-xl bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-500 text-left border-l border-slate-200">
           <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
             <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase">{membership ? 'Edit Plan' : 'New Membership'}</h3>
-            <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors"><X className="w-6 h-6" /></button>
+            <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors shrink-0"><X className="w-6 h-6" /></button>
           </div>
           
           <form onSubmit={handleFormSubmit} className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto pb-32 scrollbar-hide">
@@ -90,7 +101,7 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+            <div className="pt-4 border-t border-slate-100 space-y-6">
                <div className="space-y-4">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Time Access</label>
                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -112,11 +123,25 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
                </div>
 
                <div className="space-y-4">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Days Reach</label>
-                  <div className="grid grid-cols-1 gap-2">
-                    <button type="button" onClick={() => setFormData(p => ({ ...p, daysAccess: 'all' }))} className={`px-4 py-3 rounded-2xl border-2 text-xs font-black uppercase transition-all ${formData.daysAccess === 'all' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-50 bg-slate-50 text-slate-400'}`}>All Days</button>
-                    <button type="button" onClick={() => setFormData(p => ({ ...p, daysAccess: 'weekdays' }))} className={`px-4 py-3 rounded-2xl border-2 text-xs font-black uppercase transition-all ${formData.daysAccess === 'weekdays' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-50 bg-slate-50 text-slate-400'}`}>Monday - Friday</button>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Days</label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map((day, idx) => {
+                      const isSelected = formData.daysOfWeek.includes(idx);
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => toggleDay(idx)}
+                          className={`flex-1 min-w-[70px] py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                            isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200'
+                          }`}
+                        >
+                          {day.substr(0, 3)}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase italic">If no days selected, all days are assumed.</p>
                </div>
             </div>
 

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Menu, ClipboardList, Package, Search, Eye, XCircle, Calendar, CheckCircle, Filter, DollarSign, MapPin, ChevronRight, X, Construction, User as UserIcon, Layers, Clock, Ticket, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Menu, ClipboardList, Package, Search, Eye, XCircle, Calendar, CheckCircle, Filter, DollarSign, MapPin, ChevronRight, X, Construction, User as UserIcon, Layers, Clock, Ticket, CheckCircle2, TrendingUp, RefreshCcw } from 'lucide-react';
 import { Booking, Facility, Class, Trainer, Location, Order, BlockBooking, BlockWeeklyPayment, Block } from '../../types';
 import BookingDetailModal from './BookingDetailModal';
 import OrderDetailModal from './OrderDetailModal';
 import ConfirmationModal from './ConfirmationModal';
+import RefundModal from './RefundModal';
+import { useToast } from '../ToastContext';
+import { useNotifications } from '../NotificationContext';
 
 interface BookingsOrdersViewProps {
   facilities: Facility[];
@@ -24,6 +27,8 @@ interface BookingsOrdersViewProps {
 const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({ 
   facilities, classes, trainers, locations, bookings, orders, blockBookings, blockPayments, blocks, onUpdateBooking, onUpdateOrder, onOpenSidebar 
 }) => {
+  const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const locationState = useLocation();
   const deepLinkState = locationState.state as { 
     filterType?: 'class' | 'block';
@@ -44,6 +49,8 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
   const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
   const [viewingBlockBooking, setViewingBlockBooking] = useState<BlockBooking | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  
+  const [refundingItem, setRefundingItem] = useState<{ id: string, type: 'booking' | 'order', total: number, title: string, ref: string, userId: string } | null>(null);
 
   const filteredBookings = bookings.filter(b => {
     if (activeMainTab !== 'bookings') return false;
@@ -68,6 +75,32 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
     if (search && !o.userName.toLowerCase().includes(search.toLowerCase()) && !o.orderNumber.includes(search)) return false;
     return true;
   });
+
+  const handleRefund = (amount: number) => {
+    if (!refundingItem) return;
+    
+    if (refundingItem.type === 'booking') {
+      onUpdateBooking(refundingItem.id, { paymentStatus: 'refunded' });
+    } else {
+      onUpdateOrder(refundingItem.id, { paymentStatus: 'refunded' });
+    }
+    
+    addNotification('Refund Processed', `A refund of $${amount.toFixed(2)} for ${refundingItem.ref} has been initiated.`, 'success', refundingItem.userId);
+    addNotification('Refund Complete', `Refund for ${refundingItem.ref} processed manually by admin.`, 'info', 'admin');
+    
+    showToast('Refund initiated successfully', 'success');
+    setRefundingItem(null);
+  };
+
+  const getPaymentBadgeColor = (status?: string) => {
+    switch (status) {
+      case 'paid': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'processing': return 'bg-amber-50 text-amber-600 border-amber-100';
+      case 'refunded': return 'bg-red-50 text-red-600 border-red-100';
+      case 'completed': return 'bg-green-50 text-green-600 border-green-100';
+      default: return 'bg-slate-50 text-slate-400 border-slate-100';
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen text-left">
@@ -122,29 +155,56 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
                 <tr className="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] border-b border-slate-200">
                   <th className="px-8 py-5">{activeMainTab === 'orders' ? 'Customer' : 'Subscriber'}</th>
                   <th className="px-8 py-5">Reference</th>
-                  <th className="px-8 py-5">Contextual Detail</th>
                   <th className="px-8 py-5">Economic Value</th>
-                  <th className="px-8 py-5 text-right">Review</th>
+                  <th className="px-8 py-5">Payment Status</th>
+                  <th className="px-8 py-5 text-right">Ops</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {activeMainTab === 'bookings' && filteredBookings.map(b => (
-                  <tr key={b.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => setViewingBooking(b)}>
-                    <td className="px-8 py-6"><p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{b.userName}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{b.userEmail}</p></td>
-                    <td className="px-8 py-6"><code className="text-[9px] font-mono bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-500 uppercase tracking-tighter">BK-{b.id.substr(0,8)}</code></td>
-                    <td className="px-8 py-6"><p className="font-bold text-[10px] uppercase tracking-tight text-slate-700">{classes.find(c => c.id === b.classId)?.name || 'Session'}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{b.startTime} • {new Date(b.bookingDate).toLocaleDateString()}</p></td>
-                    <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">${(b.amount || 0).toFixed(2)}</td>
-                    <td className="px-8 py-6 text-right"><div className="flex justify-end"><div className="p-2 bg-slate-50 text-slate-400 group-hover:text-blue-600 rounded-md transition-all border border-slate-200"><Eye className="w-4 h-4" /></div></div></td>
-                  </tr>
-                ))}
+                {activeMainTab === 'bookings' && filteredBookings.map(b => {
+                  const cls = classes.find(c => c.id === b.classId);
+                  return (
+                    <tr key={b.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => setViewingBooking(b)}>
+                      <td className="px-8 py-6"><p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{b.userName}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{b.userEmail}</p></td>
+                      <td className="px-8 py-6">
+                        <code className="text-[9px] font-mono bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-500 uppercase tracking-tighter block mb-1">BK-{b.id.substr(0,8)}</code>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[150px]">{cls?.name || 'Session'}</p>
+                      </td>
+                      <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">${(b.amount || 0).toFixed(2)}</td>
+                      <td className="px-8 py-6">
+                        <span className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest border ${getPaymentBadgeColor(b.paymentStatus)}`}>
+                           {b.paymentStatus || 'Paid'}
+                        </span>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <div className="flex justify-end gap-2">
+                           {b.status === 'cancelled' && b.paymentStatus !== 'refunded' && (
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); setRefundingItem({ id: b.id, type: 'booking', total: b.amount, title: cls?.name || 'Session', ref: `BK-${b.id.substr(0,8)}`, userId: b.userId }); }}
+                               className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-md transition-all border border-blue-100 shadow-xs flex items-center gap-1.5"
+                               title="Initiate Refund"
+                             >
+                               <RefreshCcw className="w-3.5 h-3.5" /> <span className="text-[9px] font-black uppercase">Refund</span>
+                             </button>
+                           )}
+                           <div className="p-2 bg-slate-50 text-slate-400 group-hover:text-blue-600 rounded-md transition-all border border-slate-200"><Eye className="w-4 h-4" /></div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {activeMainTab === 'block-bookings' && filteredBlockBookings.map(bb => {
                    const block = blocks.find(b => b.id === bb.blockId);
                    return (
                      <tr key={bb.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => setViewingBlockBooking(bb)}>
                        <td className="px-8 py-6"><p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{bb.userName}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{bb.userEmail}</p></td>
-                       <td className="px-8 py-6"><code className="text-[9px] font-mono bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-500 uppercase tracking-tighter">BLK-{bb.id.substr(0,8)}</code></td>
-                       <td className="px-8 py-6"><p className="font-bold text-[10px] uppercase tracking-tight text-slate-700">{block?.name}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Start: {new Date(bb.startDate).toLocaleDateString()}</p></td>
-                       <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">${(block?.bookingAmount || 0).toFixed(2)} <span className="text-[9px] text-slate-300 ml-1">+ Recurring</span></td>
+                       <td className="px-8 py-6"><code className="text-[9px] font-mono bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-500 uppercase tracking-tighter block mb-1">BLK-{bb.id.substr(0,8)}</code><p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight truncate max-w-[150px]">{block?.name}</p></td>
+                       <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">${(block?.bookingAmount || 0).toFixed(2)}</td>
+                       <td className="px-8 py-6">
+                         <span className="px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest border bg-blue-50 text-blue-600 border-blue-100">
+                           Paid
+                         </span>
+                       </td>
                        <td className="px-8 py-6 text-right"><div className="flex justify-end"><div className="p-2 bg-slate-50 text-slate-400 group-hover:text-blue-600 rounded-md transition-all border border-slate-200"><Eye className="w-4 h-4" /></div></div></td>
                      </tr>
                    );
@@ -153,9 +213,26 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
                   <tr key={o.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => setViewingOrder(o)}>
                     <td className="px-8 py-6"><p className="font-bold text-slate-900 uppercase text-xs tracking-tight">{o.userName}</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{o.userEmail}</p></td>
                     <td className="px-8 py-6"><code className="text-[9px] font-mono bg-slate-100 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-500 uppercase tracking-tighter">{o.orderNumber}</code></td>
-                    <td className="px-8 py-6"><p className="font-bold text-[10px] uppercase tracking-tight text-slate-700">{o.items.length} Items</p><p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{facilities.find(f => f.id === o.facilityId)?.name}</p></td>
                     <td className="px-8 py-6 font-black text-slate-900 text-sm tracking-tighter">${(o.total || 0).toFixed(2)}</td>
-                    <td className="px-8 py-6 text-right"><div className="flex justify-end"><div className="p-2 bg-slate-50 text-slate-400 group-hover:text-blue-600 rounded-md transition-all border border-slate-200"><Eye className="w-4 h-4" /></div></div></td>
+                    <td className="px-8 py-6">
+                       <span className={`px-2 py-1 rounded-sm text-[8px] font-black uppercase tracking-widest border ${getPaymentBadgeColor(o.paymentStatus)}`}>
+                           {o.paymentStatus || 'Paid'}
+                        </span>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-2">
+                        {o.status === 'cancelled' && o.paymentStatus !== 'refunded' && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setRefundingItem({ id: o.id, type: 'order', total: o.total, title: 'Inventory Order', ref: o.orderNumber, userId: o.userId }); }}
+                            className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-md transition-all border border-blue-100 shadow-xs flex items-center gap-1.5"
+                            title="Initiate Refund"
+                          >
+                            <RefreshCcw className="w-3.5 h-3.5" /> <span className="text-[9px] font-black uppercase">Refund</span>
+                          </button>
+                        )}
+                        <div className="p-2 bg-slate-50 text-slate-400 group-hover:text-blue-600 rounded-md transition-all border border-slate-200"><Eye className="w-4 h-4" /></div>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {(activeMainTab === 'bookings' ? filteredBookings : activeMainTab === 'block-bookings' ? filteredBlockBookings : filteredOrders).length === 0 && (
@@ -184,6 +261,16 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
           facility={facilities.find(f => f.id === viewingOrder.facilityId)}
           onClose={() => setViewingOrder(null)} 
           onUpdateStatus={(s) => { onUpdateOrder(viewingOrder.id, { status: s }); setViewingOrder(null); }} 
+        />
+      )}
+
+      {refundingItem && (
+        <RefundModal 
+          title={refundingItem.title}
+          referenceId={refundingItem.ref}
+          totalPaid={refundingItem.total}
+          onConfirm={handleRefund}
+          onCancel={() => setRefundingItem(null)}
         />
       )}
 

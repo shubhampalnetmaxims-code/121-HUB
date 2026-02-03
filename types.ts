@@ -131,6 +131,7 @@ export interface Booking {
   persons: number;
   participantNames: string[];
   status: 'upcoming' | 'rescheduled' | 'cancelled' | 'delivered';
+  paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded';
   type: 'class' | 'block' | 'pass';
   amount: number;
   createdAt: number;
@@ -177,7 +178,7 @@ export interface Membership {
   allow24Hour: boolean;
   startTime?: string;
   endTime?: string;
-  daysAccess: 'all' | 'weekdays';
+  daysOfWeek: number[]; // 0 for Sunday, 1 for Monday, etc.
   status: 'active' | 'inactive';
   createdAt: number;
 }
@@ -194,7 +195,7 @@ export interface UserMembership {
   allow24Hour: boolean;
   startTime?: string;
   endTime?: string;
-  daysAccess: 'all' | 'weekdays';
+  daysOfWeek: number[];
   status: 'active' | 'expired' | 'cancelled';
   purchasedAt: number;
 }
@@ -271,6 +272,7 @@ export interface Order {
   serviceCharge: number;
   total: number;
   status: 'placed' | 'picked-up' | 'cancelled';
+  paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded';
   createdAt: number;
 }
 
@@ -450,13 +452,8 @@ export const DEFAULT_PASSES: Pass[] = [
 ];
 
 export const DEFAULT_MEMBERSHIPS: Membership[] = [
-  { id: 'm1', facilityId: '1', title: 'Platinum Gym Access', description: 'Complete 24/7 access to all weight lifting and cardio zones.', price: 59.99, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
-  { id: 'm2', facilityId: '2', title: 'Morning Zen Weekly', description: 'Early morning access to meditation halls and open air deck.', price: 25, durationDays: 7, allow24Hour: false, startTime: '06:00', endTime: '10:00', daysAccess: 'weekdays', status: 'active', createdAt: Date.now() },
-  { id: 'm3', facilityId: '3', title: 'Iron Foundation Monthly', description: 'Standard 24/7 access to the main weight floor and cardio deck. Perfect for consistent training.', price: 45.00, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
-  { id: 'm4', facilityId: '3', title: 'Weekday Warrior', description: 'Professional access during standard working hours. Optimized for the mid-day grind.', price: 30.00, durationDays: 30, allow24Hour: false, startTime: '08:00', endTime: '18:00', daysAccess: 'weekdays', status: 'active', createdAt: Date.now() },
-  { id: 'm5', facilityId: '3', title: 'Performance Elite Annual', description: 'Full year of unrestricted access to all gym zones including the recovery suite. Best long-term value.', price: 450.00, durationDays: 365, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
-  { id: 'm6', facilityId: '3', title: 'Recovery Focus 30-Day', description: 'Unlimited access to the Recovery Zone and mobility floor. Ideal for athletes in deload phases.', price: 55.00, durationDays: 30, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() },
-  { id: 'm7', facilityId: '3', title: 'Strength Pro Quarterly', description: '90 days of high-intensity training access. Designed for those committed to a specific block.', price: 120.00, durationDays: 90, allow24Hour: true, daysAccess: 'all', status: 'active', createdAt: Date.now() }
+  { id: 'm1', facilityId: '1', title: 'Platinum Gym Access', description: 'Complete 24/7 access to all weight lifting and cardio zones.', price: 59.99, durationDays: 30, allow24Hour: true, daysOfWeek: [0, 1, 2, 3, 4, 5, 6], status: 'active', createdAt: Date.now() },
+  { id: 'm2', facilityId: '2', title: 'Morning Zen Weekly', description: 'Early morning access to meditation halls and open air deck.', price: 25, durationDays: 7, allow24Hour: false, startTime: '06:00', endTime: '10:00', daysOfWeek: [1, 2, 3, 4, 5], status: 'active', createdAt: Date.now() }
 ];
 
 export const DEFAULT_BLOCKS: Block[] = [
@@ -466,14 +463,14 @@ export const DEFAULT_BLOCKS: Block[] = [
 ];
 
 export const DEFAULT_BOOKINGS: Booking[] = [
-  { id: 'b1', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c1', slotId: 's1', trainerId: 't1', locationId: 'l2', bookingDate: Date.now() - 864000000, startTime: '08:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', type: 'class', amount: 15, createdAt: Date.now() - 900000000 },
-  { id: 'b2', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c2', slotId: 's2', trainerId: 't2', locationId: 'l1', bookingDate: Date.now() - 604800000, startTime: '10:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', type: 'class', amount: 12, createdAt: Date.now() - 700000000 },
-  { id: 'b3', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c3', slotId: 's7', trainerId: 't1', locationId: 'l1', bookingDate: Date.now() + 172800000, startTime: '19:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'upcoming', type: 'class', amount: 20, createdAt: Date.now() - 500000 }
+  { id: 'b1', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c1', slotId: 's1', trainerId: 't1', locationId: 'l2', bookingDate: Date.now() - 864000000, startTime: '08:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', paymentStatus: 'paid', type: 'class', amount: 15, createdAt: Date.now() - 900000000 },
+  { id: 'b2', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c2', slotId: 's2', trainerId: 't2', locationId: 'l1', bookingDate: Date.now() - 604800000, startTime: '10:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', paymentStatus: 'paid', type: 'class', amount: 12, createdAt: Date.now() - 700000000 },
+  { id: 'b3', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c3', slotId: 's7', trainerId: 't1', locationId: 'l1', bookingDate: Date.now() + 172800000, startTime: '19:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'upcoming', paymentStatus: 'paid', type: 'class', amount: 20, createdAt: Date.now() - 500000 }
 ];
 
 export const DEFAULT_ORDERS: Order[] = [
-  { id: 'o1', orderNumber: 'ORD-A9F2-3B10', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci1', productId: 'p1', name: 'Ultra Whey Isolate', price: 54.99, size: '2kg', quantity: 1, image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 54.99, vat: 2.75, serviceCharge: 2.5, total: 60.24, status: 'picked-up', createdAt: Date.now() - 1209600000 },
-  { id: 'o2', orderNumber: 'ORD-7K4L-9P0Q', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci2', productId: 'p2', name: 'Performance Tee', price: 35.00, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 35.00, vat: 1.75, serviceCharge: 2.5, total: 39.25, status: 'placed', createdAt: Date.now() - 86400000 }
+  { id: 'o1', orderNumber: 'ORD-A9F2-3B10', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci1', productId: 'p1', name: 'Ultra Whey Isolate', price: 54.99, size: '2kg', quantity: 1, image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 54.99, vat: 2.75, serviceCharge: 2.5, total: 60.24, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 1209600000 },
+  { id: 'o2', orderNumber: 'ORD-7K4L-9P0Q', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci2', productId: 'p2', name: 'Performance Tee', price: 35.00, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 35.00, vat: 1.75, serviceCharge: 2.5, total: 39.25, status: 'placed', paymentStatus: 'paid', createdAt: Date.now() - 86400000 }
 ];
 
 // Demo Block Bookings for User u3 (Shubham)

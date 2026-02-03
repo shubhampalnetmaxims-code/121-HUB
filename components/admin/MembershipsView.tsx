@@ -128,7 +128,8 @@ const MembershipsView: React.FC<MembershipsViewProps> = ({
                      </div>
                      <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <CreditCard className="w-3.5 h-3.5 text-blue-500" />
-                        <span>Days: {m.daysAccess === 'all' ? 'All Days' : 'Weekdays Only'}</span>
+                        {/* Fix: check daysOfWeek.length since daysAccess does not exist on type Membership */}
+                        <span>Days: {m.daysOfWeek.length === 7 ? 'All Days' : 'Limited Days'}</span>
                      </div>
                   </div>
 

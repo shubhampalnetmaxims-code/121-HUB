@@ -93,7 +93,8 @@ const MyMembershipsView: React.FC<MyMembershipsViewProps> = ({ currentUser, user
                 </div>
                 <div className="p-5 bg-slate-50 rounded-[32px] border border-slate-100">
                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Access Type</p>
-                   <p className="font-bold text-slate-900 text-xs uppercase">{viewingMembership.daysAccess} Days</p>
+                   {/* Fix: check daysOfWeek length since daysAccess does not exist on type UserMembership */}
+                   <p className="font-bold text-slate-900 text-xs uppercase">{viewingMembership.daysOfWeek.length === 7 ? 'Full Week' : 'Partial Access'}</p>
                 </div>
              </div>
            }

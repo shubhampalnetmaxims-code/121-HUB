@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ShoppingBag, FileText, ChevronRight, Package, MapPin, CheckCircle, Download, Tag, Eye } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, FileText, ChevronRight, Package, MapPin, CheckCircle, Download, Tag, Eye, RefreshCcw } from 'lucide-react';
 import { Order, Facility, User } from '../../types';
 import ItemDetailModal from './ItemDetailModal';
 
@@ -44,9 +44,16 @@ const MyOrdersView: React.FC<MyOrdersViewProps> = ({ currentUser, orders, facili
              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${view === 'invoices' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-900'}`}>
                 {view === 'invoices' ? <FileText className="w-6 h-6" /> : <ShoppingBag className="w-6 h-6" />}
              </div>
-             <div className="flex-1 text-left">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{order.orderNumber}</p>
-                <h4 className="font-bold text-slate-900 leading-none uppercase text-sm tracking-tight">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</h4>
+             <div className="flex-1 text-left overflow-hidden">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">{order.orderNumber}</p>
+                <div className="flex items-center gap-2">
+                   <h4 className="font-bold text-slate-900 leading-none uppercase text-sm tracking-tight">{new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</h4>
+                   {order.paymentStatus === 'refunded' && (
+                     <span className="flex items-center gap-1 text-[7px] font-black text-red-600 uppercase bg-red-50 px-1 py-0.5 rounded border border-red-100">
+                        <RefreshCcw className="w-2 h-2" /> Refunded
+                     </span>
+                   )}
+                </div>
              </div>
              <div className="text-right flex items-center gap-3">
                 <div className="hidden sm:block">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Calendar, Clock, MapPin, ChevronRight, XCircle, MoreVertical, ShieldCheck, AlertCircle, User as UserIcon, Layers, Ticket, DollarSign, CheckCircle2, TrendingUp, Info, X, FileText, ShoppingBag, Eye } from 'lucide-react';
+import { Calendar, Clock, MapPin, ChevronRight, XCircle, MoreVertical, ShieldCheck, AlertCircle, User as UserIcon, Layers, Ticket, DollarSign, CheckCircle2, TrendingUp, Info, X, FileText, ShoppingBag, Eye, RefreshCcw } from 'lucide-react';
 import { Booking, User, Facility, Class, Trainer, Block, BlockBooking, BlockWeeklyPayment, UserMembership, Order } from '../../types';
 import { useToast } from '../ToastContext';
 import ConfirmationModal from '../admin/ConfirmationModal';
@@ -96,6 +96,8 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
 
   const SummaryCard = ({ title, sub, icon: Icon, status, item, type, facilityId }: any) => {
     const fac = facilities.find(f => f.id === facilityId);
+    const paymentStatus = item.paymentStatus;
+    
     return (
       <div className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm flex flex-col gap-4 group active:scale-[0.98] transition-all cursor-pointer" onClick={() => setViewingDetail({ type, item })}>
          <div className="flex justify-between items-start">
@@ -103,16 +105,23 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
                <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
                   <Icon className="w-6 h-6" />
                </div>
-               <div className="text-left">
-                  <h4 className="font-black text-slate-900 text-lg leading-none mb-1 uppercase tracking-tight line-clamp-1">{title}</h4>
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{fac?.name}</p>
+               <div className="text-left overflow-hidden max-w-[150px]">
+                  <h4 className="font-black text-slate-900 text-lg leading-none mb-1 uppercase tracking-tight truncate">{title}</h4>
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest truncate">{fac?.name}</p>
                </div>
             </div>
-            <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase border ${
-               status === 'upcoming' || status === 'active' || status === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-               status === 'delivered' || status === 'picked-up' ? 'bg-green-50 text-green-700 border-green-100' :
-               'bg-red-50 text-red-700 border-red-100'
-            }`}>{status}</span>
+            <div className="flex flex-col items-end gap-1.5">
+               <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase border ${
+                  status === 'upcoming' || status === 'active' || status === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                  status === 'delivered' || status === 'picked-up' ? 'bg-green-50 text-green-700 border-green-100' :
+                  'bg-red-50 text-red-700 border-red-100'
+               }`}>{status}</span>
+               {paymentStatus === 'refunded' && (
+                 <span className="flex items-center gap-1 text-[8px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+                   <RefreshCcw className="w-2.5 h-2.5" /> Refunded
+                 </span>
+               )}
+            </div>
          </div>
          <div className="flex items-center justify-between pt-2 border-t border-slate-50">
             <div className="flex items-center gap-1.5">
