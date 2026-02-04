@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
@@ -15,7 +14,7 @@ interface ConfirmationModalProps {
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   title,
   message,
-  confirmText = "Confirm",
+  confirmText = "Yes",
   cancelText = "Cancel",
   onConfirm,
   onCancel,

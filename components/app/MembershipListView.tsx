@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, CreditCard, Clock, Calendar, ShieldCheck, DollarSign, X, Check, Plus, ArrowRight } from 'lucide-react';
+import { ChevronLeft, CreditCard, Clock, Calendar, ShieldCheck, DollarSign, X, Check, Plus, ArrowRight, Tag } from 'lucide-react';
 import { Facility, Membership, User, PaymentCard } from '../../types';
 import CardFormModal from './CardFormModal';
 
@@ -70,6 +70,12 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
     setIsAddingCard(false);
   };
 
+  const calculateFinalPrice = (m: Membership) => {
+    if (!m.directDiscountEnabled || !m.directDiscountValue) return m.price;
+    if (m.directDiscountType === 'flat') return Math.max(0, m.price - m.directDiscountValue);
+    return Math.max(0, m.price * (1 - (m.directDiscountValue / 100)));
+  };
+
   if (isSuccess) {
     return (
       <div className="h-full bg-white flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
@@ -101,50 +107,63 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32 scrollbar-hide">
-        {facilityPlans.length > 0 ? facilityPlans.map(plan => (
-          <div key={plan.id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm space-y-6">
-             <div className="flex justify-between items-start">
-               <div className="space-y-1">
-                 <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none uppercase">{plan.title}</h4>
-                 <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{plan.durationDays} Day Duration</span>
+        {facilityPlans.length > 0 ? facilityPlans.map(plan => {
+          const finalPrice = calculateFinalPrice(plan);
+          const hasDiscount = finalPrice < plan.price;
+          
+          return (
+            <div key={plan.id} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm space-y-6">
+               <div className="flex justify-between items-start">
+                 <div className="space-y-1">
+                   <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none uppercase">{plan.title}</h4>
+                   <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{plan.durationDays} Day Duration</span>
+                   </div>
+                 </div>
+                 <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                    <CreditCard className="w-6 h-6" />
                  </div>
                </div>
-               <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-                  <CreditCard className="w-6 h-6" />
-               </div>
-             </div>
 
-             <div className="p-5 bg-slate-50 rounded-[28px] border border-slate-100">
-                <p className="text-sm font-medium text-slate-600 leading-relaxed uppercase tracking-tight opacity-80" dangerouslySetInnerHTML={{ __html: plan.description }} />
-             </div>
+               <div className="p-5 bg-slate-50 rounded-[28px] border border-slate-100">
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed uppercase tracking-tight opacity-80" dangerouslySetInnerHTML={{ __html: plan.description }} />
+               </div>
 
-             <div className="grid grid-cols-2 gap-3">
-               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-1 opacity-40"><Clock className="w-3 h-3" /><span className="text-[9px] font-black uppercase">Access</span></div>
-                  <p className="font-black text-slate-900 text-xs">{plan.allow24Hour ? '24/7 Hours' : `${plan.startTime}-${plan.endTime}`}</p>
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-2 mb-1 opacity-40"><Clock className="w-3 h-3" /><span className="text-[9px] font-black uppercase">Access</span></div>
+                    <p className="font-black text-slate-900 text-xs">{plan.allow24Hour ? '24/7 Hours' : `${plan.startTime}-${plan.endTime}`}</p>
+                 </div>
+                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-2 mb-1 opacity-40"><Calendar className="w-3 h-3" /><span className="text-[9px] font-black uppercase">Schedule</span></div>
+                    <p className="font-black text-slate-900 text-xs">{plan.daysOfWeek.length === 7 || plan.daysOfWeek.length === 0 ? 'All Days' : 'Limited Days'}</p>
+                 </div>
                </div>
-               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-1 opacity-40"><Calendar className="w-3 h-3" /><span className="text-[9px] font-black uppercase">Schedule</span></div>
-                  {/* Fix: check daysOfWeek length instead of non-existent daysAccess property */}
-                  <p className="font-black text-slate-900 text-xs">{plan.daysOfWeek.length === 7 ? 'All Days' : 'Limited Days'}</p>
-               </div>
-             </div>
 
-             <div className="flex justify-between items-end px-1">
-               <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Economic Fee</p>
-                  <p className="text-3xl font-black text-slate-900 tracking-tighter leading-none">${plan.price.toFixed(2)}</p>
+               <div className="flex justify-between items-end px-1">
+                 <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Economic Fee</p>
+                    <div className="flex items-baseline gap-2">
+                       {hasDiscount && <span className="text-sm font-bold text-slate-300 line-through">${plan.price.toFixed(2)}</span>}
+                       <p className="text-3xl font-black text-slate-900 tracking-tighter leading-none">${finalPrice.toFixed(2)}</p>
+                    </div>
+                 </div>
+                 <button 
+                  onClick={() => handleStartPurchase(plan)}
+                  className="px-8 py-4 bg-black text-white rounded-[24px] font-black text-sm shadow-xl active:scale-95 transition-all flex items-center gap-2 uppercase"
+                 >
+                   Enroll Now <ArrowRight className="w-4 h-4" />
+                 </button>
                </div>
-               <button 
-                onClick={() => handleStartPurchase(plan)}
-                className="px-8 py-4 bg-black text-white rounded-[24px] font-black text-sm shadow-xl active:scale-95 transition-all flex items-center gap-2 uppercase"
-               >
-                 Buy Now <ArrowRight className="w-4 h-4" />
-               </button>
-             </div>
-          </div>
-        )) : (
+               
+               {plan.rewardPointsEnabled && plan.rewardPointsValue && (
+                 <div className="flex items-center gap-2 px-1 text-[9px] font-black text-blue-600 uppercase tracking-widest">
+                    <Check className="w-3 h-3" /> Earn {plan.rewardPointsValue} Reward Points
+                 </div>
+               )}
+            </div>
+          );
+        }) : (
           <div className="py-24 text-center text-slate-400 font-bold uppercase text-xs tracking-widest italic">No active memberships currently.</div>
         )}
       </div>
@@ -176,7 +195,7 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                  <div className="flex justify-between text-sm font-bold text-slate-600"><span>Access</span><span>{selectedPlan.allow24Hour ? '24/7' : 'Timed'}</span></div>
                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                     <span className="text-lg font-black text-slate-900 tracking-tight uppercase">Final Charge</span>
-                    <span className="text-3xl font-black text-blue-600">${selectedPlan.price.toFixed(2)}</span>
+                    <span className="text-3xl font-black text-blue-600">${calculateFinalPrice(selectedPlan).toFixed(2)}</span>
                  </div>
               </div>
             </section>

@@ -2,7 +2,8 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, BookOpen, Layers, Ticket, CreditCard, 
-  ShoppingBag, Users, ArrowLeft, X, CalendarDays, ClipboardList
+  ShoppingBag, Users, ArrowLeft, X, CalendarDays, ClipboardList,
+  Gift
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,17 +44,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide text-left">
           <SidebarItem to="/admin" icon={LayoutDashboard} label="Facilities" onClick={onClose} />
           <SidebarItem to="/admin/classes" icon={BookOpen} label="Classes" onClick={onClose} />
-          <SidebarItem to="/admin/staff" icon={Users} label="Staff" onClick={onClose} />
+          <SidebarItem to="/admin/staff" icon={Users} label="Trainers" onClick={onClose} />
           <SidebarItem to="/admin/users" icon={Users} label="Users" onClick={onClose} />
           <SidebarItem to="/admin/timetable" icon={CalendarDays} label="Timetable" onClick={onClose} />
-          <SidebarItem to="/admin/marketplace" icon={ShoppingBag} label="Marketplace" onClick={onClose} />
+          <SidebarItem to="/admin/marketplace" icon="Products" label="Products" onClick={onClose} />
           <SidebarItem to="/admin/passes" icon={Ticket} label="Passes" onClick={onClose} />
           <SidebarItem to="/admin/memberships" icon={CreditCard} label="Memberships" onClick={onClose} />
           <SidebarItem to="/admin/blocks" icon={Layers} label="Blocks" onClick={onClose} />
-          <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Bookings & Orders" onClick={onClose} />
+          <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Bookings" onClick={onClose} />
+          <SidebarItem to="/admin/rewards" icon={Gift} label="Rewards" onClick={onClose} />
         </nav>
         <Link to="/" className="flex items-center gap-3 px-4 py-4 text-slate-500 hover:text-white transition-all text-sm font-bold border-t border-slate-800 mt-6 shrink-0">
           <ArrowLeft className="w-4 h-4" />

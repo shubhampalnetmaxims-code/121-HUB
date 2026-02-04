@@ -35,7 +35,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
           onClick={onAuthTrigger}
           className="w-full py-5 bg-black text-white rounded-2xl font-black text-lg shadow-2xl active:scale-95 transition-all"
         >
-          Sign In / Register
+          Sign In
         </button>
       </div>
     );
@@ -104,7 +104,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
             <GridMenuItem icon={ShieldCheck} label="Memberships" color="text-green-600" bg="bg-green-50" onClick={() => navigate('/app/profile/memberships')} />
             <GridMenuItem icon={FileText} label="Invoices" color="text-slate-600" bg="bg-slate-100" onClick={() => navigate('/app/profile/orders', { state: { view: 'invoices' } })} />
             <GridMenuItem icon={LogOut} label="Logout" color="text-slate-400" onClick={handleLogout} />
-            <GridMenuItem icon={Trash2} label="Delete" color="text-red-600" bg="bg-red-50" onClick={() => setIsDeleteConfirmOpen(true)} />
+            <GridMenuItem icon={Trash2} label="Delete Account" color="text-red-600" bg="bg-red-50" onClick={() => setIsDeleteConfirmOpen(true)} />
           </div>
         </section>
 
@@ -126,7 +126,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
            <div className="bg-white rounded-[32px] p-8 text-center space-y-6 max-w-xs shadow-2xl">
              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto"><AlertTriangle className="w-8 h-8" /></div>
              <div><h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2 uppercase">Permanently Delete?</h3><p className="text-slate-500 text-sm font-medium leading-relaxed">This action will permanently purge your profile and all associated records.</p></div>
-             <div className="space-y-3 pt-2"><button onClick={onDeleteAccount.bind(null, currentUser.id)} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-xl uppercase text-sm">Yes, Purge Data</button><button onClick={() => setIsDeleteConfirmOpen(false)} className="w-full py-4 text-slate-400 font-bold uppercase text-sm">Cancel</button></div>
+             <div className="space-y-3 pt-2"><button onClick={onDeleteAccount.bind(null, currentUser.id)} className="w-full py-4 bg-red-600 text-white rounded-2xl font-black shadow-xl uppercase text-sm">Yes, Delete</button><button onClick={() => setIsDeleteConfirmOpen(false)} className="w-full py-4 text-slate-400 font-bold uppercase text-sm">Cancel</button></div>
            </div>
         </div>
       )}

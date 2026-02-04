@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, CreditCard, Clock, Calendar, DollarSign, Info, Check, Plus, Bold, Italic, List } from 'lucide-react';
+import { X, CreditCard, Clock, Calendar, DollarSign, Info, Check, Plus, Bold, Italic, List, Percent, Gift } from 'lucide-react';
 import { Facility, Membership, DAYS_OF_WEEK } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -22,7 +22,12 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
     startTime: membership?.startTime || '09:00',
     endTime: membership?.endTime || '18:00',
     daysOfWeek: membership?.daysOfWeek || [0, 1, 2, 3, 4, 5, 6] as number[],
-    status: membership?.status || 'active'
+    status: membership?.status || 'active',
+    directDiscountEnabled: membership?.directDiscountEnabled ?? false,
+    directDiscountValue: membership?.directDiscountValue ?? 0,
+    directDiscountType: membership?.directDiscountType || 'flat' as 'flat' | 'percent',
+    rewardPointsEnabled: membership?.rewardPointsEnabled ?? false,
+    rewardPointsValue: membership?.rewardPointsValue ?? 0
   });
   
   const [customDuration, setCustomDuration] = useState(false);
@@ -145,6 +150,39 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
                </div>
             </div>
 
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Direct Discount</label>
+                     <input type="checkbox" checked={formData.directDiscountEnabled} onChange={e => setFormData(p => ({ ...p, directDiscountEnabled: e.target.checked }))} className="w-5 h-5 accent-blue-600" />
+                  </div>
+                  <div className={`space-y-3 transition-opacity ${!formData.directDiscountEnabled ? 'opacity-30 pointer-events-none' : ''}`}>
+                     <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl">
+                        <button type="button" onClick={() => setFormData(p => ({ ...p, directDiscountType: 'flat' }))} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.directDiscountType === 'flat' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400'}`}>Flat ($)</button>
+                        <button type="button" onClick={() => setFormData(p => ({ ...p, directDiscountType: 'percent' }))} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.directDiscountType === 'percent' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-400'}`}>Percent (%)</button>
+                     </div>
+                     <div className="relative">
+                        <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input type="number" value={formData.directDiscountValue} onChange={e => setFormData(p => ({ ...p, directDiscountValue: parseFloat(e.target.value) || 0 }))} className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm" />
+                     </div>
+                  </div>
+               </div>
+
+               <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reward Earning</label>
+                     <input type="checkbox" checked={formData.rewardPointsEnabled} onChange={e => setFormData(p => ({ ...p, rewardPointsEnabled: e.target.checked }))} className="w-5 h-5 accent-blue-600" />
+                  </div>
+                  <div className={`space-y-3 transition-opacity ${!formData.rewardPointsEnabled ? 'opacity-30 pointer-events-none' : ''}`}>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Points to award</p>
+                     <div className="relative">
+                        <Gift className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
+                        <input type="number" value={formData.rewardPointsValue} onChange={e => setFormData(p => ({ ...p, rewardPointsValue: parseInt(e.target.value) || 0 }))} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm" />
+                     </div>
+                  </div>
+               </div>
+            </div>
+
             <div className="pt-4 border-t border-slate-100">
                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Plan Duration (Days)</label>
                <div className="flex flex-wrap gap-2">
@@ -195,7 +233,7 @@ const MembershipFormModal: React.FC<MembershipFormModalProps> = ({ membership, f
 
             <div className="flex flex-col md:flex-row gap-4 pt-10 sticky bottom-0 bg-white/80 backdrop-blur-md pb-4">
               <button type="button" onClick={onClose} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-bold text-slate-400 hover:bg-slate-50 transition-colors text-sm uppercase">Discard</button>
-              <button type="submit" className="flex-1 py-4 bg-black text-white rounded-2xl font-black shadow-2xl hover:bg-slate-800 transition-all text-sm uppercase">Create Plan</button>
+              <button type="submit" className="flex-1 py-4 bg-black text-white rounded-2xl font-black shadow-2xl hover:bg-slate-800 transition-all text-sm uppercase">Save Plan</button>
             </div>
           </form>
         </div>

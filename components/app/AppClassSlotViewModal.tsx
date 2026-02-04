@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Clock, MapPin, User, BookOpen, UserPlus, ShieldCheck, DollarSign, Ticket, Check } from 'lucide-react';
-import { ClassSlot, Class, Trainer, Location, User as UserType, Booking, UserPass, Pass } from '../../types';
+import { ClassSlot, Class, Trainer, Location, User as UserType, Booking, UserPass, Pass, RewardSettings } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
 import BookingPreviewModal from './BookingPreviewModal';
@@ -19,6 +19,9 @@ interface AppClassSlotViewModalProps {
   availablePasses: Pass[];
   onBuyPass: (p: Pass) => void;
   onUsePass: (userPassId: string, credits: number) => void;
+  // Added reward properties
+  rewardSettings: RewardSettings;
+  onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel: () => void }) => (
@@ -39,7 +42,8 @@ const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel
 
 const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({ 
   slot, cls, trainer, location, onClose, onAuthTrigger, currentUser, onAddBooking, onUpdateUser,
-  userPasses, availablePasses, onBuyPass, onUsePass
+  userPasses, availablePasses, onBuyPass, onUsePass,
+  rewardSettings, onRedeemPoints // Destructured new props
 }) => {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
@@ -113,7 +117,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
         </div>
         <h3 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 leading-none">Booking Confirmed!</h3>
         <p className="text-slate-500 text-lg mb-10 leading-relaxed">You're all set for <b>{cls?.name}</b> at {slot.startTime}. See you there!</p>
-        <button onClick={onClose} className="w-full py-5 bg-black text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all">Done</button>
+        <button onClick={onClose} className="w-full py-5 bg-black text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-[0.98] transition-all">Done</button>
       </div>
     );
   }
@@ -333,6 +337,9 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           selectedNewPass={availablePasses.find(p => p.id === selectedNewPassId)}
           onBuyPass={onBuyPass}
           onUsePass={onUsePass}
+          // Fix: Propagating missing reward props to BookingPreviewModal
+          rewardSettings={rewardSettings}
+          onRedeemPoints={onRedeemPoints}
         />
       )}
     </div>

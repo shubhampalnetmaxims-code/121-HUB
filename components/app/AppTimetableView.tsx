@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Filter, Calendar as CalendarIcon, Layout, ArrowLeft, Tag, Eye, CheckCircle2 } from 'lucide-react';
-import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK, User, Booking, UserPass, Pass } from '../../types';
+import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK, User, Booking, UserPass, Pass, RewardSettings } from '../../types';
 import AppClassSlotViewModal from './AppClassSlotViewModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -18,11 +18,15 @@ interface AppTimetableViewProps {
   availablePasses: Pass[];
   onBuyPass: (p: Pass) => void;
   onUsePass: (userPassId: string, credits: number) => void;
+  // Added reward properties
+  rewardSettings: RewardSettings;
+  onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const AppTimetableView: React.FC<AppTimetableViewProps> = ({
   facility, classes, trainers, locations, classSlots, onAuthTrigger, currentUser, onAddBooking, onUpdateUser,
-  userPasses, availablePasses, onBuyPass, onUsePass
+  userPasses, availablePasses, onBuyPass, onUsePass,
+  rewardSettings, onRedeemPoints // Destructured new props
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -187,7 +191,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                           <div 
                             key={s.id} 
                             onClick={() => handleSlotClick(s)}
-                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-95 transition-all cursor-pointer border bg-slate-50 border-slate-100 hover:border-blue-200`}
+                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-[0.98] transition-all cursor-pointer border bg-slate-50 border-slate-100 hover:border-blue-200`}
                           >
                             <div className="text-left relative">
                               <div className="flex items-center justify-between gap-1.5 mb-1">
@@ -236,6 +240,9 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
           availablePasses={availablePasses}
           onBuyPass={onBuyPass}
           onUsePass={onUsePass}
+          // Propagating reward props
+          rewardSettings={rewardSettings}
+          onRedeemPoints={onRedeemPoints}
         />
       )}
     </div>

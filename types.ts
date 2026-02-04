@@ -68,6 +68,9 @@ export interface BlockBooking {
   bookingAmountPaid: boolean;
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   createdAt: number;
+  rewardPointsEarned?: number;
+  rewardPointsUsed?: number;
+  rewardDiscount?: number;
 }
 
 export interface BlockWeeklyPayment {
@@ -136,6 +139,9 @@ export interface Booking {
   amount: number;
   createdAt: number;
   usedPassId?: string;
+  rewardPointsEarned?: number;
+  rewardPointsUsed?: number;
+  rewardDiscount?: number;
 }
 
 export interface Pass {
@@ -166,6 +172,9 @@ export interface UserPass {
   allowedClassIds: string[];
   purchasedAt: number;
   status: 'active' | 'exhausted' | 'expired';
+  rewardPointsEarned?: number;
+  rewardPointsUsed?: number;
+  rewardDiscount?: number;
 }
 
 export interface Membership {
@@ -181,6 +190,11 @@ export interface Membership {
   daysOfWeek: number[]; // 0 for Sunday, 1 for Monday, etc.
   status: 'active' | 'inactive';
   createdAt: number;
+  directDiscountEnabled?: boolean;
+  directDiscountValue?: number;
+  directDiscountType?: 'flat' | 'percent';
+  rewardPointsEnabled?: boolean;
+  rewardPointsValue?: number;
 }
 
 export interface UserMembership {
@@ -198,6 +212,9 @@ export interface UserMembership {
   daysOfWeek: number[];
   status: 'active' | 'expired' | 'cancelled';
   purchasedAt: number;
+  rewardPointsEarned?: number;
+  rewardPointsUsed?: number;
+  rewardDiscount?: number;
 }
 
 export interface Measurement {
@@ -274,6 +291,9 @@ export interface Order {
   status: 'placed' | 'picked-up' | 'cancelled';
   paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded';
   createdAt: number;
+  rewardPointsEarned?: number;
+  rewardPointsUsed?: number;
+  rewardDiscount?: number;
 }
 
 export interface PaymentCard {
@@ -284,6 +304,32 @@ export interface PaymentCard {
   expiryDate: string; // MM/YY
   isPrimary: boolean;
   createdAt: number;
+}
+
+export interface RewardTransaction {
+  id: string;
+  userId: string;
+  date: number;
+  type: 'earned' | 'used';
+  source: 'booking' | 'block' | 'order' | 'pass' | 'membership' | 'manual';
+  referenceId: string;
+  points: number;
+  remainingBalance: number;
+}
+
+export interface RewardSettings {
+  classes: { enabled: boolean; points: number };
+  passes: { enabled: boolean; points: number };
+  blocks: { enabled: boolean; points: number };
+  orders: { enabled: boolean; points: number };
+  memberships: { enabled: boolean; points: number };
+  redemption: {
+    enabled: boolean;
+    pointsToValue: number; // e.g., 1000 points
+    monetaryValue: number; // e.g., 10 EUR
+    minPointsRequired: number;
+    enabledModules: string[]; // ['booking', 'block', 'pass', 'order']
+  };
 }
 
 export interface User {
@@ -297,6 +343,7 @@ export interface User {
   status: 'active' | 'blocked';
   createdAt: number;
   paymentCards: PaymentCard[];
+  rewardPoints: number;
 }
 
 export interface AppNotification {
@@ -382,6 +429,37 @@ export const DEFAULT_FACILITIES: Facility[] = [
   }
 ];
 
+export const DEFAULT_REWARD_SETTINGS: RewardSettings = {
+  classes: { enabled: true, points: 150 },
+  passes: { enabled: true, points: 650 },
+  blocks: { enabled: true, points: 1000 },
+  orders: { enabled: true, points: 200 },
+  memberships: { enabled: true, points: 500 },
+  redemption: {
+    enabled: true,
+    pointsToValue: 1000,
+    monetaryValue: 10,
+    minPointsRequired: 500,
+    enabledModules: ['booking', 'block', 'pass', 'order']
+  }
+};
+
+export const DEFAULT_USERS: User[] = [
+  { id: 'u1', email: 'sarah@example.com', fullName: 'Sarah Johnson', phone: '+1 555-1234', gender: 'Female', paymentMethod: 'added', status: 'active', createdAt: Date.now() - 5000000, paymentCards: [], rewardPoints: 1200 },
+  { id: 'u2', email: 'mike@example.com', fullName: 'Mike Ross', phone: '+1 555-4321', gender: 'Male', paymentMethod: 'skipped', status: 'blocked', createdAt: Date.now() - 8000000, paymentCards: [], rewardPoints: 450 },
+  { id: 'u3', email: 'shubham@gmail.com', fullName: 'Shubham Kumar', phone: '+91 9876543210', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now() - 10000000, paymentCards: [
+    { id: 'card1', holderName: 'SHUBHAM KUMAR', cardNumber: '•••• •••• •••• 4242', brand: 'Visa', expiryDate: '12/28', isPrimary: true, createdAt: Date.now() }
+  ], rewardPoints: 1350 }
+];
+
+export const DEFAULT_REWARD_TRANSACTIONS: RewardTransaction[] = [
+  { id: 'rt1', userId: 'u3', date: Date.now() - 1000000, type: 'earned', source: 'booking', referenceId: 'BK-12345', points: 300, remainingBalance: 300 },
+  { id: 'rt2', userId: 'u3', date: Date.now() - 900000, type: 'earned', source: 'order', referenceId: 'ORD-9876', points: 400, remainingBalance: 700 },
+  { id: 'rt3', userId: 'u3', date: Date.now() - 800000, type: 'earned', source: 'membership', referenceId: 'MBR-555', points: 500, remainingBalance: 1200 },
+  { id: 'rt4', userId: 'u3', date: Date.now() - 700000, type: 'used', source: 'block', referenceId: 'BLK-444', points: 500, remainingBalance: 700 },
+  { id: 'rt5', userId: 'u3', date: Date.now() - 600000, type: 'earned', source: 'pass', referenceId: 'PSS-333', points: 650, remainingBalance: 1350 }
+];
+
 export const DEFAULT_CLASSES: Class[] = [
   // 121 Fitness Classes
   { id: 'c1', facilityId: '1', name: 'Boxing', shortDescription: 'High-intensity boxing training for all levels.', duration: '1 hour', requirements: 'Gloves, wraps', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?q=80&w=600&auto=format&fit=crop', createdAt: Date.now(), pricePerSession: 15, status: 'active' },
@@ -432,14 +510,6 @@ export const DEFAULT_CLASS_SLOTS: ClassSlot[] = [
   { id: 's10', facilityId: '2', classId: 'z1', trainerId: 't3', locationId: 'l4', dayOfWeek: 5, startTime: '18:00', duration: '1 hour', status: 'available', currentBookings: 5, maxBookings: 20 }
 ];
 
-export const DEFAULT_USERS: User[] = [
-  { id: 'u1', email: 'sarah@example.com', fullName: 'Sarah Johnson', phone: '+1 555-1234', gender: 'Female', paymentMethod: 'added', status: 'active', createdAt: Date.now() - 5000000, paymentCards: [] },
-  { id: 'u2', email: 'mike@example.com', fullName: 'Mike Ross', phone: '+1 555-4321', gender: 'Male', paymentMethod: 'skipped', status: 'blocked', createdAt: Date.now() - 8000000, paymentCards: [] },
-  { id: 'u3', email: 'shubham@gmail.com', fullName: 'Shubham Kumar', phone: '+91 9876543210', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now() - 10000000, paymentCards: [
-    { id: 'card1', holderName: 'SHUBHAM KUMAR', cardNumber: '•••• •••• •••• 4242', brand: 'Visa', expiryDate: '12/28', isPrimary: true, createdAt: Date.now() }
-  ] }
-];
-
 export const DEFAULT_PRODUCTS: Product[] = [
   { id: 'p1', facilityId: '1', name: 'Ultra Whey Isolate', price: 69.99, discountPercent: 20, discountedPrice: 54.99, quantity: 25, sizeStocks: [{size: '2kg', quantity: 25}], category: 'Supplements', status: 'active', createdAt: Date.now(), description: 'Premium grass-fed whey isolate. High protein content with minimal carbs.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'], color: 'Vanilla' },
   { id: 'p2', facilityId: '1', name: 'Performance Tee', price: 35.00, quantity: 50, sizeStocks: [{size: 'M', quantity: 20}, {size: 'L', quantity: 30}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Sweat-wicking technical tee for high intensity sessions.', images: ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400&auto=format&fit=crop'], color: 'Charcoal' },
@@ -469,7 +539,7 @@ export const DEFAULT_BOOKINGS: Booking[] = [
 ];
 
 export const DEFAULT_ORDERS: Order[] = [
-  { id: 'o1', orderNumber: 'ORD-A9F2-3B10', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci1', productId: 'p1', name: 'Ultra Whey Isolate', price: 54.99, size: '2kg', quantity: 1, image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 54.99, vat: 2.75, serviceCharge: 2.5, total: 60.24, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 1209600000 },
+  { id: 'o1', orderNumber: 'ORD-A9F2-3B10', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci1', productId: 'p1', name: 'Ultra Whey Isolate', price: 54.99, size: '2kg', quantity: 1, image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 54.99, vat: 2.75, serviceCharge: 2.5, total: 60.24, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 1209600000 },
   { id: 'o2', orderNumber: 'ORD-7K4L-9P0Q', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci2', productId: 'p2', name: 'Performance Tee', price: 35.00, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 35.00, vat: 1.75, serviceCharge: 2.5, total: 39.25, status: 'placed', paymentStatus: 'paid', createdAt: Date.now() - 86400000 }
 ];
 

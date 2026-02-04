@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home as HomeIcon, Calendar, User, ShoppingBag, PlusCircle } from 'lucide-react';
@@ -17,7 +16,7 @@ const BottomNav: React.FC = () => {
       </button>
       <button onClick={() => navigate('/app/market')} className={`flex flex-col items-center gap-1.5 transition-colors ${isActive('/market') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
         <ShoppingBag className="w-5 h-5" />
-        <span className="text-[8px] font-bold uppercase tracking-widest">Market</span>
+        <span className="text-[8px] font-bold uppercase tracking-widest">Shop</span>
       </button>
       <button onClick={() => navigate('/app/activity')} className={`flex flex-col items-center gap-1.5 transition-colors ${isActive('/activity') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
         <div className={`p-1.5 rounded-full ${isActive('/activity') ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>

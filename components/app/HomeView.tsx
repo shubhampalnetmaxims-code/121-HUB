@@ -77,18 +77,18 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
               <div className="absolute bottom-4 left-6">
                 <h4 className="text-white font-bold text-xl tracking-tight leading-none mb-1">{f.name}</h4>
                 <div className="flex items-center gap-1.5 text-white/80 text-[9px] font-bold uppercase tracking-wider">
-                   <MapPin className="w-2.5 h-2.5" /> 121 Wellness Network
+                   <MapPin className="w-2.5 h-2.5" /> 121 Network
                 </div>
               </div>
             </div>
 
             <div className="p-4 flex justify-between items-center bg-white">
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Digital Hub</span>
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hub</span>
                <button 
                 onClick={() => navigate(`/app/facility/${f.id}`)}
                 className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-black transition-all"
                >
-                 Open Hub
+                 View
                  <ArrowRight className="w-4 h-4" />
                </button>
             </div>

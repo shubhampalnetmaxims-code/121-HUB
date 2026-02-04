@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_MEMBERSHIPS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -68,6 +68,8 @@ const AppContent: React.FC = () => {
   const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>([]);
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>([]);
+  const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>([]);
+  const [rewardSettings, setRewardSettings] = useState<RewardSettings>(DEFAULT_REWARD_SETTINGS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -103,6 +105,8 @@ const AppContent: React.FC = () => {
     setBlockPayments(safeHydrate('121_block_payments', DEFAULT_BLOCK_PAYMENTS));
     setMeasurements(safeHydrate('121_measurements', []));
     setPhotoLogs(safeHydrate('121_photo_logs', []));
+    setRewardTransactions(safeHydrate('121_reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
+    setRewardSettings(safeHydrate('121_reward_settings', DEFAULT_REWARD_SETTINGS));
     setCurrentUser(safeHydrate('121_current_user', null));
     setIsLoading(false);
   }, []);
@@ -128,13 +132,44 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_block_payments', JSON.stringify(blockPayments));
       localStorage.setItem('121_measurements', JSON.stringify(measurements));
       localStorage.setItem('121_photo_logs', JSON.stringify(photoLogs));
+      localStorage.setItem('121_reward_transactions', JSON.stringify(rewardTransactions));
+      localStorage.setItem('121_reward_settings', JSON.stringify(rewardSettings));
       if (currentUser) {
         localStorage.setItem('121_current_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('121_current_user');
       }
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, isLoading]);
+
+  const addRewardTransaction = (userId: string, type: 'earned' | 'used', source: RewardTransaction['source'], referenceId: string, points: number) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const currentBalance = user.rewardPoints;
+    const newBalance = type === 'earned' ? currentBalance + points : currentBalance - points;
+    
+    const newTX: RewardTransaction = {
+      id: Math.random().toString(36).substr(2, 9),
+      userId,
+      date: Date.now(),
+      type,
+      source,
+      referenceId,
+      points,
+      remainingBalance: newBalance
+    };
+
+    setRewardTransactions(prev => [newTX, ...prev]);
+    updateUserPoints(userId, newBalance);
+  };
+
+  const updateUserPoints = (userId: string, newPoints: number) => {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, rewardPoints: newPoints } : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => prev ? { ...prev, rewardPoints: newPoints } : null);
+    }
+  };
 
   const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
     setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
@@ -177,6 +212,14 @@ const AppContent: React.FC = () => {
 
   const buyMembership = (m: Membership) => {
     if (!currentUser) return;
+    
+    // Calculate price after direct discount if any
+    let finalPrice = m.price;
+    if (m.directDiscountEnabled && m.directDiscountValue) {
+      if (m.directDiscountType === 'flat') finalPrice = Math.max(0, m.price - m.directDiscountValue);
+      else finalPrice = Math.max(0, m.price * (1 - (m.directDiscountValue / 100)));
+    }
+
     const newUserMembership: UserMembership = {
       id: Math.random().toString(36).substr(2, 9),
       userId: currentUser.id,
@@ -185,7 +228,7 @@ const AppContent: React.FC = () => {
       title: m.title,
       startDate: Date.now(),
       endDate: Date.now() + (m.durationDays * 86400000),
-      price: m.price,
+      price: finalPrice,
       allow24Hour: m.allow24Hour,
       startTime: m.startTime,
       endTime: m.endTime,
@@ -194,6 +237,14 @@ const AppContent: React.FC = () => {
       purchasedAt: Date.now()
     };
     setUserMemberships(prev => [...prev, newUserMembership]);
+    
+    // Reward Logic
+    if (rewardSettings.memberships.enabled) {
+       const pts = m.rewardPointsEnabled ? m.rewardPointsValue || rewardSettings.memberships.points : rewardSettings.memberships.points;
+       addRewardTransaction(currentUser.id, 'earned', 'membership', newUserMembership.id, pts);
+       showToast(`Earned ${pts} points!`, 'success');
+    }
+
     showToast('Membership activated!', 'success');
     addNotification('Membership Active', `Your ${m.title} is now active.`, 'success', currentUser.id);
   };
@@ -237,6 +288,12 @@ const AppContent: React.FC = () => {
       createdAt: Date.now()
     };
     
+    // Reward Earning
+    if (rewardSettings.blocks.enabled) {
+      addRewardTransaction(currentUser.id, 'earned', 'block', newBB.id, rewardSettings.blocks.points);
+      showToast(`Earned ${rewardSettings.blocks.points} points!`, 'success');
+    }
+
     // Generate weekly payments
     const newPayments: BlockWeeklyPayment[] = [];
     for (let i = 1; i <= block.numWeeks; i++) {
@@ -347,6 +404,13 @@ const AppContent: React.FC = () => {
       purchasedAt: Date.now(),
       status: 'active'
     };
+    
+    // Reward Earning
+    if (rewardSettings.passes.enabled) {
+      addRewardTransaction(currentUser.id, 'earned', 'pass', newUserPass.id, rewardSettings.passes.points);
+      showToast(`Earned ${rewardSettings.passes.points} points!`, 'success');
+    }
+
     setUserPasses(prev => [...prev, newUserPass]);
     showToast('Pass purchased!', 'success');
     addNotification('Pass Purchased', `You bought ${pass.name}. Ready to use!`, 'success', currentUser.id);
@@ -399,6 +463,13 @@ const AppContent: React.FC = () => {
       paymentStatus: 'paid',
       createdAt: Date.now()
     };
+    
+    // Reward Logic
+    if (currentUser && rewardSettings.orders.enabled) {
+       addRewardTransaction(currentUser.id, 'earned', 'order', newOrder.id, rewardSettings.orders.points);
+       showToast(`Earned ${rewardSettings.orders.points} points!`, 'success');
+    }
+
     setOrders(prev => [newOrder, ...prev]);
     setCart([]);
     return newOrder;
@@ -426,7 +497,8 @@ const AppContent: React.FC = () => {
       id: Math.random().toString(36).substr(2, 9),
       status: 'active',
       createdAt: Date.now(),
-      paymentCards: userData.paymentCards || []
+      paymentCards: userData.paymentCards || [],
+      rewardPoints: 0
     };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
@@ -459,13 +531,19 @@ const AppContent: React.FC = () => {
       paymentStatus: 'paid',
       createdAt: Date.now()
     };
+    
+    // Reward Logic
+    if (currentUser && rewardSettings.classes.enabled && newBooking.type === 'class') {
+       addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, rewardSettings.classes.points);
+       showToast(`Earned ${rewardSettings.classes.points} points!`, 'success');
+    }
+
     setBookings(prev => [newBooking, ...prev]);
     return newBooking;
   };
 
   const updateBooking = (id: string, updates: Partial<Booking>) => {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-    showToast('Booking updated', 'success');
   };
 
   const onAddMeasurement = (m: Omit<Measurement, 'id'>) => {
@@ -520,6 +598,9 @@ const AppContent: React.FC = () => {
                 blockPayments={blockPayments}
                 measurements={measurements}
                 photoLogs={photoLogs}
+                rewardTransactions={rewardTransactions}
+                rewardSettings={rewardSettings}
+                onRedeemPoints={(pts, src, ref) => currentUser && addRewardTransaction(currentUser.id, 'used', src as any, ref, pts)}
                 currentUser={currentUser}
                 onRegisterUser={registerUser}
                 onUpdateUser={updateUser}
@@ -599,6 +680,9 @@ const AppContent: React.FC = () => {
                 userMemberships={userMemberships}
                 measurements={measurements}
                 photoLogs={photoLogs}
+                rewardSettings={rewardSettings}
+                rewardTransactions={rewardTransactions}
+                onUpdateRewardSettings={setRewardSettings}
               />
             } 
           />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, CreditCard, Check, Tag } from 'lucide-react';
-import { CartItem, Order, User, PaymentCard } from '../../types';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, CreditCard, Check, Tag, Coins, Lock } from 'lucide-react';
+import { CartItem, Order, User, PaymentCard, RewardSettings } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
 import CardFormModal from './CardFormModal';
@@ -14,10 +14,12 @@ interface CartViewProps {
   onAddOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Order;
   onAuthTrigger: () => void;
   onUpdateUser: (id: string, updates: Partial<User>) => void;
+  rewardSettings: RewardSettings;
+  onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const CartView: React.FC<CartViewProps> = ({ 
-  cart, updateQuantity, remove, currentUser, onAddOrder, onAuthTrigger, onUpdateUser 
+  cart, updateQuantity, remove, currentUser, onAddOrder, onAuthTrigger, onUpdateUser, rewardSettings, onRedeemPoints
 }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -25,13 +27,23 @@ const CartView: React.FC<CartViewProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
+  const [useRewards, setUseRewards] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [selectedCardId, setSelectedCardId] = useState<string>(currentUser?.paymentCards.find(c => c.isPrimary)?.id || currentUser?.paymentCards[0]?.id || '');
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const vat = subtotal * 0.05; // 5% VAT
   const serviceCharge = subtotal > 0 ? 2.50 : 0;
-  const total = subtotal + vat + serviceCharge;
+  const baseTotal = subtotal + vat + serviceCharge;
+
+  const redemptionEnabled = rewardSettings.redemption.enabled && rewardSettings.redemption.enabledModules.includes('order');
+  const hasMinPoints = currentUser && currentUser.rewardPoints >= rewardSettings.redemption.minPointsRequired;
+  
+  const canRedeem = currentUser && redemptionEnabled && hasMinPoints && baseTotal > 0;
+
+  const pointsToUse = useRewards && currentUser ? Math.min(currentUser.rewardPoints, Math.floor(baseTotal / rewardSettings.redemption.monetaryValue * rewardSettings.redemption.pointsToValue)) : 0;
+  const rewardDiscount = (pointsToUse / rewardSettings.redemption.pointsToValue) * rewardSettings.redemption.monetaryValue;
+  const finalTotal = Math.max(0, baseTotal - rewardDiscount);
 
   const handleCheckout = async () => {
     if (!currentUser) {
@@ -39,19 +51,18 @@ const CartView: React.FC<CartViewProps> = ({
       return;
     }
 
-    if (!selectedCardId) {
+    if (finalTotal > 0 && !selectedCardId) {
       setIsAddingCard(true);
       return;
     }
 
     setIsProcessing(true);
-    // Simulate payment gateway
     await new Promise(r => setTimeout(r, 2000));
 
     const ordNum = `ORD-${Math.random().toString(36).substr(2, 4).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     setOrderNumber(ordNum);
 
-    onAddOrder({
+    const newOrder = onAddOrder({
       orderNumber: ordNum,
       userId: currentUser.id,
       userName: currentUser.fullName,
@@ -61,9 +72,15 @@ const CartView: React.FC<CartViewProps> = ({
       subtotal,
       vat,
       serviceCharge,
-      total,
-      status: 'placed'
+      total: finalTotal,
+      status: 'placed',
+      rewardPointsUsed: pointsToUse,
+      rewardDiscount: rewardDiscount
     });
+
+    if (pointsToUse > 0) {
+      onRedeemPoints(pointsToUse, 'order', newOrder.id);
+    }
 
     addNotification('Order Placed', `Order ${ordNum} has been placed successfully.`, 'success', currentUser.id);
     addNotification('New Order Received', `A new marketplace order (${ordNum}) has been received.`, 'info', 'admin');
@@ -149,6 +166,41 @@ const CartView: React.FC<CartViewProps> = ({
               ))}
             </div>
 
+            {redemptionEnabled && (
+              <section className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100">
+                 {hasMinPoints ? (
+                    <>
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2 text-left">
+                          <Coins className="w-5 h-5 text-blue-600" />
+                          <div>
+                              <p className="text-xs font-black text-blue-900 uppercase leading-none mb-1">Use Rewards</p>
+                              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Available: {currentUser.rewardPoints} Pts</p>
+                          </div>
+                        </div>
+                        <input type="checkbox" checked={useRewards} onChange={e => setUseRewards(e.target.checked)} className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer" />
+                      </div>
+                      {useRewards && (
+                        <div className="animate-in slide-in-from-top-2 duration-300 flex justify-between items-center p-3 bg-white rounded-xl border border-blue-100">
+                          <span className="text-[10px] font-black text-slate-400 uppercase">Saving Applied</span>
+                          <span className="font-black text-green-600">-${rewardDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                 ) : (
+                    <div className="flex items-center gap-4 opacity-70">
+                       <div className="p-3 bg-white rounded-2xl text-slate-400 shadow-sm">
+                          <Lock className="w-5 h-5" />
+                       </div>
+                       <div className="text-left flex-1">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Rewards Locked</p>
+                          <p className="text-[10px] font-bold text-slate-400">Need {rewardSettings.redemption.minPointsRequired} points to redeem.</p>
+                       </div>
+                    </div>
+                 )}
+              </section>
+            )}
+
             <section className="space-y-4">
                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Payment Method</h4>
                {currentUser ? (
@@ -177,24 +229,21 @@ const CartView: React.FC<CartViewProps> = ({
                )}
             </section>
 
-            <section className="bg-slate-50 rounded-[32px] p-6 space-y-4">
+            <section className="bg-slate-50 rounded-[32px] p-6 space-y-4 text-left">
               <div className="flex justify-between text-sm font-bold text-slate-500">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>Base Total</span>
+                <span>${baseTotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold text-slate-500">
-                <span>VAT (5%)</span>
-                <span>${vat.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm font-bold text-slate-500">
-                <span>Service Fee</span>
-                <span>${serviceCharge.toFixed(2)}</span>
-              </div>
+              {rewardDiscount > 0 && (
+                <div className="flex justify-between text-sm font-bold text-green-600">
+                  <span>Reward Discount ({pointsToUse} pts)</span>
+                  <span>-${rewardDiscount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                <span className="text-xl font-black text-slate-900 tracking-tight">Total</span>
-                <span className="text-3xl font-black text-blue-600">${total.toFixed(2)}</span>
+                <span className="text-xl font-black text-slate-900 tracking-tight uppercase">Final Total</span>
+                <span className="text-3xl font-black text-blue-600">${finalTotal.toFixed(2)}</span>
               </div>
-              <p className="text-[8px] font-black text-slate-400 uppercase text-center tracking-widest mt-2">VAT and service charges will be applied.</p>
             </section>
           </>
         ) : (
@@ -204,9 +253,9 @@ const CartView: React.FC<CartViewProps> = ({
             </div>
             <div>
               <p className="text-lg font-bold text-slate-400">Cart is empty</p>
-              <p className="text-xs text-slate-300 mt-1">Visit our market to find performance gear.</p>
+              <p className="text-xs text-slate-300 mt-1">Visit our shop to find performance gear.</p>
             </div>
-            <button onClick={() => navigate('/app/market')} className="px-8 py-3 bg-black text-white rounded-xl font-bold text-sm">Explore Market</button>
+            <button onClick={() => navigate('/app/market')} className="px-8 py-3 bg-black text-white rounded-xl font-bold text-sm">Explore Shop</button>
           </div>
         )}
       </div>
@@ -223,7 +272,7 @@ const CartView: React.FC<CartViewProps> = ({
             ) : (
               <>
                 <ShieldCheck className="w-6 h-6" />
-                Proceed to Pay
+                {finalTotal === 0 ? 'Confirm Order' : `Pay $${finalTotal.toFixed(2)}`}
               </>
             )}
           </button>

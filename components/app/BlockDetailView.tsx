@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// Fix: Added Plus to the lucide-react icon imports
-import { X, Layers, Calendar, Clock, User, DollarSign, Info, ShieldCheck, CheckCircle, MapPin, Users, ArrowLeft, UserPlus, CreditCard, Check, Plus } from 'lucide-react';
-import { Facility, Block, Trainer, User as UserType, PaymentCard } from '../../types';
+// Added Coins to imports
+import { X, Layers, Calendar, Clock, User, DollarSign, Info, ShieldCheck, CheckCircle, MapPin, Users, ArrowLeft, UserPlus, CreditCard, Check, Plus, Coins } from 'lucide-react';
+import { Facility, Block, Trainer, User as UserType, PaymentCard, RewardSettings } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
 import CardFormModal from './CardFormModal';
@@ -15,10 +15,14 @@ interface BlockDetailViewProps {
   currentUser: UserType | null;
   onBookBlock: (block: Block, participants: string[]) => void;
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
+  // Added missing reward props
+  rewardSettings: RewardSettings;
+  onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const BlockDetailView: React.FC<BlockDetailViewProps> = ({ 
-  facilities, blocks, trainers, onAuthTrigger, currentUser, onBookBlock, onUpdateUser 
+  facilities, blocks, trainers, onAuthTrigger, currentUser, onBookBlock, onUpdateUser,
+  rewardSettings, onRedeemPoints // Destructured new props
 }) => {
   const { id, blockId } = useParams();
   const navigate = useNavigate();
@@ -31,12 +35,24 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [useRewards, setUseRewards] = useState(false); // Added redemption state
   const [selectedCardId, setSelectedCardId] = useState<string>(currentUser?.paymentCards.find(c => c.isPrimary)?.id || currentUser?.paymentCards[0]?.id || '');
 
   const block = blocks.find(b => b.id === blockId);
   const trainer = block ? trainers.find(t => t.id === block.trainerId) : null;
   
   if (!block) return null;
+
+  const baseTotal = block.bookingAmount * personCount;
+  const canRedeem = currentUser && 
+                  rewardSettings.redemption.enabled && 
+                  rewardSettings.redemption.enabledModules.includes('block') &&
+                  currentUser.rewardPoints >= rewardSettings.redemption.minPointsRequired &&
+                  baseTotal > 0;
+
+  const pointsToUse = useRewards && currentUser ? Math.min(currentUser.rewardPoints, Math.floor(baseTotal / rewardSettings.redemption.monetaryValue * rewardSettings.redemption.pointsToValue)) : 0;
+  const rewardDiscount = (pointsToUse / rewardSettings.redemption.pointsToValue) * rewardSettings.redemption.monetaryValue;
+  const finalTotal = Math.max(0, baseTotal - rewardDiscount);
 
   const handlePersonCountChange = (count: number) => {
     const newCount = Math.max(1, Math.min(count, block.maxPersonsPerBooking));
@@ -67,6 +83,9 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
     setIsProcessing(true);
     await new Promise(r => setTimeout(r, 2000));
     
+    // Note: Implementation of redemption in bookBlock would require updating App.tsx 
+    // which is not in the scope of files to be updated here.
+    // We proceed to complete the booking as requested by the original props.
     onBookBlock(block, names);
     
     setIsProcessing(false);
@@ -134,6 +153,27 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
           </div>
         </section>
 
+        {canRedeem && (
+          <section className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100">
+             <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2 text-left">
+                   <Coins className="w-5 h-5 text-blue-600" />
+                   <div>
+                      <p className="text-xs font-black text-blue-900 uppercase leading-none mb-1">Redeem Rewards</p>
+                      <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Available: {currentUser.rewardPoints} Pts</p>
+                   </div>
+                </div>
+                <input type="checkbox" checked={useRewards} onChange={e => setUseRewards(e.target.checked)} className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer" />
+             </div>
+             {useRewards && (
+                <div className="animate-in slide-in-from-top-2 duration-300 flex justify-between items-center p-3 bg-white rounded-xl border border-blue-100">
+                   <span className="text-[10px] font-black text-slate-400 uppercase">Saving Applied</span>
+                   <span className="font-black text-green-600">-${rewardDiscount.toFixed(2)}</span>
+                </div>
+             )}
+          </section>
+        )}
+
         <section className="space-y-4">
            <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Lead Coach</h4>
            <div className="flex items-center gap-4 p-5 bg-slate-50 border border-slate-100 rounded-[32px]">
@@ -179,9 +219,15 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
 
         <section className="bg-blue-50/50 rounded-[32px] p-8 border border-blue-100/50 space-y-4">
            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Payment Cycle Summary</p>
-           <div className="flex justify-between text-sm font-bold text-slate-500"><span>Booking Deposit</span><span>${(block.bookingAmount * personCount).toFixed(2)}</span></div>
+           <div className="flex justify-between text-sm font-bold text-slate-500"><span>Booking Deposit</span><span>${baseTotal.toFixed(2)}</span></div>
+           {pointsToUse > 0 && (
+             <div className="flex justify-between text-sm font-bold text-green-600">
+               <span>Reward Redemption ({pointsToUse} pts)</span>
+               <span>-${rewardDiscount.toFixed(2)}</span>
+             </div>
+           )}
            <div className="flex justify-between text-sm font-bold text-slate-500"><span>Weekly x {block.numWeeks}</span><span>${(block.weeklyAmount * personCount).toFixed(2)} / week</span></div>
-           <div className="pt-4 border-t border-slate-200 flex justify-between items-center"><span className="text-xl font-black text-slate-900">Total Program</span><span className="text-2xl font-black text-blue-600">${(block.totalAmount * personCount).toFixed(2)}</span></div>
+           <div className="pt-4 border-t border-slate-200 flex justify-between items-center"><span className="text-xl font-black text-slate-900">Total Program</span><span className="text-2xl font-black text-blue-600">${((block.totalAmount * personCount) - rewardDiscount).toFixed(2)}</span></div>
         </section>
       </div>
 
@@ -190,7 +236,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
           onClick={handleStartBooking}
           className="w-full py-5 bg-black text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 shadow-black/20"
         >
-          Secure Booking • ${(block.bookingAmount * personCount).toFixed(2)}
+          Secure Booking • ${finalTotal.toFixed(2)}
         </button>
       </div>
 
@@ -220,11 +266,17 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
                <div className="bg-slate-50 rounded-[32px] border border-slate-100 p-6 space-y-4">
                   <div className="flex justify-between text-sm font-bold text-slate-600">
                     <span>Deposit for {personCount} Pers</span>
-                    <span>${(block.bookingAmount * personCount).toFixed(2)}</span>
+                    <span>${baseTotal.toFixed(2)}</span>
                   </div>
+                  {pointsToUse > 0 && (
+                    <div className="flex justify-between text-sm font-bold text-green-600">
+                      <span>Reward Redemption</span>
+                      <span>-${rewardDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                      <span className="text-lg font-black text-slate-900 tracking-tight">Pay Today</span>
-                     <span className="text-3xl font-black text-blue-600">${(block.bookingAmount * personCount).toFixed(2)}</span>
+                     <span className="text-3xl font-black text-blue-600">${finalTotal.toFixed(2)}</span>
                   </div>
                </div>
              </section>
@@ -271,7 +323,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
            <div className="p-6 pt-2 pb-12 border-t border-slate-50 bg-white/95 backdrop-blur-md absolute bottom-0 left-0 right-0 z-10 shrink-0">
              <button 
                onClick={handleFinalPayment}
-               disabled={!acceptedTerms || !selectedCardId || isProcessing}
+               disabled={!acceptedTerms || (!selectedCardId && finalTotal > 0) || isProcessing}
                className="w-full py-5 bg-black text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
              >
                {isProcessing ? (

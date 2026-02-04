@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package, CheckCircle2, TrendingUp, Activity, Image as ImageIcon } from 'lucide-react';
-import { User as UserType, Booking, Class, Facility, Order, UserPass, UserMembership, BlockBooking, BlockWeeklyPayment, Block, Measurement, PhotoLog } from '../../types';
+import { ArrowLeft, User, Mail, Phone, ShieldCheck, Ban, Trash2, Menu, Calendar, CreditCard, ClipboardList, Clock, MapPin, ChevronRight, ShoppingBag, Ticket, UserCheck, Layers, Package, CheckCircle2, TrendingUp, Activity, Image as ImageIcon, Coins, Gift, TrendingDown } from 'lucide-react';
+import { User as UserType, Booking, Class, Facility, Order, UserPass, UserMembership, BlockBooking, BlockWeeklyPayment, Block, Measurement, PhotoLog, RewardTransaction } from '../../types';
 import { useToast } from '../ToastContext';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -18,6 +18,7 @@ interface UserDetailViewProps {
   blocks: Block[];
   measurements: Measurement[];
   photoLogs: PhotoLog[];
+  rewardTransactions: RewardTransaction[];
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
   onDeleteUser: (id: string) => void;
   onOpenSidebar: () => void;
@@ -36,6 +37,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   blocks = [], 
   measurements = [], 
   photoLogs = [], 
+  rewardTransactions = [],
   onUpdateUser, 
   onDeleteUser, 
   onOpenSidebar 
@@ -43,7 +45,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   const { userId } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes' | 'memberships' | 'blocks' | 'health'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'bookings' | 'orders' | 'passes' | 'memberships' | 'blocks' | 'health' | 'rewards'>('profile');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const user = users.find(u => u.id === userId);
@@ -64,6 +66,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
   const userBBookings = blockBookings.filter(bb => bb.userId === user.id).sort((a, b) => b.createdAt - a.createdAt);
   const userMeasurements = measurements.filter(m => m.userId === user.id).sort((a, b) => b.date - a.date);
   const userPhotos = photoLogs.filter(p => p.userId === user.id).sort((a, b) => b.date - a.date);
+  const userRTX = rewardTransactions.filter(tx => tx.userId === user.id).sort((a, b) => b.date - a.date);
 
   const handleDelete = () => {
     onDeleteUser(user.id);
@@ -110,10 +113,13 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
             <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-2">{user.fullName}</h3>
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-3">
               <span className={`px-2.5 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-[0.2em] border ${
-                user.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                user.status === 'active' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'
               }`}>
                 {user.status}
               </span>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-sm text-[9px] font-black uppercase border border-blue-100">
+                 <Coins className="w-3 h-3" /> {user.rewardPoints} Pts
+              </div>
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Enrolled: {new Date(user.createdAt).toLocaleDateString()}</span>
             </div>
           </div>
@@ -136,6 +142,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
         <div className="flex border-b border-slate-200 mb-8 overflow-x-auto scrollbar-hide px-1">
           <TabButton id="profile" label="Details" icon={UserCheck} />
           <TabButton id="health" label="Health Data" icon={Activity} />
+          <TabButton id="rewards" label="Rewards Ledger" icon={Gift} />
           <TabButton id="bookings" label="Reservations" icon={Calendar} />
           <TabButton id="memberships" label="Memberships" icon={ShieldCheck} />
           <TabButton id="blocks" label="Programs" icon={Layers} />
@@ -165,6 +172,53 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === 'rewards' && (
+             <div className="animate-in fade-in duration-300">
+               <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                  <div className="flex items-center gap-4">
+                     <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg"><Coins className="w-7 h-7" /></div>
+                     <div className="text-left">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Wallet Balance</p>
+                        <p className="text-2xl font-black text-slate-900">{user.rewardPoints} Points</p>
+                     </div>
+                  </div>
+               </div>
+               <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                     <thead>
+                        <tr className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                           <th className="px-8 py-5">Timestamp</th>
+                           <th className="px-8 py-5">Classification</th>
+                           <th className="px-8 py-5">Source Context</th>
+                           <th className="px-8 py-5">Points</th>
+                           <th className="px-8 py-5">Balance</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-50">
+                        {userRTX.length > 0 ? userRTX.map(tx => (
+                          <tr key={tx.id} className="text-xs font-bold text-slate-600">
+                             <td className="px-8 py-5">{new Date(tx.date).toLocaleDateString()}</td>
+                             <td className="px-8 py-5">
+                                <span className={`px-2 py-0.5 rounded uppercase text-[8px] ${tx.type === 'earned' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{tx.type}</span>
+                             </td>
+                             <td className="px-8 py-5">
+                                <p className="uppercase text-slate-900">{tx.source}</p>
+                                <p className="text-[9px] text-slate-300 font-mono">ID: {tx.referenceId.substr(0,12)}</p>
+                             </td>
+                             <td className="px-8 py-5 font-black text-sm">
+                                <span className={tx.type === 'earned' ? 'text-green-600' : 'text-red-600'}>{tx.type === 'earned' ? '+' : '-'}{tx.points}</span>
+                             </td>
+                             <td className="px-8 py-5 text-slate-400">{tx.remainingBalance}</td>
+                          </tr>
+                        )) : (
+                          <tr><td colSpan={5} className="py-20 text-center text-slate-300 italic font-medium uppercase text-[10px] tracking-widest">No transaction history</td></tr>
+                        )}
+                     </tbody>
+                  </table>
+               </div>
+             </div>
           )}
 
           {activeTab === 'health' && (
@@ -307,7 +361,6 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
             <div className="p-8 space-y-10 animate-in fade-in duration-300">
               {userBBookings.length > 0 ? userBBookings.map(bb => {
                 const block = blocks.find(b => b.id === bb.blockId);
-                const payments = blockPayments.filter(p => p.blockBookingId === bb.id).sort((a, b) => a.weekNumber - b.weekNumber);
                 return (
                   <div key={bb.id} className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-xs text-left">
                     <div className="p-6 bg-white border-b border-slate-100 flex justify-between items-start">
