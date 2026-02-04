@@ -58,6 +58,9 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
   const filteredSlots = classSlots.filter(s => {
     if (s.facilityId !== facility.id) return false;
     
+    // Logic: Only show slots that are accepted by the trainer
+    if (s.trainerStatus !== 'accepted') return false;
+
     // Status check for parent class
     const parentClass = classes.find(c => c.id === s.classId);
     if (!parentClass || parentClass.status === 'inactive') return false;

@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Filter, Plus, Menu, Edit3, Trash2, CalendarDays, Calendar as CalendarIcon, Layout, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Plus, Menu, Edit3, Trash2, CalendarDays, Calendar as CalendarIcon, Layout, Users, ShieldCheck, XCircle, Clock } from 'lucide-react';
 import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK } from '../../types';
 import ClassSlotFormModal from './ClassSlotFormModal';
 import ClassSlotViewModal from './ClassSlotViewModal';
@@ -225,13 +224,20 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                                    <button onClick={(e) => { e.stopPropagation(); setDeletingId(s.id); }} className="p-1.5 bg-white border border-slate-200 rounded-md shadow-sm hover:text-red-600 transition-colors"><Trash2 className="w-3 h-3" /></button>
                                 </div>
                               </div>
-                              <div className="pt-3 border-t border-slate-100 flex items-center justify-between mt-auto">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: trn?.colorCode || '#cbd5e1' }} />
-                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight truncate max-w-[80px]">{trn?.name || 'TBA'}</p>
+                              <div className="pt-3 border-t border-slate-100 flex flex-col gap-1 mt-auto">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: trn?.colorCode || '#cbd5e1' }} />
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-tight truncate max-w-[80px]">{trn?.name || 'TBA'}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase">
+                                    <Users className="w-3 h-3" /> {s.currentBookings}/{s.maxBookings}
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase">
-                                  <Users className="w-3 h-3" /> {s.currentBookings}/{s.maxBookings}
+                                <div className="flex justify-start">
+                                   {s.trainerStatus === 'pending' && <span className="flex items-center gap-1 text-[7px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-1 py-0.5 rounded border border-amber-100"><Clock className="w-2 h-2" /> Pending Coach</span>}
+                                   {s.trainerStatus === 'accepted' && <span className="flex items-center gap-1 text-[7px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-1 py-0.5 rounded border border-green-100"><ShieldCheck className="w-2 h-2" /> Accepted</span>}
+                                   {s.trainerStatus === 'not-available' && <span className="flex items-center gap-1 text-[7px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-1 py-0.5 rounded border border-red-100"><XCircle className="w-2 h-2" /> Declined</span>}
                                 </div>
                               </div>
                             </div>

@@ -51,7 +51,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
   const hasMinPoints = currentUser && currentUser.rewardPoints >= rewardSettings.redemption.minPointsRequired;
   const canRedeem = redemptionEnabled && hasMinPoints && baseTotal > 0;
 
-  const pointsToUse = useRewards ? Math.min(currentUser.rewardPoints, Math.floor(baseTotal / rewardSettings.redemption.monetaryValue * rewardSettings.redemption.pointsToValue)) : 0;
+  const pointsToUse = useRewards ? Math.min(currentUser.rewardPoints, Math.floor(baseTotal / rewardSettings.redemption.pointsToValue * rewardSettings.redemption.pointsToValue)) : 0;
   const rewardDiscount = (pointsToUse / rewardSettings.redemption.pointsToValue) * rewardSettings.redemption.monetaryValue;
   const finalTotal = Math.max(0, baseTotal - rewardDiscount);
 
@@ -73,6 +73,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
       onUsePass(selectedUserPass!.id, participantNames.length);
     }
 
+    // Fix: Added attendanceStatus: 'pending' to satisfy Omit<Booking, 'id' | 'createdAt'>
     const bookingData: Omit<Booking, 'id' | 'createdAt'> = {
       userId: currentUser.id,
       userName: currentUser.fullName,
@@ -87,6 +88,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
       persons: participantNames.length,
       participantNames: participantNames,
       status: 'upcoming',
+      attendanceStatus: 'pending',
       type: (isUsingExistingPass || isBuyingNewPass) ? 'pass' : 'class',
       amount: finalTotal,
       usedPassId: isUsingExistingPass ? selectedUserPass?.id : undefined,

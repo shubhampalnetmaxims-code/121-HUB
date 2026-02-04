@@ -191,28 +191,31 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                         <tr className="bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                            <th className="px-8 py-5">Timestamp</th>
                            <th className="px-8 py-5">Classification</th>
-                           <th className="px-8 py-5">Source Context</th>
+                           <th className="px-8 py-5">Facility</th>
                            <th className="px-8 py-5">Points</th>
-                           <th className="px-8 py-5">Balance</th>
+                           <th className="px-8 py-5 text-right">Balance</th>
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-slate-50">
-                        {userRTX.length > 0 ? userRTX.map(tx => (
-                          <tr key={tx.id} className="text-xs font-bold text-slate-600">
-                             <td className="px-8 py-5">{new Date(tx.date).toLocaleDateString()}</td>
-                             <td className="px-8 py-5">
-                                <span className={`px-2 py-0.5 rounded uppercase text-[8px] ${tx.type === 'earned' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{tx.type}</span>
-                             </td>
-                             <td className="px-8 py-5">
-                                <p className="uppercase text-slate-900">{tx.source}</p>
-                                <p className="text-[9px] text-slate-300 font-mono">ID: {tx.referenceId.substr(0,12)}</p>
-                             </td>
-                             <td className="px-8 py-5 font-black text-sm">
-                                <span className={tx.type === 'earned' ? 'text-green-600' : 'text-red-600'}>{tx.type === 'earned' ? '+' : '-'}{tx.points}</span>
-                             </td>
-                             <td className="px-8 py-5 text-slate-400">{tx.remainingBalance}</td>
-                          </tr>
-                        )) : (
+                        {userRTX.length > 0 ? userRTX.map(tx => {
+                          const fac = facilities.find(f => f.id === tx.facilityId);
+                          return (
+                            <tr key={tx.id} className="text-xs font-bold text-slate-600">
+                               <td className="px-8 py-5">{new Date(tx.date).toLocaleDateString()}</td>
+                               <td className="px-8 py-5">
+                                  <span className={`px-2 py-0.5 rounded uppercase text-[8px] ${tx.type === 'earned' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{tx.type} ({tx.source})</span>
+                               </td>
+                               <td className="px-8 py-5">
+                                  <p className="uppercase text-slate-900">{fac?.name || 'Manual'}</p>
+                                  <p className="text-[9px] text-slate-300 font-mono">REF: {tx.referenceId.substr(0,12)}</p>
+                               </td>
+                               <td className="px-8 py-5 font-black text-sm">
+                                  <span className={tx.type === 'earned' ? 'text-green-600' : 'text-red-600'}>{tx.type === 'earned' ? '+' : '-'}{tx.points}</span>
+                               </td>
+                               <td className="px-8 py-5 text-slate-400 text-right">{tx.remainingBalance}</td>
+                            </tr>
+                          );
+                        }) : (
                           <tr><td colSpan={5} className="py-20 text-center text-slate-300 italic font-medium uppercase text-[10px] tracking-widest">No transaction history</td></tr>
                         )}
                      </tbody>
@@ -282,7 +285,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                     <th className="px-8 py-5">Hub Context</th>
                     <th className="px-8 py-5">Scheduled Phase</th>
                     <th className="px-8 py-5">Value</th>
-                    <th className="px-8 py-5">State</th>
+                    <th className="px-8 py-5 text-right">State</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
@@ -298,7 +301,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                         <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{b.startTime}</p>
                       </td>
                       <td className="px-8 py-6 font-black text-slate-900 tracking-tighter">${b.amount.toFixed(2)}</td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-6 text-right">
                         <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${
                           b.status === 'upcoming' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                           b.status === 'delivered' ? 'bg-green-50 text-green-700 border-green-200' :
@@ -324,7 +327,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                     <th className="px-8 py-5">Plan Title</th>
                     <th className="px-8 py-5">Hub Context</th>
                     <th className="px-8 py-5">Validity Cycle</th>
-                    <th className="px-8 py-5">Economic Status</th>
+                    <th className="px-8 py-5 text-right">Economic Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
@@ -341,9 +344,9 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({
                         <p className="font-bold text-slate-700 text-xs uppercase tracking-tight">{new Date(um.startDate).toLocaleDateString()} - {new Date(um.endDate).toLocaleDateString()}</p>
                         <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{um.allow24Hour ? '24/7' : `${um.startTime}-${um.endTime}`}</p>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-8 py-6 text-right">
                         <span className={`px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-widest border ${
-                          Date.now() < um.endDate ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
+                          Date.now() < um.endDate ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-200'
                         }`}>
                           {Date.now() < um.endDate ? 'Active' : 'Expired'}
                         </span>

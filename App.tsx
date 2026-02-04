@@ -5,9 +5,10 @@ import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
 import AdminLogin from './components/AdminLogin';
+import TrainerApp from './components/trainer/TrainerApp';
 import { ToastProvider, useToast } from './components/ToastContext';
 import { NotificationProvider, useNotifications } from './components/NotificationContext';
-import { Layout, ShieldCheck } from 'lucide-react';
+import { Layout, ShieldCheck, UserCircle } from 'lucide-react';
 
 const GlobalHeader: React.FC = () => {
   const location = useLocation();
@@ -31,6 +32,13 @@ const GlobalHeader: React.FC = () => {
             User App
           </Link>
           <Link 
+            to="/trainer" 
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${location.pathname.startsWith('/trainer') ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+          >
+            <UserCircle className="w-4 h-4" />
+            Trainer
+          </Link>
+          <Link 
             to="/admin" 
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${location.pathname.startsWith('/admin') ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
           >
@@ -40,7 +48,7 @@ const GlobalHeader: React.FC = () => {
         </nav>
       </div>
       <div className="hidden md:flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Dashboard
+        Network Dashboard
       </div>
     </div>
   );
@@ -71,6 +79,7 @@ const AppContent: React.FC = () => {
   const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>([]);
   const [rewardSettings, setRewardSettings] = useState<RewardSettings>(DEFAULT_REWARD_SETTINGS);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentTrainer, setCurrentTrainer] = useState<Trainer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const safeHydrate = <T,>(key: string, fallback: T): T => {
@@ -108,6 +117,7 @@ const AppContent: React.FC = () => {
     setRewardTransactions(safeHydrate('121_reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
     setRewardSettings(safeHydrate('121_reward_settings', DEFAULT_REWARD_SETTINGS));
     setCurrentUser(safeHydrate('121_current_user', null));
+    setCurrentTrainer(safeHydrate('121_current_trainer', null));
     setIsLoading(false);
   }, []);
 
@@ -134,340 +144,112 @@ const AppContent: React.FC = () => {
       localStorage.setItem('121_photo_logs', JSON.stringify(photoLogs));
       localStorage.setItem('121_reward_transactions', JSON.stringify(rewardTransactions));
       localStorage.setItem('121_reward_settings', JSON.stringify(rewardSettings));
-      if (currentUser) {
-        localStorage.setItem('121_current_user', JSON.stringify(currentUser));
-      } else {
-        localStorage.removeItem('121_current_user');
-      }
+      if (currentUser) localStorage.setItem('121_current_user', JSON.stringify(currentUser));
+      else localStorage.removeItem('121_current_user');
+      if (currentTrainer) localStorage.setItem('121_current_trainer', JSON.stringify(currentTrainer));
+      else localStorage.removeItem('121_current_trainer');
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, currentTrainer, isLoading]);
 
-  const addRewardTransaction = (userId: string, type: 'earned' | 'used', source: RewardTransaction['source'], referenceId: string, points: number) => {
+  const addRewardTransaction = (userId: string, type: 'earned' | 'used', source: RewardTransaction['source'], referenceId: string, points: number, facilityId?: string) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
-
     const currentBalance = user.rewardPoints;
     const newBalance = type === 'earned' ? currentBalance + points : currentBalance - points;
-    
-    const newTX: RewardTransaction = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId,
-      date: Date.now(),
-      type,
-      source,
-      referenceId,
-      points,
-      remainingBalance: newBalance
-    };
-
+    const newTX: RewardTransaction = { id: Math.random().toString(36).substr(2, 9), userId, date: Date.now(), type, source, referenceId, points, remainingBalance: newBalance, facilityId };
     setRewardTransactions(prev => [newTX, ...prev]);
     updateUserPoints(userId, newBalance);
   };
 
   const updateUserPoints = (userId: string, newPoints: number) => {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, rewardPoints: newPoints } : u));
-    if (currentUser?.id === userId) {
-      setCurrentUser(prev => prev ? { ...prev, rewardPoints: newPoints } : null);
-    }
+    if (currentUser?.id === userId) setCurrentUser(prev => prev ? { ...prev, rewardPoints: newPoints } : null);
   };
 
-  const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => {
-    setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
-    showToast('Facility added', 'success');
-  };
-  const updateFacility = (id: string, updates: Partial<Facility>) => {
-    setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
-    showToast('Facility updated', 'success');
-  };
-  const deleteFacility = (id: string) => {
-    setFacilities(prev => prev.filter(f => f.id !== id));
-    showToast('Facility removed', 'info');
+  const addFacility = (facility: Omit<Facility, 'id' | 'createdAt' | 'features'>) => setFacilities(prev => [...prev, { ...facility, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now(), features: [] }]);
+  const updateFacility = (id: string, updates: Partial<Facility>) => setFacilities(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
+  const deleteFacility = (id: string) => setFacilities(prev => prev.filter(f => f.id !== id));
+
+  const addClass = (data: Omit<Class, 'id' | 'createdAt'>) => setClasses(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
+  const updateClass = (id: string, updates: Partial<Class>) => setClasses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  const deleteClass = (id: string) => setClasses(prev => prev.filter(c => c.id !== id));
+
+  const updateTrainer = (id: string, updates: Partial<Trainer>) => {
+    setTrainers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    if (currentTrainer?.id === id) setCurrentTrainer(prev => prev ? { ...prev, ...updates } : null);
   };
 
-  const addClass = (data: Omit<Class, 'id' | 'createdAt'>) => {
-    setClasses(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Class created', 'success');
-  };
-  const updateClass = (id: string, updates: Partial<Class>) => {
-    setClasses(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
-    showToast('Class updated', 'success');
-  };
-  const deleteClass = (id: string) => {
-    setClasses(prev => prev.filter(c => c.id !== id));
-    showToast('Class deleted', 'info');
+  const updateSlot = (id: string, updates: Partial<ClassSlot>) => {
+    setClassSlots(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   };
 
-  const addMembership = (data: Omit<Membership, 'id' | 'createdAt'>) => {
-    setMemberships(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Membership created', 'success');
-  };
-  const updateMembership = (id: string, updates: Partial<Membership>) => {
-    setMemberships(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
-    showToast('Membership updated', 'success');
-  };
-  const deleteMembership = (id: string) => {
-    setMemberships(prev => prev.filter(m => m.id !== id));
-    showToast('Membership removed', 'info');
+  const updateBooking = (id: string, updates: Partial<Booking>) => {
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
   };
 
   const buyMembership = (m: Membership) => {
     if (!currentUser) return;
-    
-    // Calculate price after direct discount if any
     let finalPrice = m.price;
     if (m.directDiscountEnabled && m.directDiscountValue) {
       if (m.directDiscountType === 'flat') finalPrice = Math.max(0, m.price - m.directDiscountValue);
       else finalPrice = Math.max(0, m.price * (1 - (m.directDiscountValue / 100)));
     }
-
-    const newUserMembership: UserMembership = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId: currentUser.id,
-      membershipId: m.id,
-      facilityId: m.facilityId,
-      title: m.title,
-      startDate: Date.now(),
-      endDate: Date.now() + (m.durationDays * 86400000),
-      price: finalPrice,
-      allow24Hour: m.allow24Hour,
-      startTime: m.startTime,
-      endTime: m.endTime,
-      daysOfWeek: m.daysOfWeek,
-      status: 'active',
-      purchasedAt: Date.now()
-    };
+    const newUserMembership: UserMembership = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, membershipId: m.id, facilityId: m.facilityId, title: m.title, startDate: Date.now(), endDate: Date.now() + (m.durationDays * 86400000), price: finalPrice, allow24Hour: m.allow24Hour, startTime: m.startTime, endTime: m.endTime, daysOfWeek: m.daysOfWeek, status: 'active', purchasedAt: Date.now() };
     setUserMemberships(prev => [...prev, newUserMembership]);
     
-    // Reward Logic
-    if (rewardSettings.memberships.enabled) {
-       const pts = m.rewardPointsEnabled ? m.rewardPointsValue || rewardSettings.memberships.points : rewardSettings.memberships.points;
-       addRewardTransaction(currentUser.id, 'earned', 'membership', newUserMembership.id, pts);
+    // Facility-specific reward check
+    const mConfig = rewardSettings.memberships;
+    if (mConfig.enabled && (mConfig.facilityIds.length === 0 || mConfig.facilityIds.includes(m.facilityId))) {
+       const pts = m.rewardPointsEnabled ? m.rewardPointsValue || mConfig.points : mConfig.points;
+       addRewardTransaction(currentUser.id, 'earned', 'membership', newUserMembership.id, pts, m.facilityId);
        showToast(`Earned ${pts} points!`, 'success');
     }
-
     showToast('Membership activated!', 'success');
-    addNotification('Membership Active', `Your ${m.title} is now active.`, 'success', currentUser.id);
-  };
-
-  const updateUserMembership = (id: string, updates: Partial<UserMembership>) => {
-    setUserMemberships(prev => prev.map(um => um.id === id ? { ...um, ...updates } : um));
-  };
-
-  const addBlock = (data: Omit<Block, 'id' | 'createdAt'>) => {
-    setBlocks(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Block created', 'success');
-  };
-  const updateBlock = (id: string, updates: Partial<Block>) => {
-    setBlocks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-    showToast('Block updated', 'success');
-  };
-  const deleteBlock = (id: string) => {
-    const hasBookings = blockBookings.some(bb => bb.blockId === id);
-    if (hasBookings) {
-      showToast('Cannot delete block with active bookings', 'error');
-      return;
-    }
-    setBlocks(prev => prev.filter(b => b.id !== id));
-    showToast('Block deleted', 'info');
   };
 
   const bookBlock = (block: Block, participantNames: string[]) => {
     if (!currentUser) return;
-    const newBB: BlockBooking = {
-      id: Math.random().toString(36).substr(2, 9),
-      blockId: block.id,
-      userId: currentUser.id,
-      userName: currentUser.fullName,
-      userEmail: currentUser.email,
-      facilityId: block.facilityId,
-      trainerId: block.trainerId,
-      startDate: block.startDate,
-      participantNames,
-      bookingAmountPaid: true,
-      status: 'upcoming',
-      createdAt: Date.now()
-    };
+    const newBB: BlockBooking = { id: Math.random().toString(36).substr(2, 9), blockId: block.id, userId: currentUser.id, userName: currentUser.fullName, userEmail: currentUser.email, facilityId: block.facilityId, trainerId: block.trainerId, startDate: block.startDate, participantNames, bookingAmountPaid: true, status: 'upcoming', createdAt: Date.now() };
     
-    // Reward Earning
-    if (rewardSettings.blocks.enabled) {
-      addRewardTransaction(currentUser.id, 'earned', 'block', newBB.id, rewardSettings.blocks.points);
-      showToast(`Earned ${rewardSettings.blocks.points} points!`, 'success');
+    // Facility-specific reward check
+    const bConfig = rewardSettings.blocks;
+    if (bConfig.enabled && (bConfig.facilityIds.length === 0 || bConfig.facilityIds.includes(block.facilityId))) {
+      addRewardTransaction(currentUser.id, 'earned', 'block', newBB.id, bConfig.points, block.facilityId);
+      showToast(`Earned ${bConfig.points} points!`, 'success');
     }
 
-    // Generate weekly payments
     const newPayments: BlockWeeklyPayment[] = [];
     for (let i = 1; i <= block.numWeeks; i++) {
-      newPayments.push({
-        id: Math.random().toString(36).substr(2, 9),
-        blockBookingId: newBB.id,
-        userId: currentUser.id,
-        weekNumber: i,
-        amount: block.weeklyAmount,
-        dueDate: block.startDate + (i - 1) * 7 * 86400000,
-        status: 'pending'
-      });
+      newPayments.push({ id: Math.random().toString(36).substr(2, 9), blockBookingId: newBB.id, userId: currentUser.id, weekNumber: i, amount: block.weeklyAmount, dueDate: block.startDate + (i - 1) * 7 * 86400000, status: 'pending' });
     }
-
     setBlockBookings(prev => [...prev, newBB]);
     setBlockPayments(prev => [...prev, ...newPayments]);
     showToast('Block joined successfully!', 'success');
-    addNotification('Block Joined', `You joined ${block.name}. Booking amount paid.`, 'success', currentUser.id);
-  };
-
-  const payWeeklyBlock = (paymentId: string) => {
-    setBlockPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status: 'paid', paidAt: Date.now() } : p));
-    showToast('Weekly installment paid', 'success');
-  };
-
-  const updateBlockBooking = (id: string, updates: Partial<BlockBooking>) => {
-    setBlockBookings(prev => prev.map(bb => bb.id === id ? { ...bb, ...updates } : bb));
-  };
-
-  const addTrainer = (data: Omit<Trainer, 'id' | 'createdAt'>) => {
-    setTrainers(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Trainer added', 'success');
-  };
-  const updateTrainer = (id: string, updates: Partial<Trainer>) => {
-    setTrainers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    showToast('Trainer updated', 'success');
-  };
-  const deleteTrainer = (id: string) => {
-    setTrainers(prev => prev.filter(t => t.id !== id));
-    showToast('Trainer removed', 'info');
-  };
-
-  const addLocation = (data: Omit<StaffLocation, 'id' | 'createdAt'>) => {
-    setLocations(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Location saved', 'success');
-  };
-  const updateLocation = (id: string, updates: Partial<StaffLocation>) => {
-    setLocations(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
-    showToast('Location updated', 'success');
-  };
-  const deleteLocation = (id: string) => {
-    setLocations(prev => prev.filter(l => l.id !== id));
-    showToast('Location removed', 'info');
-  };
-
-  const addClassSlot = (data: Omit<ClassSlot, 'id'>) => {
-    setClassSlots(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9) }]);
-    showToast('Slot added', 'success');
-  };
-  const updateClassSlot = (id: string, updates: Partial<ClassSlot>) => {
-    setClassSlots(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-    showToast('Slot updated', 'success');
-  };
-  const deleteClassSlot = (id: string) => {
-    setClassSlots(prev => prev.filter(s => s.id !== id));
-    showToast('Slot removed', 'info');
-  };
-
-  const addProduct = (data: Omit<Product, 'id' | 'createdAt'>) => {
-    setProducts(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Product added', 'success');
-  };
-  const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    showToast('Product updated', 'success');
-  };
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-    showToast('Product removed', 'info');
-  };
-
-  const addPass = (data: Omit<Pass, 'id' | 'createdAt'>) => {
-    setPasses(prev => [...prev, { ...data, id: Math.random().toString(36).substr(2, 9), createdAt: Date.now() }]);
-    showToast('Pass created', 'success');
-  };
-  const updatePass = (id: string, updates: Partial<Pass>) => {
-    setPasses(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    showToast('Pass updated', 'success');
-  };
-  const deletePass = (id: string) => {
-    setPasses(prev => prev.filter(p => p.id !== id));
-    showToast('Pass removed', 'info');
   };
 
   const buyPass = (pass: Pass) => {
     if (!currentUser) return;
-    const newUserPass: UserPass = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId: currentUser.id,
-      passId: pass.id,
-      facilityId: pass.facilityId,
-      name: pass.name,
-      totalCredits: pass.credits,
-      remainingCredits: pass.credits,
-      personsPerBooking: pass.personsPerBooking,
-      isAllClasses: pass.isAllClasses,
-      allowedClassIds: pass.allowedClassIds,
-      purchasedAt: Date.now(),
-      status: 'active'
-    };
+    const newUserPass: UserPass = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, passId: pass.id, facilityId: pass.facilityId, name: pass.name, totalCredits: pass.credits, remainingCredits: pass.credits, personsPerBooking: pass.personsPerBooking, isAllClasses: pass.isAllClasses, allowedClassIds: pass.allowedClassIds, purchasedAt: Date.now(), status: 'active' };
     
-    // Reward Earning
-    if (rewardSettings.passes.enabled) {
-      addRewardTransaction(currentUser.id, 'earned', 'pass', newUserPass.id, rewardSettings.passes.points);
-      showToast(`Earned ${rewardSettings.passes.points} points!`, 'success');
+    // Facility-specific reward check
+    const pConfig = rewardSettings.passes;
+    if (pConfig.enabled && (pConfig.facilityIds.length === 0 || pConfig.facilityIds.includes(pass.facilityId))) {
+      addRewardTransaction(currentUser.id, 'earned', 'pass', newUserPass.id, pConfig.points, pass.facilityId);
+      showToast(`Earned ${pConfig.points} points!`, 'success');
     }
 
     setUserPasses(prev => [...prev, newUserPass]);
     showToast('Pass purchased!', 'success');
-    addNotification('Pass Purchased', `You bought ${pass.name}. Ready to use!`, 'success', currentUser.id);
-  };
-
-  const usePass = (userPassId: string, credits: number) => {
-    setUserPasses(prev => prev.map(p => {
-      if (p.id === userPassId) {
-        const remaining = p.remainingCredits - credits;
-        return { 
-          ...p, 
-          remainingCredits: remaining,
-          status: remaining <= 0 ? 'exhausted' : p.status
-        };
-      }
-      return p;
-    }));
-  };
-
-  const onAddToCart = (item: CartItem) => {
-    setCart(prev => {
-      const existing = prev.find(i => i.productId === item.productId && i.size === item.size);
-      if (existing) {
-        return prev.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + item.quantity } : i);
-      }
-      return [...prev, item];
-    });
-  };
-
-  const updateCartQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(i => {
-      if (i.id === id) {
-        const product = products.find(p => p.id === i.productId);
-        const stock = product?.sizeStocks.find(ss => ss.size === i.size)?.quantity || 0;
-        const newQty = Math.max(1, Math.min(i.quantity + delta, stock));
-        return { ...i, quantity: newQty };
-      }
-      return i;
-    }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(i => i.id !== id));
   };
 
   const addOrder = (order: Omit<Order, 'id' | 'createdAt'>) => {
-    const newOrder: Order = {
-      ...order,
-      id: Math.random().toString(36).substr(2, 9),
-      paymentStatus: 'paid',
-      createdAt: Date.now()
-    };
+    const newOrder: Order = { ...order, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now() };
     
-    // Reward Logic
-    if (currentUser && rewardSettings.orders.enabled) {
-       addRewardTransaction(currentUser.id, 'earned', 'order', newOrder.id, rewardSettings.orders.points);
-       showToast(`Earned ${rewardSettings.orders.points} points!`, 'success');
+    // Facility-specific reward check
+    const oConfig = rewardSettings.orders;
+    if (currentUser && oConfig.enabled && (oConfig.facilityIds.length === 0 || oConfig.facilityIds.includes(newOrder.facilityId))) {
+      addRewardTransaction(currentUser.id, 'earned', 'order', newOrder.id, oConfig.points, newOrder.facilityId);
+      showToast(`Earned ${oConfig.points} points!`, 'success');
     }
 
     setOrders(prev => [newOrder, ...prev]);
@@ -475,96 +257,26 @@ const AppContent: React.FC = () => {
     return newOrder;
   };
 
-  const updateOrder = (id: string, updates: Partial<Order>) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
-    const order = orders.find(o => o.id === id);
-    if (updates.status === 'picked-up' && order) {
-      addNotification('Order Picked Up', `Your order ${order.orderNumber} is ready.`, 'success', order.userId);
-      showToast('Order marked as picked up', 'success');
-    }
-  };
-
   const registerUser = (userData: Omit<User, 'id' | 'status' | 'createdAt'>) => {
     const existing = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-    if (existing) {
-      setCurrentUser(existing);
-      showToast(`Welcome back, ${existing.fullName}`, 'success');
-      return;
-    }
-
-    const newUser: User = {
-      ...userData,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'active',
-      createdAt: Date.now(),
-      paymentCards: userData.paymentCards || [],
-      rewardPoints: 0
-    };
+    if (existing) { setCurrentUser(existing); return; }
+    const newUser: User = { ...userData, id: Math.random().toString(36).substr(2, 9), status: 'active', createdAt: Date.now(), paymentCards: userData.paymentCards || [], rewardPoints: 0 };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
-    showToast(`Welcome, ${userData.fullName}`, 'success');
-    addNotification('New Member', `${userData.fullName} joined the platform.`, 'success', 'admin');
-  };
-
-  const updateUser = (id: string, updates: Partial<User>) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
-    if (currentUser?.id === id) {
-      setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
-    }
-    showToast('Profile updated', 'success');
-  };
-
-  const deleteUser = (id: string) => {
-    setUsers(prev => prev.filter(u => u.id !== id));
-    if (currentUser?.id === id) {
-      setCurrentUser(null);
-      showToast('Account deleted', 'info');
-    } else {
-      showToast('Member removed', 'info');
-    }
   };
 
   const onAddBooking = (booking: Omit<Booking, 'id' | 'createdAt'>) => {
-    const newBooking: Booking = {
-      ...booking,
-      id: Math.random().toString(36).substr(2, 9),
-      paymentStatus: 'paid',
-      createdAt: Date.now()
-    };
+    const newBooking: Booking = { ...booking, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now(), attendanceStatus: 'pending' };
     
-    // Reward Logic
-    if (currentUser && rewardSettings.classes.enabled && newBooking.type === 'class') {
-       addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, rewardSettings.classes.points);
-       showToast(`Earned ${rewardSettings.classes.points} points!`, 'success');
+    // Facility-specific reward check
+    const cConfig = rewardSettings.classes;
+    if (currentUser && cConfig.enabled && newBooking.type === 'class' && (cConfig.facilityIds.length === 0 || cConfig.facilityIds.includes(newBooking.facilityId))) {
+       addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, cConfig.points, newBooking.facilityId);
+       showToast(`Earned ${cConfig.points} points!`, 'success');
     }
 
     setBookings(prev => [newBooking, ...prev]);
     return newBooking;
-  };
-
-  const updateBooking = (id: string, updates: Partial<Booking>) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-  };
-
-  const onAddMeasurement = (m: Omit<Measurement, 'id'>) => {
-    setMeasurements(prev => [...prev, { ...m, id: Math.random().toString(36).substr(2, 9) }]);
-    showToast('Measurement logged', 'success');
-  };
-
-  const onAddPhotoLog = (p: Omit<PhotoLog, 'id'>) => {
-    setPhotoLogs(prev => [...prev, { ...p, id: Math.random().toString(36).substr(2, 9) }]);
-    showToast('Photo added to log', 'success');
-  };
-
-  const onDeletePhotoLog = (id: string) => {
-    setPhotoLogs(prev => prev.filter(p => p.id !== id));
-    showToast('Photo removed', 'info');
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    setCart([]);
-    showToast('Logged out', 'info');
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-semibold text-slate-400">Loading...</div>;
@@ -575,117 +287,86 @@ const AppContent: React.FC = () => {
       <div className="pt-0">
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route 
-            path="/app/*" 
-            element={
-              <AppHub 
-                facilities={facilities} 
-                classes={classes} 
-                trainers={trainers} 
-                locations={locations} 
-                classSlots={classSlots}
-                products={products}
-                bookings={bookings}
-                cart={cart}
-                orders={orders}
-                users={users}
-                passes={passes}
-                userPasses={userPasses}
-                memberships={memberships}
-                userMemberships={userMemberships}
-                blocks={blocks}
-                blockBookings={blockBookings}
-                blockPayments={blockPayments}
-                measurements={measurements}
-                photoLogs={photoLogs}
-                rewardTransactions={rewardTransactions}
-                rewardSettings={rewardSettings}
-                onRedeemPoints={(pts, src, ref) => currentUser && addRewardTransaction(currentUser.id, 'used', src as any, ref, pts)}
-                currentUser={currentUser}
-                onRegisterUser={registerUser}
-                onUpdateUser={updateUser}
-                onLogout={handleLogout}
-                onDeleteUser={deleteUser}
-                onAddBooking={onAddBooking}
-                onUpdateBooking={updateBooking}
-                onUpdateBlockBooking={updateBlockBooking}
-                onUpdateOrder={updateOrder}
-                onUpdateUserMembership={updateUserMembership}
-                onAddToCart={onAddToCart}
-                updateCartQuantity={updateCartQuantity}
-                removeFromCart={removeFromCart}
-                onAddOrder={addOrder}
-                onBuyPass={buyPass}
-                onUsePass={usePass}
-                onBookBlock={bookBlock}
-                onPayWeeklyBlock={payWeeklyBlock}
-                onBuyMembership={buyMembership}
-                onAddMeasurement={onAddMeasurement}
-                onAddPhotoLog={onAddPhotoLog}
-                onDeletePhotoLog={onDeletePhotoLog}
-              />
-            } 
-          />
+          <Route path="/app/*" element={
+            <AppHub 
+              facilities={facilities} classes={classes} trainers={trainers} locations={locations} classSlots={classSlots}
+              products={products} bookings={bookings} cart={cart} orders={orders} users={users}
+              passes={passes} userPasses={userPasses} memberships={memberships} userMemberships={userMemberships}
+              blocks={blocks} blockBookings={blockBookings} blockPayments={blockPayments} measurements={measurements} photoLogs={photoLogs}
+              rewardTransactions={rewardTransactions} rewardSettings={rewardSettings} onRedeemPoints={(pts, src, ref) => currentUser && addRewardTransaction(currentUser.id, 'used', src as any, ref, pts)}
+              currentUser={currentUser} onRegisterUser={registerUser} onUpdateUser={(id, up) => setUsers(p => p.map(u => u.id === id ? {...u, ...up} : u))} onLogout={() => setCurrentUser(null)} onDeleteUser={(id) => setUsers(p => p.filter(u => u.id !== id))}
+              onAddBooking={onAddBooking} onUpdateBooking={updateBooking}
+              onUpdateBlockBooking={(id, up) => setBlockBookings(p => p.map(b => b.id === id ? {...b, ...up} : b))}
+              onUpdateOrder={(id, up) => setOrders(p => p.map(o => o.id === id ? {...o, ...up} : o))}
+              onUpdateUserMembership={(id, up) => setUserMemberships(p => p.map(m => m.id === id ? {...m, ...up} : m))}
+              onAddToCart={(it) => setCart(p => {
+                const existing = p.find(i => i.productId === it.productId && i.size === it.size);
+                if (existing) {
+                  return p.map(i => i.id === existing.id ? { ...i, quantity: i.quantity + it.quantity } : i);
+                }
+                return [...p, it];
+              })} 
+              updateCartQuantity={(id, d) => setCart(p => p.map(i => i.id === id ? {...i, quantity: i.quantity + d} : i))} removeFromCart={(id) => setCart(p => p.filter(i => i.id !== id))}
+              onAddOrder={addOrder} onBuyPass={buyPass} onUsePass={(id, c) => setUserPasses(p => p.map(up => up.id === id ? {...up, remainingCredits: up.remainingCredits - c} : up))}
+              onBookBlock={bookBlock} onPayWeeklyBlock={(id) => setBlockPayments(p => p.map(py => py.id === id ? {...py, status: 'paid'} : py))} onBuyMembership={buyMembership}
+              onAddMeasurement={(m) => setMeasurements(p => [...p, {...m, id: Math.random().toString(36).substr(2, 9)}])} onAddPhotoLog={(ph) => setPhotoLogs(p => [...p, {...ph, id: Math.random().toString(36).substr(2, 9)}])}
+              onDeletePhotoLog={(id) => setPhotoLogs(p => p.filter(ph => ph.id !== id))}
+            />
+          } />
+          
+          <Route path="/trainer/*" element={
+            <TrainerApp 
+              trainers={trainers} 
+              classSlots={classSlots} 
+              bookings={bookings} 
+              classes={classes}
+              facilities={facilities}
+              // Added missing locations prop
+              locations={locations}
+              currentTrainer={currentTrainer} 
+              onTrainerLogin={(t) => setCurrentTrainer(t)} 
+              onTrainerLogout={() => setCurrentTrainer(null)}
+              onUpdateTrainer={updateTrainer}
+              onUpdateSlot={updateSlot}
+              onUpdateBooking={updateBooking}
+            />
+          } />
+
           <Route path="/admin-login" element={<AdminLogin />} />
-          <Route 
-            path="/admin/*" 
-            element={
-              <AdminPanel 
-                facilities={facilities} 
-                onAdd={addFacility} 
-                onUpdate={updateFacility} 
-                onDelete={deleteFacility}
-                classes={classes}
-                onAddClass={addClass}
-                onUpdateClass={updateClass}
-                onDeleteClass={deleteClass}
-                trainers={trainers}
-                onAddTrainer={addTrainer}
-                onUpdateTrainer={updateTrainer}
-                onDeleteTrainer={deleteTrainer}
-                locations={locations}
-                onAddLocation={addLocation}
-                onUpdateLocation={updateLocation}
-                onDeleteLocation={deleteLocation}
-                classSlots={classSlots}
-                onAddClassSlot={addClassSlot}
-                onUpdateClassSlot={updateClassSlot}
-                onDeleteClassSlot={deleteClassSlot}
-                products={products}
-                onAddProduct={addProduct}
-                onUpdateProduct={updateProduct}
-                onDeleteProduct={deleteProduct}
-                passes={passes}
-                onAddPass={addPass}
-                onUpdatePass={updatePass}
-                onDeletePass={deletePass}
-                memberships={memberships}
-                onAddMembership={addMembership}
-                onUpdateMembership={updateMembership}
-                onDeleteMembership={deleteMembership}
-                blocks={blocks}
-                onAddBlock={addBlock}
-                onUpdateBlock={updateBlock}
-                onDeleteBlock={deleteBlock}
-                users={users}
-                onUpdateUser={updateUser}
-                onDeleteUser={deleteUser}
-                bookings={bookings}
-                onUpdateBooking={updateBooking}
-                orders={orders}
-                onUpdateOrder={updateOrder}
-                blockBookings={blockBookings}
-                blockPayments={blockPayments}
-                userPasses={userPasses}
-                userMemberships={userMemberships}
-                measurements={measurements}
-                photoLogs={photoLogs}
-                rewardSettings={rewardSettings}
-                rewardTransactions={rewardTransactions}
-                onUpdateRewardSettings={setRewardSettings}
-              />
-            } 
-          />
+          <Route path="/admin/*" element={
+            <AdminPanel 
+              facilities={facilities} onAdd={addFacility} onUpdate={updateFacility} onDelete={deleteFacility}
+              classes={classes} onAddClass={addClass} onUpdateClass={updateClass} onDeleteClass={deleteClass}
+              trainers={trainers} onAddTrainer={(t) => setTrainers(p => [...p, { ...t, id: Math.random().toString(36).substr(2,9), createdAt: Date.now(), isFirstLogin: true, password: '', speciality: '', experience: '' }])}
+              onUpdateTrainer={updateTrainer}
+              onDeleteTrainer={(id) => setTrainers(p => p.filter(t => t.id !== id))}
+              locations={locations} onAddLocation={(l) => setLocations(p => [...p, {...l, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdateLocation={(id, up) => setLocations(p => p.map(l => l.id === id ? {...l, ...up} : l))}
+              onDeleteLocation={(id) => setLocations(p => p.filter(l => l.id !== id))}
+              classSlots={classSlots} onAddClassSlot={(s) => setClassSlots(p => [...p, { ...s, id: Math.random().toString(36).substr(2,9), trainerStatus: 'pending', isDelivered: false }])}
+              onUpdateClassSlot={updateSlot}
+              onDeleteClassSlot={(id) => setClassSlots(p => p.filter(s => s.id !== id))}
+              products={products} onAddProduct={(p) => setProducts(pr => [...pr, {...p, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdateProduct={(id, up) => setProducts(p => p.map(pr => pr.id === id ? {...pr, ...up} : pr))}
+              onDeleteProduct={(id) => setProducts(p => p.filter(pr => pr.id !== id))}
+              passes={passes} onAddPass={(p) => setPasses(ps => [...ps, {...p, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdatePass={(id, up) => setPasses(p => p.map(ps => ps.id === id ? {...ps, ...up} : ps))}
+              onDeletePass={(id) => setPasses(p => p.filter(ps => ps.id !== id))}
+              memberships={memberships} onAddMembership={(m) => setMemberships(mb => [...mb, {...m, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdateMembership={(id, up) => setMemberships(p => p.map(mb => mb.id === id ? {...mb, ...up} : mb))}
+              onDeleteMembership={(id) => setMemberships(p => p.filter(mb => mb.id !== id))}
+              blocks={blocks} onAddBlock={(b) => setBlocks(bk => [...bk, {...b, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdateBlock={(id, up) => setBlocks(p => p.map(bk => bk.id === id ? {...bk, ...up} : bk))}
+              onDeleteBlock={(id) => setBlocks(p => p.filter(bk => bk.id !== id))}
+              users={users} onUpdateUser={(id, up) => setUsers(p => p.map(u => u.id === id ? {...u, ...up} : u))}
+              onDeleteUser={(id) => setUsers(p => p.filter(u => u.id !== id))}
+              bookings={bookings} onUpdateBooking={updateBooking}
+              orders={orders} onUpdateOrder={(id, up) => setOrders(p => p.map(o => o.id === id ? {...o, ...up} : o))}
+              blockBookings={blockBookings} blockPayments={blockPayments} userPasses={userPasses} userMemberships={userMemberships}
+              measurements={measurements} photoLogs={photoLogs} rewardSettings={rewardSettings} rewardTransactions={rewardTransactions}
+              onUpdateRewardSettings={(s) => setRewardSettings(s)}
+            />
+          } />
         </Routes>
       </div>
     </HashRouter>

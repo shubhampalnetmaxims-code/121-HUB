@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
-import { Plus, Menu, Users, MapPin, Edit3, Trash2, Mail, Phone, Eye, Filter, LayoutGrid } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Menu, Users, MapPin, Edit3, Trash2, Mail, Phone, Eye, Filter, LayoutGrid, ChevronRight } from 'lucide-react';
 import { Facility, Trainer, Location } from '../../types';
 import TrainerFormModal from './TrainerFormModal';
 import LocationFormModal from './LocationFormModal';
-import TrainerViewModal from './TrainerViewModal';
 import LocationViewModal from './LocationViewModal';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -25,12 +24,12 @@ const StaffView: React.FC<StaffViewProps> = ({
   facilities, trainers, onAddTrainer, onUpdateTrainer, onDeleteTrainer,
   locations, onAddLocation, onUpdateLocation, onDeleteLocation, onOpenSidebar 
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'trainers' | 'locations'>('trainers');
   const [isTrainerModalOpen, setIsTrainerModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   
   const [editingTrainer, setEditingTrainer] = useState<Trainer | null>(null);
-  const [viewingTrainer, setViewingTrainer] = useState<Trainer | null>(null);
   
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [viewingLocation, setViewingLocation] = useState<Location | null>(null);
@@ -144,7 +143,11 @@ const StaffView: React.FC<StaffViewProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
                     {filteredTrainers.length > 0 ? filteredTrainers.map(t => (
-                      <tr key={t.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <tr 
+                        key={t.id} 
+                        className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                        onClick={() => navigate(`/admin/trainer/${t.id}`)}
+                      >
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
@@ -161,7 +164,7 @@ const StaffView: React.FC<StaffViewProps> = ({
                         </td>
                         <td className="px-8 py-6 text-left">
                            <div className="text-xs font-bold text-slate-600 truncate max-w-[200px]">{t.email}</div>
-                           <div className="text-[10px] text-slate-400 font-bold tracking-tight">{t.phone}</div>
+                           <div className="text-[10px] text-slate-400 font-bold mt-0.5 tracking-tight">{t.phone}</div>
                         </td>
                         <td className="px-8 py-6 text-left">
                            <div className="flex flex-wrap gap-1">
@@ -176,10 +179,13 @@ const StaffView: React.FC<StaffViewProps> = ({
                            </div>
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-1.5">
-                             <button onClick={() => setViewingTrainer(t)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-md transition-colors shadow-xs" title="View Portfolio"><Eye className="w-4 h-4" /></button>
+                          <div className="flex justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                             <button onClick={() => navigate(`/admin/trainer/${t.id}`)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-md transition-colors shadow-xs" title="View Portfolio"><Eye className="w-4 h-4" /></button>
                              <button onClick={() => handleEditTrainer(t)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-md transition-colors shadow-xs" title="Edit Profile"><Edit3 className="w-4 h-4" /></button>
                              <button onClick={() => setDeletingTrainerId(t.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 border border-slate-200 rounded-md transition-colors shadow-xs" title="Delete Account"><Trash2 className="w-4 h-4" /></button>
+                             <div className="p-2 text-slate-300 group-hover:text-slate-900 transition-colors">
+                               <ChevronRight className="w-4 h-4" />
+                             </div>
                           </div>
                         </td>
                       </tr>
@@ -256,7 +262,7 @@ const StaffView: React.FC<StaffViewProps> = ({
                            <code className="text-[10px] font-mono bg-slate-50 px-2 py-0.5 border border-slate-200 rounded-sm text-slate-400 uppercase tracking-tighter">LOC-{l.id.substr(0,4)}</code>
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-1.5">
+                          <div className="flex justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                              <button onClick={() => setViewingLocation(l)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-md transition-colors shadow-xs" title="Infrastructure Review"><Eye className="w-4 h-4" /></button>
                              <button onClick={() => handleEditLocation(l)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 border border-slate-200 rounded-md transition-colors shadow-xs" title="Modify Asset"><Edit3 className="w-4 h-4" /></button>
                              <button onClick={() => setDeletingLocationId(l.id)} className="p-2 bg-slate-50 text-slate-400 hover:text-red-600 border border-slate-200 rounded-md transition-colors shadow-xs" title="Remove Infrastructure"><Trash2 className="w-4 h-4" /></button>
@@ -287,14 +293,6 @@ const StaffView: React.FC<StaffViewProps> = ({
             setIsTrainerModalOpen(false);
             setEditingTrainer(null);
           }} 
-        />
-      )}
-
-      {viewingTrainer && (
-        <TrainerViewModal 
-          trainer={viewingTrainer} 
-          facilities={facilities} 
-          onClose={() => setViewingTrainer(null)} 
         />
       )}
 

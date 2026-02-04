@@ -116,9 +116,10 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="cart" element={<CartView cart={cart} updateQuantity={updateCartQuantity} remove={removeFromCart} currentUser={currentUser} onAddOrder={onAddOrder} onAuthTrigger={handleAuthTrigger} onUpdateUser={onUpdateUser} rewardSettings={rewardSettings} onRedeemPoints={onRedeemPoints} />} />
             <Route path="activity" element={<ActivityView />} />
             <Route path="measurements" element={<MeasurementsView currentUser={currentUser} measurements={measurements} onAddMeasurement={onAddMeasurement} onAuthTrigger={handleAuthTrigger} />} />
-            <Route path="photo-logs" element={<PhotoLogView currentUser={currentUser} photoLogs={photoLogs} onAddPhotoLog={onAddPhotoLog} onDeletePhotoLog={onDeletePhotoLog} onAuthTrigger={handleAuthTrigger} />} />
+            <Route path="photo-logs" element={<PhotoLogView currentUser={currentUser} photoLogs={photoLogs} onAddPhotoLog={onAddPhotoLog} onDeletePhotoLog={id => onDeletePhotoLog(id)} onAuthTrigger={handleAuthTrigger} />} />
             {/* Replaced UnderDevelopmentApp with RewardsHistoryView */}
-            <Route path="rewards" element={<RewardsHistoryView currentUser={currentUser} transactions={rewardTransactions} settings={rewardSettings} />} />
+            {/* Fix: Pass missing 'facilities' prop to RewardsHistoryView (required by line 121 error) */}
+            <Route path="rewards" element={<RewardsHistoryView currentUser={currentUser} transactions={rewardTransactions} settings={rewardSettings} facilities={facilities} />} />
             <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} userMemberships={userMemberships} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
