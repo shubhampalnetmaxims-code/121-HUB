@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardSettings, RewardTransaction } from '../types';
@@ -71,6 +70,7 @@ interface AdminPanelProps {
   rewardSettings: RewardSettings;
   rewardTransactions: RewardTransaction[];
   onUpdateRewardSettings: (s: RewardSettings) => void;
+  onResetSystem: () => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -89,7 +89,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   blockBookings, blockPayments,
   userPasses, userMemberships,
   measurements, photoLogs,
-  rewardSettings, rewardTransactions, onUpdateRewardSettings
+  rewardSettings, rewardTransactions, onUpdateRewardSettings,
+  onResetSystem
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -99,9 +100,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
       <main className="flex-1 lg:ml-64 bg-slate-50 min-h-screen">
         <Routes>
-          <Route index element={<FacilitiesView facilities={facilities} onAdd={onAdd} onUpdate={onUpdate} onDelete={onDelete} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          <Route index element={<FacilitiesView facilities={facilities} onAdd={onAdd} onUpdate={onUpdate} onDelete={onDelete} onOpenSidebar={() => setIsSidebarOpen(true)} onResetSystem={onResetSystem} />} />
           <Route path="facility/:id" element={<FacilityDetailView facilities={facilities} onUpdate={onUpdate} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          {/* Fix: Added 'on' prefix to updateClass and deleteClass to match destructured prop names */}
           <Route path="classes" element={<ClassesView facilities={facilities} classes={classes} onAddClass={onAddClass} onUpdateClass={onUpdateClass} onDeleteClass={onDeleteClass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="staff" element={<StaffView facilities={facilities} trainers={trainers} onAddTrainer={onAddTrainer} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} locations={locations} onAddLocation={onAddLocation} onUpdateLocation={onUpdateLocation} onDeleteLocation={onDeleteLocation} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="trainer/:trainerId" element={<TrainerDetailView trainers={trainers} classSlots={classSlots} bookings={bookings} classes={classes} facilities={facilities} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} onOpenSidebar={() => setIsSidebarOpen(true)} />} />

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Dumbbell, ChevronRight, Edit3, Menu, Bell, XCircle, RefreshCw, ShoppingCart } from 'lucide-react';
+import { Plus, Search, Dumbbell, ChevronRight, Edit3, Menu, Bell, XCircle, RefreshCw, ShoppingCart, RotateCcw } from 'lucide-react';
 import { Facility } from '../../types';
 import { useNotifications } from '../NotificationContext';
 import FacilityFormModal from './FacilityFormModal';
@@ -14,9 +13,10 @@ interface FacilitiesViewProps {
   onUpdate: (id: string, updates: any) => void;
   onDelete: (id: string) => void;
   onOpenSidebar: () => void;
+  onResetSystem: () => void;
 }
 
-const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUpdate, onDelete, onOpenSidebar }) => {
+const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUpdate, onDelete, onOpenSidebar, onResetSystem }) => {
   const navigate = useNavigate();
   const { notifications } = useNotifications();
   const [search, setSearch] = useState('');
@@ -51,7 +51,14 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
               <p className="text-slate-500 text-xs font-medium">Manage location profiles and hub settings.</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={onResetSystem}
+              className="p-2.5 bg-white text-slate-400 hover:text-red-600 rounded-md border border-slate-200 shadow-sm transition-all"
+              title="Reset System to Dummy Data"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
             <button 
               onClick={() => setIsNotifOpen(true)}
               className="p-2.5 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-md transition-all relative border border-slate-200 shadow-sm"

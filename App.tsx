@@ -10,6 +10,8 @@ import { ToastProvider, useToast } from './components/ToastContext';
 import { NotificationProvider, useNotifications } from './components/NotificationContext';
 import { Layout, ShieldCheck, UserCircle } from 'lucide-react';
 
+const STORAGE_PREFIX = '121fit_v2_';
+
 const GlobalHeader: React.FC = () => {
   const location = useLocation();
   const isLanding = location.pathname === '/';
@@ -84,9 +86,15 @@ const AppContent: React.FC = () => {
 
   const safeHydrate = <T,>(key: string, fallback: T): T => {
     try {
-      const stored = localStorage.getItem(key);
+      const stored = localStorage.getItem(STORAGE_PREFIX + key);
       if (!stored || stored === 'undefined' || stored === 'null') return fallback;
       const parsed = JSON.parse(stored);
+      
+      // If we expect an array and it's empty but fallback has data, use fallback to avoid "empty site" syndrome
+      if (Array.isArray(fallback) && fallback.length > 0 && Array.isArray(parsed) && parsed.length === 0) {
+        return fallback;
+      }
+      
       return parsed || fallback;
     } catch (e) {
       console.error(`Failed to hydrate ${key}:`, e);
@@ -94,60 +102,69 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleResetSystem = () => {
+    if (window.confirm("Are you sure? This will wipe all current changes and restore the original dummy data.")) {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(STORAGE_PREFIX)) localStorage.removeItem(key);
+      });
+      window.location.reload();
+    }
+  };
+
   useEffect(() => {
-    setFacilities(safeHydrate('121_facilities', DEFAULT_FACILITIES));
-    setClasses(safeHydrate('121_classes', DEFAULT_CLASSES));
-    setTrainers(safeHydrate('121_trainers', DEFAULT_TRAINERS));
-    setLocations(safeHydrate('121_locations', DEFAULT_LOCATIONS));
-    setClassSlots(safeHydrate('121_slots', DEFAULT_CLASS_SLOTS));
-    setProducts(safeHydrate('121_products', DEFAULT_PRODUCTS));
-    setUsers(safeHydrate('121_users', DEFAULT_USERS));
-    setBookings(safeHydrate('121_bookings', DEFAULT_BOOKINGS));
-    setCart(safeHydrate('121_cart', []));
-    setOrders(safeHydrate('121_orders', DEFAULT_ORDERS));
-    setPasses(safeHydrate('121_passes', DEFAULT_PASSES));
-    setUserPasses(safeHydrate('121_user_passes', []));
-    setMemberships(safeHydrate('121_memberships', DEFAULT_MEMBERSHIPS));
-    setUserMemberships(safeHydrate('121_user_memberships', []));
-    setBlocks(safeHydrate('121_blocks', DEFAULT_BLOCKS));
-    setBlockBookings(safeHydrate('121_block_bookings', DEFAULT_BLOCK_BOOKINGS));
-    setBlockPayments(safeHydrate('121_block_payments', DEFAULT_BLOCK_PAYMENTS));
-    setMeasurements(safeHydrate('121_measurements', []));
-    setPhotoLogs(safeHydrate('121_photo_logs', []));
-    setRewardTransactions(safeHydrate('121_reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
-    setRewardSettings(safeHydrate('121_reward_settings', DEFAULT_REWARD_SETTINGS));
-    setCurrentUser(safeHydrate('121_current_user', null));
-    setCurrentTrainer(safeHydrate('121_current_trainer', null));
+    setFacilities(safeHydrate('facilities', DEFAULT_FACILITIES));
+    setClasses(safeHydrate('classes', DEFAULT_CLASSES));
+    setTrainers(safeHydrate('trainers', DEFAULT_TRAINERS));
+    setLocations(safeHydrate('locations', DEFAULT_LOCATIONS));
+    setClassSlots(safeHydrate('slots', DEFAULT_CLASS_SLOTS));
+    setProducts(safeHydrate('products', DEFAULT_PRODUCTS));
+    setUsers(safeHydrate('users', DEFAULT_USERS));
+    setBookings(safeHydrate('bookings', DEFAULT_BOOKINGS));
+    setCart(safeHydrate('cart', []));
+    setOrders(safeHydrate('orders', DEFAULT_ORDERS));
+    setPasses(safeHydrate('passes', DEFAULT_PASSES));
+    setUserPasses(safeHydrate('user_passes', []));
+    setMemberships(safeHydrate('memberships', DEFAULT_MEMBERSHIPS));
+    setUserMemberships(safeHydrate('user_memberships', []));
+    setBlocks(safeHydrate('blocks', DEFAULT_BLOCKS));
+    setBlockBookings(safeHydrate('block_bookings', DEFAULT_BLOCK_BOOKINGS));
+    setBlockPayments(safeHydrate('block_payments', DEFAULT_BLOCK_PAYMENTS));
+    setMeasurements(safeHydrate('measurements', []));
+    setPhotoLogs(safeHydrate('photo_logs', []));
+    setRewardTransactions(safeHydrate('reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
+    setRewardSettings(safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
+    setCurrentUser(safeHydrate('current_user', null));
+    setCurrentTrainer(safeHydrate('current_trainer', null));
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem('121_facilities', JSON.stringify(facilities));
-      localStorage.setItem('121_classes', JSON.stringify(classes));
-      localStorage.setItem('121_trainers', JSON.stringify(trainers));
-      localStorage.setItem('121_locations', JSON.stringify(locations));
-      localStorage.setItem('121_slots', JSON.stringify(classSlots));
-      localStorage.setItem('121_products', JSON.stringify(products));
-      localStorage.setItem('121_users', JSON.stringify(users));
-      localStorage.setItem('121_bookings', JSON.stringify(bookings));
-      localStorage.setItem('121_cart', JSON.stringify(cart));
-      localStorage.setItem('121_orders', JSON.stringify(orders));
-      localStorage.setItem('121_passes', JSON.stringify(passes));
-      localStorage.setItem('121_user_passes', JSON.stringify(userPasses));
-      localStorage.setItem('121_memberships', JSON.stringify(memberships));
-      localStorage.setItem('121_user_memberships', JSON.stringify(userMemberships));
-      localStorage.setItem('121_blocks', JSON.stringify(blocks));
-      localStorage.setItem('121_block_bookings', JSON.stringify(blockBookings));
-      localStorage.setItem('121_block_payments', JSON.stringify(blockPayments));
-      localStorage.setItem('121_measurements', JSON.stringify(measurements));
-      localStorage.setItem('121_photo_logs', JSON.stringify(photoLogs));
-      localStorage.setItem('121_reward_transactions', JSON.stringify(rewardTransactions));
-      localStorage.setItem('121_reward_settings', JSON.stringify(rewardSettings));
-      if (currentUser) localStorage.setItem('121_current_user', JSON.stringify(currentUser));
-      else localStorage.removeItem('121_current_user');
-      if (currentTrainer) localStorage.setItem('121_current_trainer', JSON.stringify(currentTrainer));
-      else localStorage.removeItem('121_current_trainer');
+      localStorage.setItem(STORAGE_PREFIX + 'facilities', JSON.stringify(facilities));
+      localStorage.setItem(STORAGE_PREFIX + 'classes', JSON.stringify(classes));
+      localStorage.setItem(STORAGE_PREFIX + 'trainers', JSON.stringify(trainers));
+      localStorage.setItem(STORAGE_PREFIX + 'locations', JSON.stringify(locations));
+      localStorage.setItem(STORAGE_PREFIX + 'slots', JSON.stringify(classSlots));
+      localStorage.setItem(STORAGE_PREFIX + 'products', JSON.stringify(products));
+      localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(users));
+      localStorage.setItem(STORAGE_PREFIX + 'bookings', JSON.stringify(bookings));
+      localStorage.setItem(STORAGE_PREFIX + 'cart', JSON.stringify(cart));
+      localStorage.setItem(STORAGE_PREFIX + 'orders', JSON.stringify(orders));
+      localStorage.setItem(STORAGE_PREFIX + 'passes', JSON.stringify(passes));
+      localStorage.setItem(STORAGE_PREFIX + 'user_passes', JSON.stringify(userPasses));
+      localStorage.setItem(STORAGE_PREFIX + 'memberships', JSON.stringify(memberships));
+      localStorage.setItem(STORAGE_PREFIX + 'user_memberships', JSON.stringify(userMemberships));
+      localStorage.setItem(STORAGE_PREFIX + 'blocks', JSON.stringify(blocks));
+      localStorage.setItem(STORAGE_PREFIX + 'block_bookings', JSON.stringify(blockBookings));
+      localStorage.setItem(STORAGE_PREFIX + 'block_payments', JSON.stringify(blockPayments));
+      localStorage.setItem(STORAGE_PREFIX + 'measurements', JSON.stringify(measurements));
+      localStorage.setItem(STORAGE_PREFIX + 'photo_logs', JSON.stringify(photoLogs));
+      localStorage.setItem(STORAGE_PREFIX + 'reward_transactions', JSON.stringify(rewardTransactions));
+      localStorage.setItem(STORAGE_PREFIX + 'reward_settings', JSON.stringify(rewardSettings));
+      if (currentUser) localStorage.setItem(STORAGE_PREFIX + 'current_user', JSON.stringify(currentUser));
+      else localStorage.removeItem(STORAGE_PREFIX + 'current_user');
+      if (currentTrainer) localStorage.setItem(STORAGE_PREFIX + 'current_trainer', JSON.stringify(currentTrainer));
+      else localStorage.removeItem(STORAGE_PREFIX + 'current_trainer');
     }
   }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, currentTrainer, isLoading]);
 
@@ -321,7 +338,6 @@ const AppContent: React.FC = () => {
               bookings={bookings} 
               classes={classes}
               facilities={facilities}
-              // Added missing locations prop
               locations={locations}
               currentTrainer={currentTrainer} 
               onTrainerLogin={(t) => setCurrentTrainer(t)} 
@@ -365,6 +381,7 @@ const AppContent: React.FC = () => {
               blockBookings={blockBookings} blockPayments={blockPayments} userPasses={userPasses} userMemberships={userMemberships}
               measurements={measurements} photoLogs={photoLogs} rewardSettings={rewardSettings} rewardTransactions={rewardTransactions}
               onUpdateRewardSettings={(s) => setRewardSettings(s)}
+              onResetSystem={handleResetSystem}
             />
           } />
         </Routes>
