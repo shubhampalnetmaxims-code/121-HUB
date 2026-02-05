@@ -6,6 +6,7 @@ import TrainerHomeView from './TrainerHomeView';
 import TrainerFacilityHub from './TrainerFacilityHub';
 import TrainerTimetableView from './TrainerTimetableView';
 import TrainerSlotDetailView from './TrainerSlotDetailView';
+import TrainerClassDetailView from './TrainerClassDetailView';
 import TrainerBookingsTab from './TrainerBookingsTab';
 import TrainerProfileSetup from './TrainerProfileSetup';
 import TrainerProfileTab from './TrainerProfileTab';
@@ -72,6 +73,7 @@ const TrainerApp: React.FC<TrainerAppProps> = ({
             <Route path="home" element={currentTrainer ? <TrainerHomeView facilities={facilities} trainer={currentTrainer} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/home'); }} />} />
             <Route path="facility/:id" element={<TrainerFacilityHub facilities={facilities} classes={classes} trainer={currentTrainer!} />} />
             <Route path="facility/:id/timetable/:classId" element={<TrainerTimetableView facilities={facilities} classes={classes} trainer={currentTrainer!} classSlots={classSlots} onUpdateSlot={onUpdateSlot} />} />
+            <Route path="facility/:id/class/:classId" element={<TrainerClassDetailView classes={classes} />} />
             <Route path="slot/:slotId" element={<TrainerSlotDetailView classSlots={classSlots} classes={classes} facilities={facilities} bookings={bookings} trainer={currentTrainer!} onUpdateSlot={onUpdateSlot} onUpdateBooking={onUpdateBooking} />} />
             <Route path="bookings" element={currentTrainer ? <TrainerBookingsTab trainer={currentTrainer} bookings={bookings} classSlots={classSlots} classes={classes} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/bookings'); }} />} />
             <Route path="profile" element={currentTrainer ? <TrainerProfileTab trainer={currentTrainer} onLogout={onTrainerLogout} onUpdateTrainer={onUpdateTrainer} facilities={facilities} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/profile'); }} />} />

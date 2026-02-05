@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, FileText } from 'lucide-react';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save } from 'lucide-react';
 import { Facility, FEATURE_MODULES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
+import { useToast } from '../ToastContext';
 
 const IconMap: Record<string, any> = {
   BookOpen, Layers, Ticket, CreditCard, ShoppingBag
@@ -17,10 +18,14 @@ interface FacilityDetailViewProps {
 const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onUpdate, onOpenSidebar }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const facility = facilities.find(f => f.id === id);
   if (!facility) return <div className="p-20 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">Facility Not Found</div>;
+
+  const [localGallery, setLocalGallery] = useState<string[]>(facility.galleryImages || []);
 
   const currentSettings = facility.settings || {
     canCancelBooking: true,
@@ -36,16 +41,62 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
 
   const toggleFeature = (featureId: string) => {
     const currentFeatures = facility.features || [];
-    const newFeatures = currentFeatures.includes(featureId)
-      ? currentFeatures.filter(fid => fid !== featureId)
-      : [...currentFeatures, featureId];
+    const isEnabling = !currentFeatures.includes(featureId);
+    const newFeatures = isEnabling
+      ? [...currentFeatures, featureId]
+      : currentFeatures.filter(fid => fid !== featureId);
+    
     onUpdate(facility.id, { features: newFeatures });
+    
+    const moduleName = FEATURE_MODULES.find(m => m.id === featureId)?.name || 'Feature';
+    if (isEnabling) {
+      showToast(`${moduleName} enabled successfully`, 'success');
+    } else {
+      showToast(`${moduleName} disabled successfully`, 'warning');
+    }
   };
 
   const updateSettings = (key: keyof NonNullable<Facility['settings']>, value: any) => {
     onUpdate(facility.id, {
       settings: { ...currentSettings, [key]: value }
     });
+    
+    const labels: Record<string, string> = {
+      canCancelBooking: 'Cancel booking',
+      canRescheduleBooking: 'Reschedule',
+      canCancelOrder: 'Cancel order',
+      canCancelMembership: 'Cancel membership',
+      canCancelBlock: 'Cancel block'
+    };
+    
+    const label = labels[key] || 'Setting';
+    if (value) {
+      showToast(`${label} enabled for this facility`, 'success');
+    } else {
+      showToast(`${label} disabled for this facility`, 'warning');
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalGallery(prev => [...prev, reader.result as string]);
+        showToast('Image added successfully', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeGalleryImage = (idx: number) => {
+    setLocalGallery(prev => prev.filter((_, i) => i !== idx));
+    showToast('Image removed', 'success');
+  };
+
+  const saveGallery = () => {
+    onUpdate(facility.id, { galleryImages: localGallery });
+    showToast('Facility images updated', 'success');
   };
 
   const PolicyToggle = ({ icon: Icon, label, description, active, onChange }: { icon: any, label: string, description: string, active: boolean, onChange: (v: boolean) => void }) => (
@@ -69,7 +120,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
   );
 
   return (
-    <div className="p-4 md:p-8 lg:mt-14 mt-12 pb-32">
+    <div className="p-4 md:p-8 lg:mt-14 mt-12 pb-32 text-left">
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-10">
         <div className="flex items-center gap-4">
           <button onClick={onOpenSidebar} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-md">
@@ -94,6 +145,49 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Gallery Section */}
+        <section className="xl:col-span-2 bg-white rounded-lg p-8 border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-left">
+              <h3 className="text-xs font-black flex items-center gap-3 uppercase tracking-[0.2em] text-slate-400">
+                <ImageIcon className="w-4 h-4" /> Facility Images
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-1">Add multiple showcase images for the auto-scrolling hub slider.</p>
+            </div>
+            <button 
+              onClick={saveGallery}
+              className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+            >
+              <Save className="w-4 h-4" /> Save Images
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {localGallery.map((img, idx) => (
+              <div key={idx} className="aspect-video relative rounded-lg overflow-hidden group border border-slate-100 shadow-sm">
+                <img src={img} className="w-full h-full object-cover" alt="" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button 
+                    onClick={() => removeGalleryImage(idx)}
+                    className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="aspect-video border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-all group"
+            >
+              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+                <Plus className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-black uppercase">Add Image</span>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+            </button>
+          </div>
+        </section>
+
         <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col h-full">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xs font-black text-left flex items-center gap-3 uppercase tracking-[0.2em] text-slate-400">
@@ -169,60 +263,6 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
               active={currentSettings.canCancelBlock}
               onChange={(v) => updateSettings('canCancelBlock', v)}
             />
-          </div>
-        </section>
-      </div>
-
-      {/* Refund Policies */}
-      <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
-             <FileText className="w-4 h-4 text-slate-400" />
-             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Refund Framework</h3>
-          </div>
-          <div className="space-y-4 text-left">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Class Sessions Refund Rule</label>
-                <textarea 
-                  value={currentSettings.refundPolicyClasses} 
-                  onChange={e => updateSettings('refundPolicyClasses', e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
-                  placeholder="e.g. 100% refund if cancelled 24h prior..."
-                />
-             </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Marketplace Refund Rule</label>
-                <textarea 
-                  value={currentSettings.refundPolicyOrders} 
-                  onChange={e => updateSettings('refundPolicyOrders', e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
-                  placeholder="e.g. No refunds once items are collected..."
-                />
-             </div>
-          </div>
-        </section>
-        
-        <section className="bg-white rounded-lg p-8 md:p-10 border border-slate-200 shadow-sm space-y-6">
-          <div className="pt-10 opacity-0 hidden xl:block border-b border-transparent pb-4" /> {/* Spacer */}
-          <div className="space-y-4 text-left">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Membership Refund Rule</label>
-                <textarea 
-                  value={currentSettings.refundPolicyMemberships} 
-                  onChange={e => updateSettings('refundPolicyMemberships', e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
-                  placeholder="e.g. Pro-rated refund based on remaining time..."
-                />
-             </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Program Blocks Refund Rule</label>
-                <textarea 
-                  value={currentSettings.refundPolicyBlocks} 
-                  onChange={e => updateSettings('refundPolicyBlocks', e.target.value)}
-                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl font-medium text-xs outline-none h-24 focus:bg-white transition-all"
-                  placeholder="e.g. Full refund only if program hasn't started..."
-                />
-             </div>
           </div>
         </section>
       </div>

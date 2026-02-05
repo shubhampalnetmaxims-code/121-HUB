@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { ToastMessage, ToastType } from '../types';
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
@@ -30,13 +29,13 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   return (
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col items-center gap-3 w-full max-w-sm px-6 pointer-events-none">
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[300] flex flex-col items-center gap-3 w-full max-w-sm px-6 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={`
               w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md flex items-start gap-3 pointer-events-auto
-              animate-in slide-in-from-top-4 fade-in duration-300
+              animate-in slide-in-from-bottom-4 fade-in duration-300
               ${toast.type === 'success' ? 'bg-green-600 text-white' : ''}
               ${toast.type === 'error' ? 'bg-red-600 text-white' : ''}
               ${toast.type === 'warning' ? 'bg-amber-500 text-white' : ''}

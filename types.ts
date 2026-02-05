@@ -4,6 +4,7 @@ export interface Facility {
   description: string;
   icon: string;
   imageUrl?: string;
+  galleryImages: string[];
   isActive: boolean;
   createdAt: number;
   features: string[];
@@ -398,83 +399,156 @@ const DEFAULT_SETTINGS = {
 };
 
 export const DEFAULT_FACILITIES: Facility[] = [
-  { id: '1', name: '121 Gym', description: 'Elite bodybuilding and heavy lifting hub.', icon: 'Dumbbell', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop', isActive: true, createdAt: Date.now(), features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace'], settings: DEFAULT_SETTINGS },
-  { id: '2', name: '121 Fitness', description: 'Dynamic group classes and cardio zones.', icon: 'Activity', imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop', isActive: true, createdAt: Date.now(), features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace'], settings: DEFAULT_SETTINGS },
-  { id: '3', name: '121 Zen', description: 'Mindfulness, meditation, and yoga sanctuary.', icon: 'Flower2', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop', isActive: true, createdAt: Date.now(), features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace'], settings: DEFAULT_SETTINGS }
+  { 
+    id: '1', 
+    name: '121 Gym', 
+    description: 'Elite bodybuilding and heavy lifting hub.', 
+    icon: 'Dumbbell', 
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop', 
+    galleryImages: [
+      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1000&auto=format&fit=crop'
+    ],
+    isActive: true, 
+    createdAt: Date.now(), 
+    features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace', 'blocks'], 
+    settings: DEFAULT_SETTINGS 
+  },
+  { 
+    id: '2', 
+    name: '121 Fitness', 
+    description: 'Dynamic group classes and cardio zones.', 
+    icon: 'Activity', 
+    imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop', 
+    galleryImages: [
+      'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1518611012118-2969c6a2c7a7?q=80&w=1000&auto=format&fit=crop'
+    ],
+    isActive: true, 
+    createdAt: Date.now(), 
+    features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace'], 
+    settings: DEFAULT_SETTINGS 
+  },
+  { 
+    id: '3', 
+    name: '121 Zen', 
+    description: 'Mindfulness, meditation, and yoga sanctuary.', 
+    icon: 'Flower2', 
+    imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop', 
+    galleryImages: [
+      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000&auto=format&fit=crop'
+    ],
+    isActive: true, 
+    createdAt: Date.now(), 
+    features: ['classes', 'timetable', 'passes', 'memberships', 'marketplace', 'blocks'], 
+    settings: DEFAULT_SETTINGS 
+  }
 ];
 
 export const DEFAULT_USERS: User[] = [
-  { id: 'u3', email: 'shubham@gmail.com', fullName: 'Shubham Kumar', phone: '+91 9876543210', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now() - 10000000, paymentCards: [{ id: 'card1', holderName: 'SHUBHAM KUMAR', cardNumber: '•••• •••• •••• 4242', brand: 'Visa', expiryDate: '12/28', isPrimary: true, createdAt: Date.now() }], rewardPoints: 1350 }
+  { 
+    id: 'u-shubham', 
+    email: 'shubham@gmail.com', 
+    fullName: 'Shubham Kumar', 
+    phone: '+91 9876543210', 
+    gender: 'Male', 
+    paymentMethod: 'added', 
+    status: 'active', 
+    createdAt: Date.now() - 100000000, 
+    paymentCards: [
+      { id: 'card-1', holderName: 'SHUBHAM KUMAR', cardNumber: '•••• •••• •••• 4242', brand: 'Visa', expiryDate: '12/28', isPrimary: true, createdAt: Date.now() }
+    ], 
+    rewardPoints: 250 
+  }
 ];
 
 export const DEFAULT_TRAINERS: Trainer[] = [
-  { id: 't1', name: 'Rahul Sharma', email: 'rahul@121.com', phone: '+91 9000000001', facilityIds: ['1'], profilePicture: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?q=80&w=400&auto=format&fit=crop', colorCode: '#2563eb', createdAt: Date.now(), isFirstLogin: false, description: 'Master of Strength', permissions: { canCancel: true, canReschedule: true } },
-  { id: 't2', name: 'Amit Verma', email: 'amit@121.com', phone: '+91 9000000002', facilityIds: ['1'], profilePicture: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&auto=format&fit=crop', colorCode: '#dc2626', createdAt: Date.now(), isFirstLogin: false, description: 'Conditioning Specialist', permissions: { canCancel: true, canReschedule: true } },
-  { id: 't3', name: 'Neha Singh', email: 'neha@121.com', phone: '+91 9000000003', facilityIds: ['1'], profilePicture: 'https://images.unsplash.com/photo-1548690312-e3b507d17a4d?q=80&w=400&auto=format&fit=crop', colorCode: '#16a34a', createdAt: Date.now(), isFirstLogin: false, description: 'Hypertrophy Coach', permissions: { canCancel: true, canReschedule: true } },
-  { id: 't4', name: 'Pooja Mehta', email: 'pooja@121.com', phone: '+91 9000000004', facilityIds: ['2'], profilePicture: 'https://images.unsplash.com/photo-1552196564-97c36739f72e?q=80&w=400&auto=format&fit=crop', colorCode: '#9333ea', createdAt: Date.now(), isFirstLogin: false, description: 'Zumba & Aerobics', permissions: { canCancel: false, canReschedule: true } },
-  { id: 't5', name: 'Karan Malhotra', email: 'karan@121.com', phone: '+91 9000000005', facilityIds: ['2'], profilePicture: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop', colorCode: '#ea580c', createdAt: Date.now(), isFirstLogin: false, description: 'Cardio Blast Master', permissions: { canCancel: false, canReschedule: true } },
-  { id: 't6', name: 'Anjali Desai', email: 'anjali@121.com', phone: '+91 9000000006', facilityIds: ['3'], profilePicture: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=400&auto=format&fit=crop', colorCode: '#0891b2', createdAt: Date.now(), isFirstLogin: false, description: 'Yoga Guru', permissions: { canCancel: true, canReschedule: false } },
-  { id: 't7', name: 'Ritu Kapoor', email: 'ritu@121.com', phone: '+91 9000000007', facilityIds: ['3'], profilePicture: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=400&auto=format&fit=crop', colorCode: '#db2777', createdAt: Date.now(), isFirstLogin: false, description: 'Meditation & Breathwork', permissions: { canCancel: true, canReschedule: false } }
+  { id: 't-rahul', name: 'Rahul Verma', email: 'rahul.verma@121fit.com', phone: '9876543210', facilityIds: ['1'], colorCode: '#FF6B6B', createdAt: Date.now(), isFirstLogin: false, description: 'Master of high intensity and heavy compound lifting.', speciality: 'HIIT, Strength Training', experience: '8 Years', permissions: { canCancel: true, canReschedule: true } },
+  { id: 't-ankit', name: 'Ankit Sharma', email: 'ankit.sharma@121fit.com', phone: '9876543221', facilityIds: ['2'], colorCode: '#4ECDC4', createdAt: Date.now(), isFirstLogin: false, description: 'Dance fitness expert and group cardio specialist.', speciality: 'Zumba, Cardio Blast', experience: '5 Years', permissions: { canCancel: false, canReschedule: true } },
+  { id: 't-sneha', name: 'Sneha Kapoor', email: 'sneha.kapoor@121fit.com', phone: '9876543232', facilityIds: ['3'], colorCode: '#6C5CE7', createdAt: Date.now(), isFirstLogin: false, description: 'Yoga and meditation guru focusing on mindfulness.', speciality: 'Yoga Flow, Meditation', experience: '10 Years', permissions: { canCancel: true, canReschedule: false } },
+  { id: 't-aman', name: 'Aman Singh', email: 'aman.singh@121fit.com', phone: '9876543243', facilityIds: ['1'], colorCode: '#F9CA24', createdAt: Date.now(), isFirstLogin: false, description: 'Functional training and cross-fit specialist.', speciality: 'Cross Training', experience: '4 Years', permissions: { canCancel: true, canReschedule: true } },
+  { id: 't-neha', name: 'Neha Joshi', email: 'neha.joshi@121fit.com', phone: '9876543254', facilityIds: ['2'], colorCode: '#1ABC9C', createdAt: Date.now(), isFirstLogin: false, description: 'Conditioning coach for fat loss and metabolic reset.', speciality: 'Functional Training', experience: '6 Years', permissions: { canCancel: false, canReschedule: true } }
 ];
 
 export const DEFAULT_CLASSES: Class[] = [
-  { id: 'c1', facilityId: '1', name: 'Strength Training', shortDescription: 'Heavy compound lifts.', duration: '1 hour', requirements: 'Lifting shoes', level: 'Intermediate', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c64b52d2?q=80&w=600&auto=format&fit=crop', pricePerSession: 25, status: 'active', createdAt: Date.now() },
-  { id: 'c2', facilityId: '1', name: 'HIIT Workout', shortDescription: 'High intensity intervals.', duration: '45 mins', requirements: 'Towel', level: 'Expert', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop', pricePerSession: 20, status: 'active', createdAt: Date.now() },
-  { id: 'c3', facilityId: '1', name: 'Weight Loss Program', shortDescription: 'Fat burning circuit.', duration: '1 hour', requirements: 'Sweat towel', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?q=80&w=600&auto=format&fit=crop', pricePerSession: 30, status: 'active', createdAt: Date.now() },
-  { id: 'c4', facilityId: '2', name: 'Zumba', shortDescription: 'Dance fitness party.', duration: '1 hour', requirements: 'Active wear', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?q=80&w=600&auto=format&fit=crop', pricePerSession: 15, status: 'active', createdAt: Date.now() },
-  { id: 'c5', facilityId: '2', name: 'Cardio Blast', shortDescription: 'Pure cardio burn.', duration: '45 mins', requirements: 'Running shoes', level: 'Intermediate', imageUrl: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=600&auto=format&fit=crop', pricePerSession: 20, status: 'active', createdAt: Date.now() },
-  { id: 'c6', facilityId: '3', name: 'Yoga Flow', shortDescription: 'Vinyasa sequences.', duration: '1.5 hours', requirements: 'Mat', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=1000&auto=format&fit=crop', pricePerSession: 35, status: 'active', createdAt: Date.now() },
-  { id: 'c7', facilityId: '3', name: 'Meditation', shortDescription: 'Deep mindfulness.', duration: '1 hour', requirements: 'Comfortable clothing', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop', pricePerSession: 25, status: 'active', createdAt: Date.now() }
+  { id: 'c-strength', facilityId: '1', name: 'Strength Training', shortDescription: 'Heavy compound movements for maximum hypertrophy.', duration: '1 hour', requirements: 'Lifting shoes', level: 'Intermediate', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c64b52d2?q=80&w=600&auto=format&fit=crop', pricePerSession: 25, status: 'active', createdAt: Date.now() },
+  { id: 'c-hiit', facilityId: '1', name: 'HIIT Workout', shortDescription: 'Explosive interval training for rapid fat burn.', duration: '45 mins', requirements: 'Towel', level: 'Expert', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop', pricePerSession: 20, status: 'active', createdAt: Date.now() },
+  { id: 'c-zumba', facilityId: '2', name: 'Zumba', shortDescription: 'High energy dance fitness to popular rhythms.', duration: '1 hour', requirements: 'Comfortable footwear', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?q=80&w=600&auto=format&fit=crop', pricePerSession: 15, status: 'active', createdAt: Date.now() },
+  { id: 'c-yoga', facilityId: '3', name: 'Yoga Flow', shortDescription: 'Vinyasa sequences to unite mind and body.', duration: '1.5 hours', requirements: 'Yoga Mat', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=1000&auto=format&fit=crop', pricePerSession: 35, status: 'active', createdAt: Date.now() },
+  { id: 'c-meditation', facilityId: '3', name: 'Meditation', shortDescription: 'Guided sessions for stress reduction and focus.', duration: '1 hour', requirements: 'Silent mode phone', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop', pricePerSession: 25, status: 'active', createdAt: Date.now() }
 ];
 
 export const DEFAULT_LOCATIONS: Location[] = [
-  { id: 'l1', facilityIds: ['1'], name: 'Main Power Floor', createdAt: Date.now() },
-  { id: 'l2', facilityIds: ['2'], name: 'Dance Studio A', createdAt: Date.now() },
-  { id: 'l3', facilityIds: ['3'], name: 'Zen Garden', createdAt: Date.now() }
+  { id: 'loc-andheri', facilityIds: ['1'], name: 'Andheri West', createdAt: Date.now() },
+  { id: 'loc-bandra', facilityIds: ['1'], name: 'Bandra East', createdAt: Date.now() },
+  { id: 'loc-powai', facilityIds: ['1'], name: 'Powai', createdAt: Date.now() },
+  { id: 'loc-parel', facilityIds: ['2'], name: 'Lower Parel', createdAt: Date.now() },
+  { id: 'loc-malad', facilityIds: ['2'], name: 'Malad West', createdAt: Date.now() },
+  { id: 'loc-juhu', facilityIds: ['3'], name: 'Juhu', createdAt: Date.now() },
+  { id: 'loc-thane', facilityIds: ['3'], name: 'Thane', createdAt: Date.now() }
 ];
 
 export const DEFAULT_CLASS_SLOTS: ClassSlot[] = [
-  { id: 's1', facilityId: '1', classId: 'c1', trainerId: 't1', locationId: 'l1', dayOfWeek: 1, startTime: '07:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 5, maxBookings: 12 },
-  { id: 's2', facilityId: '1', classId: 'c2', trainerId: 't1', locationId: 'l1', dayOfWeek: 2, startTime: '06:00', duration: '45 mins', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 8, maxBookings: 15 },
-  { id: 's3', facilityId: '2', classId: 'c4', trainerId: 't4', locationId: 'l2', dayOfWeek: 1, startTime: '06:30', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 10, maxBookings: 20 },
-  { id: 's4', facilityId: '3', classId: 'c6', trainerId: 't6', locationId: 'l3', dayOfWeek: 1, startTime: '07:00', duration: '1.5 hours', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 4, maxBookings: 10 }
+  { id: 'slot-1', facilityId: '1', classId: 'c-strength', trainerId: 't-rahul', locationId: 'loc-andheri', dayOfWeek: 1, startTime: '07:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 8, maxBookings: 12 },
+  { id: 'slot-2', facilityId: '3', classId: 'c-yoga', trainerId: 't-sneha', locationId: 'loc-juhu', dayOfWeek: 2, startTime: '18:30', duration: '1.5 hours', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 5, maxBookings: 15 }
 ];
 
 export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'p1', facilityId: '1', name: 'Protein Powder', price: 40, discountedPrice: 36, discountPercent: 10, quantity: 50, sizeStocks: [{size: '2kg', quantity: 50}], category: 'Supplements', status: 'active', createdAt: Date.now(), description: 'Ultra filtered whey.', images: ['https://images.unsplash.com/photo-1593094855729-19c062c97482?q=80&w=400&auto=format&fit=crop'], color: 'Vanilla' },
-  { id: 'p2', facilityId: '1', name: 'Gym Gloves', price: 15, quantity: 20, sizeStocks: [{size: 'M', quantity: 20}], category: 'Gear', status: 'active', createdAt: Date.now(), description: 'Superior grip.', images: ['https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop'] },
-  { id: 'p3', facilityId: '3', name: 'Yoga Mat', price: 30, discountedPrice: 25.5, discountPercent: 15, quantity: 15, sizeStocks: [{size: 'Standard', quantity: 15}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Eco-friendly grip.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'] }
+  { id: 'p-gloves', facilityId: '1', name: 'Gym Gloves', price: 15, quantity: 50, sizeStocks: [{size: 'M', quantity: 30}, {size: 'L', quantity: 20}], category: 'Gear', status: 'active', createdAt: Date.now(), description: 'High grip weightlifting gloves.', images: ['https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-tshirt', facilityId: '1', name: 'Gym T-Shirt', price: 20, quantity: 40, sizeStocks: [{size: 'S', quantity: 10}, {size: 'M', quantity: 10}, {size: 'L', quantity: 10}, {size: 'XL', quantity: 10}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Moisture-wicking standard fit.', images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-mat', facilityId: '3', name: 'Yoga Mat', price: 25, quantity: 15, sizeStocks: [{size: 'Standard', quantity: 15}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Eco-friendly non-slip mat.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-bottle', facilityId: '2', name: 'Water Bottle', price: 12, quantity: 30, sizeStocks: [{size: '750ml', quantity: 30}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Insulated steel bottle.', images: ['https://images.unsplash.com/photo-1602143307185-84447545512d?q=80&w=400&auto=format&fit=crop'] }
 ];
 
 export const DEFAULT_PASSES: Pass[] = [
-  { id: 'pass1', facilityId: '1', name: '10 Class Pass', price: 180, credits: 10, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Bulk sessions for Gym.', quantity: 100, status: 'active', createdAt: Date.now() },
-  { id: 'pass2', facilityId: '2', name: 'Unlimited Fitness Pass', price: 150, credits: 99, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Monthly fitness burn.', quantity: 50, status: 'active', createdAt: Date.now() },
-  { id: 'pass3', facilityId: '3', name: 'Zen 5 Session Pass', price: 150, credits: 5, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Deep meditation pack.', quantity: 50, status: 'active', createdAt: Date.now() }
+  { id: 'pass-gym', facilityId: '1', name: 'Gym Strength Pass', price: 120, credits: 10, personsPerBooking: 1, allowedClassIds: ['c-strength'], isAllClasses: false, description: 'Bulk sessions for strength floor access.', quantity: 100, status: 'active', createdAt: Date.now() },
+  { id: 'pass-zen', facilityId: '3', name: 'Zen Yoga Pass', price: 100, credits: 12, personsPerBooking: 1, allowedClassIds: ['c-yoga', 'c-meditation'], isAllClasses: false, description: 'Holistic wellness bundle for Zen classes.', quantity: 50, status: 'active', createdAt: Date.now() },
+  { id: 'pass-fit', facilityId: '2', name: 'Fitness Combo Pass', price: 90, credits: 8, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Flexible entry for all Fitness hub classes.', quantity: 50, status: 'active', createdAt: Date.now() }
 ];
 
 export const DEFAULT_MEMBERSHIPS: Membership[] = [
-  { id: 'm1', facilityId: '1', title: 'Monthly Gym Access', description: '24/7 weight floor access.', price: 99, durationDays: 30, allow24Hour: true, daysOfWeek: [0,1,2,3,4,5,6], status: 'active', createdAt: Date.now() },
-  { id: 'm2', facilityId: '2', title: 'Fitness Monthly', description: 'All group classes included.', price: 89, durationDays: 30, allow24Hour: false, startTime: '06:00', endTime: '22:00', daysOfWeek: [0,1,2,3,4,5,6], status: 'active', createdAt: Date.now() },
-  { id: 'm3', facilityId: '3', title: 'Zen Monthly', description: 'Peace and mindfulness.', price: 129, durationDays: 30, allow24Hour: false, startTime: '06:00', endTime: '21:00', daysOfWeek: [0,1,2,3,4,5,6], status: 'active', createdAt: Date.now() }
+  { id: 'm-gym-monthly', facilityId: '1', title: '121 Gym Monthly', description: 'Unlimited premium gym floor access with 24/7 keycard.', price: 60, durationDays: 30, allow24Hour: true, daysOfWeek: [0,1,2,3,4,5,6], status: 'active', createdAt: Date.now() }
+];
+
+export const DEFAULT_BLOCKS: Block[] = [
+  { id: 'b-hiit-4wk', facilityId: '1', trainerId: 't-rahul', name: 'HIIT 4 Week Block', about: 'Intense metabolic conditioning cycle.', expect: 'Fat loss and endurance improvements.', numWeeks: 4, daysOfWeek: [1,3,5], startDate: Date.now() - 604800000, startTime: '07:00', duration: '1 hour', maxPersons: 10, maxPersonsPerBooking: 1, bookingAmount: 50, weeklyAmount: 25, totalAmount: 150, status: 'active', createdAt: Date.now() },
+  { id: 'b-yoga-beg', facilityId: '3', trainerId: 't-sneha', name: 'Yoga Beginner Block', about: 'Foundational yoga for alignment and peace.', expect: 'Master basic asanas and breathing.', numWeeks: 3, daysOfWeek: [2,4], startDate: Date.now() + 86400000, startTime: '18:30', duration: '1 hour', maxPersons: 12, maxPersonsPerBooking: 1, bookingAmount: 40, weeklyAmount: 20, totalAmount: 100, status: 'active', createdAt: Date.now() }
 ];
 
 export const DEFAULT_BOOKINGS: Booking[] = [
-  { id: 'b1', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c2', slotId: 's2', trainerId: 't1', locationId: 'l1', bookingDate: Date.now() - 86400000, startTime: '06:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', attendanceStatus: 'present', paymentStatus: 'paid', type: 'class', amount: 25, createdAt: Date.now() - 900000000 }
+  { id: 'b-old-1', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', classId: 'c-strength', slotId: 'slot-1', trainerId: 't-rahul', locationId: 'loc-andheri', bookingDate: Date.now() - 86400000, startTime: '07:00', persons: 1, participantNames: ['Shubham Kumar'], status: 'delivered', attendanceStatus: 'present', paymentStatus: 'paid', type: 'class', amount: 25, createdAt: Date.now() - 172800000 }
 ];
 
 export const DEFAULT_ORDERS: Order[] = [
-  { id: 'o1', orderNumber: 'GYM-001', userId: 'u3', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'ci1', productId: 'p1', name: 'Protein Powder', price: 36, size: '2kg', quantity: 1, image: 'https://images.unsplash.com/photo-1593094855729-19c062c97482?q=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 36, vat: 1.8, serviceCharge: 2.5, total: 40.3, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 1209600000 }
+  { id: 'o-old-1', orderNumber: 'ORD-G123', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'it-1', productId: 'p-gloves', name: 'Gym Gloves', price: 15, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 15, vat: 0.75, serviceCharge: 2.5, total: 18.25, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 864000000 }
 ];
 
-export const DEFAULT_BLOCKS: Block[] = [];
-export const DEFAULT_BLOCK_BOOKINGS: BlockBooking[] = [];
-export const DEFAULT_BLOCK_PAYMENTS: BlockWeeklyPayment[] = [];
-export const DEFAULT_REWARD_TRANSACTIONS: RewardTransaction[] = [];
+export const DEFAULT_BLOCK_BOOKINGS: BlockBooking[] = [
+  { id: 'bb-hiit-shubham', blockId: 'b-hiit-4wk', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', trainerId: 't-rahul', startDate: Date.now() - 604800000, participantNames: ['Shubham Kumar'], bookingAmountPaid: true, status: 'ongoing', createdAt: Date.now() - 604800000 }
+];
+
+export const DEFAULT_BLOCK_PAYMENTS: BlockWeeklyPayment[] = [
+  { id: 'py-wk1', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 1, amount: 25, dueDate: Date.now() - 604800000, status: 'paid' },
+  { id: 'py-wk2', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 2, amount: 25, dueDate: Date.now(), status: 'paid' },
+  { id: 'py-wk3', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 3, amount: 25, dueDate: Date.now() + 604800000, status: 'pending' }
+];
+
+export const DEFAULT_REWARD_TRANSACTIONS: RewardTransaction[] = [
+  { id: 'tx-1', userId: 'u-shubham', date: Date.now() - 1000000, type: 'earned', source: 'booking', referenceId: 'b-old-1', points: 400, remainingBalance: 400, facilityId: '1' },
+  { id: 'tx-2', userId: 'u-shubham', date: Date.now() - 900000, type: 'earned', source: 'block', referenceId: 'bb-hiit-shubham', points: 300, remainingBalance: 700, facilityId: '1' },
+  { id: 'tx-3', userId: 'u-shubham', date: Date.now() - 800000, type: 'earned', source: 'pass', referenceId: 'pass-gym-ref', points: 200, remainingBalance: 900, facilityId: '1' },
+  { id: 'tx-4', userId: 'u-shubham', date: Date.now() - 700000, type: 'earned', source: 'order', referenceId: 'o-old-1', points: 150, remainingBalance: 1050, facilityId: '1' },
+  { id: 'tx-5', userId: 'u-shubham', date: Date.now() - 600000, type: 'earned', source: 'membership', referenceId: 'm-gym-ref', points: 200, remainingBalance: 1250, facilityId: '1' },
+  { id: 'tx-6', userId: 'u-shubham', date: Date.now() - 500000, type: 'used', source: 'manual', referenceId: 'discount-ref', points: 1000, remainingBalance: 250, facilityId: '1' }
+];
+
 export const DEFAULT_REWARD_SETTINGS: RewardSettings = {
-  classes: { enabled: true, points: 10, facilityIds: [] },
-  passes: { enabled: true, points: 50, facilityIds: [] },
-  blocks: { enabled: true, points: 100, facilityIds: [] },
+  classes: { enabled: true, points: 50, facilityIds: [] },
+  passes: { enabled: true, points: 100, facilityIds: [] },
+  blocks: { enabled: true, points: 150, facilityIds: [] },
   orders: { enabled: true, points: 20, facilityIds: [] },
-  memberships: { enabled: true, points: 100, facilityIds: [] },
-  redemption: { enabled: true, pointsToValue: 100, monetaryValue: 5, minPointsRequired: 100, enabledModules: ['booking', 'block', 'pass', 'order'] }
+  memberships: { enabled: true, points: 200, facilityIds: [] },
+  redemption: { enabled: true, pointsToValue: 1000, monetaryValue: 10, minPointsRequired: 1000, enabledModules: ['booking', 'block', 'pass', 'order'] }
 };

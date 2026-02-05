@@ -94,6 +94,20 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
     return "";
   };
 
+  const handleAttemptAction = (id: string, type: 'class' | 'block' | 'membership' | 'order', facilityId: string, isAllowed: boolean) => {
+    if (!isAllowed) {
+      const msgMap: Record<string, string> = {
+        class: 'Cancel booking',
+        block: 'Cancel program',
+        membership: 'Cancel membership',
+        order: 'Cancel order'
+      };
+      showToast(`${msgMap[type] || 'Action'} is not allowed for this facility`, 'warning');
+      return;
+    }
+    setCancellingItem({ id, type, facilityId });
+  };
+
   const SummaryCard = ({ title, sub, icon: Icon, status, item, type, facilityId }: any) => {
     const fac = facilities.find(f => f.id === facilityId);
     const paymentStatus = item.paymentStatus;
@@ -114,7 +128,7 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
                <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase border ${
                   status === 'upcoming' || status === 'active' || status === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                   status === 'delivered' || status === 'picked-up' ? 'bg-green-50 text-green-700 border-green-100' :
-                  'bg-red-50 text-red-700 border-red-100'
+                  'bg-red-50 text-red-700 border-red-200'
                }`}>{status}</span>
                {paymentStatus === 'refunded' && (
                  <span className="flex items-center gap-1 text-[8px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
@@ -197,11 +211,11 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
           onClose={() => setViewingDetail(null)}
           actions={
             <>
-              {viewingDetail.type === 'booking' && viewingDetail.item.status === 'upcoming' && facilities.find(f => f.id === viewingDetail.item.facilityId)?.settings?.canCancelBooking && (
-                 <button onClick={() => setCancellingItem({id: viewingDetail.item.id, type: 'class', facilityId: viewingDetail.item.facilityId})} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase text-xs tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all">Withdraw Reservation</button>
+              {viewingDetail.type === 'booking' && viewingDetail.item.status === 'upcoming' && (
+                 <button onClick={() => handleAttemptAction(viewingDetail.item.id, 'class', viewingDetail.item.facilityId, !!facilities.find(f => f.id === viewingDetail.item.facilityId)?.settings?.canCancelBooking)} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase text-xs tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all">Withdraw Reservation</button>
               )}
-              {viewingDetail.type === 'order' && viewingDetail.item.status === 'placed' && facilities.find(f => f.id === viewingDetail.item.facilityId)?.settings?.canCancelOrder && (
-                 <button onClick={() => setCancellingItem({id: viewingDetail.item.id, type: 'order', facilityId: viewingDetail.item.facilityId})} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase text-xs tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all">Cancel Market Order</button>
+              {viewingDetail.type === 'order' && viewingDetail.item.status === 'placed' && (
+                 <button onClick={() => handleAttemptAction(viewingDetail.item.id, 'order', viewingDetail.item.facilityId, !!facilities.find(f => f.id === viewingDetail.item.facilityId)?.settings?.canCancelOrder)} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase text-xs tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all">Cancel Market Order</button>
               )}
             </>
           }
