@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Trainer, ClassSlot, Booking, Class, Facility, Location as FacilityLocation } from '../../types';
 import TrainerLogin from './TrainerLogin';
 import TrainerHomeView from './TrainerHomeView';
@@ -7,10 +7,11 @@ import TrainerFacilityHub from './TrainerFacilityHub';
 import TrainerTimetableView from './TrainerTimetableView';
 import TrainerSlotDetailView from './TrainerSlotDetailView';
 import TrainerClassDetailView from './TrainerClassDetailView';
+import TrainerSchedulesTab from './TrainerSchedulesTab';
 import TrainerBookingsTab from './TrainerBookingsTab';
 import TrainerProfileSetup from './TrainerProfileSetup';
 import TrainerProfileTab from './TrainerProfileTab';
-import { Home, Calendar, User } from 'lucide-react';
+import { LayoutGrid, Calendar, ClipboardList, User } from 'lucide-react';
 
 interface TrainerAppProps {
   trainers: Trainer[];
@@ -35,16 +36,28 @@ const TrainerBottomNav = () => {
   return (
     <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-100 flex items-center justify-around px-2 z-40">
       <button onClick={() => navigate('/trainer/home')} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/trainer/home') ? 'text-blue-600' : 'text-slate-400'}`}>
-        <Home className="w-5 h-5" />
-        <span className="text-[10px] font-medium uppercase tracking-tight">Home</span>
+        <div className="p-1 rounded-lg">
+          <LayoutGrid className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-tight">Hubs</span>
+      </button>
+      <button onClick={() => navigate('/trainer/schedules')} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/trainer/schedules') ? 'text-blue-600' : 'text-slate-400'}`}>
+        <div className="p-1 rounded-lg">
+          <Calendar className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-tight">Schedule</span>
       </button>
       <button onClick={() => navigate('/trainer/bookings')} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/trainer/bookings') ? 'text-blue-600' : 'text-slate-400'}`}>
-        <Calendar className="w-5 h-5" />
-        <span className="text-[10px] font-medium uppercase tracking-tight">Bookings</span>
+        <div className="p-1 rounded-lg">
+          <ClipboardList className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-tight">Rosters</span>
       </button>
       <button onClick={() => navigate('/trainer/profile')} className={`flex flex-col items-center gap-1 transition-colors ${isActive('/trainer/profile') ? 'text-blue-600' : 'text-slate-400'}`}>
-        <User className="w-5 h-5" />
-        <span className="text-[10px] font-medium uppercase tracking-tight">Profile</span>
+        <div className="p-1 rounded-lg">
+          <User className="w-5 h-5" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-tight">Profile</span>
       </button>
     </div>
   );
@@ -64,19 +77,20 @@ const TrainerApp: React.FC<TrainerAppProps> = ({
           <Routes>
             <Route index element={
               !currentTrainer ? (
-                <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); if(t.isFirstLogin) navigate('/trainer/setup'); else navigate('/trainer/home'); }} />
+                <TrainerLogin trainers={trainers} onUpdateTrainer={onUpdateTrainer} onLogin={(t) => { onTrainerLogin(t); if(t.isFirstLogin) navigate('/trainer/setup'); else navigate('/trainer/home'); }} />
               ) : (
                 currentTrainer.isFirstLogin ? <TrainerProfileSetup trainer={currentTrainer} onComplete={(up) => { onUpdateTrainer(currentTrainer.id, {...up, isFirstLogin: false}); navigate('/trainer/home'); }} /> : <TrainerHomeView facilities={facilities} trainer={currentTrainer} />
               )
             } />
-            <Route path="setup" element={currentTrainer ? <TrainerProfileSetup trainer={currentTrainer} onComplete={(up) => { onUpdateTrainer(currentTrainer.id, {...up, isFirstLogin: false}); navigate('/trainer/home'); }} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/setup'); }} />} />
-            <Route path="home" element={currentTrainer ? <TrainerHomeView facilities={facilities} trainer={currentTrainer} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/home'); }} />} />
-            <Route path="facility/:id" element={<TrainerFacilityHub facilities={facilities} classes={classes} trainer={currentTrainer!} />} />
-            <Route path="facility/:id/timetable/:classId" element={<TrainerTimetableView facilities={facilities} classes={classes} trainer={currentTrainer!} classSlots={classSlots} onUpdateSlot={onUpdateSlot} />} />
-            <Route path="facility/:id/class/:classId" element={<TrainerClassDetailView classes={classes} />} />
-            <Route path="slot/:slotId" element={<TrainerSlotDetailView classSlots={classSlots} classes={classes} facilities={facilities} bookings={bookings} trainer={currentTrainer!} onUpdateSlot={onUpdateSlot} onUpdateBooking={onUpdateBooking} />} />
-            <Route path="bookings" element={currentTrainer ? <TrainerBookingsTab trainer={currentTrainer} bookings={bookings} classSlots={classSlots} classes={classes} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/bookings'); }} />} />
-            <Route path="profile" element={currentTrainer ? <TrainerProfileTab trainer={currentTrainer} onLogout={onTrainerLogout} onUpdateTrainer={onUpdateTrainer} facilities={facilities} /> : <TrainerLogin trainers={trainers} onLogin={(t) => { onTrainerLogin(t); navigate('/trainer/profile'); }} />} />
+            <Route path="setup" element={currentTrainer ? <TrainerProfileSetup trainer={currentTrainer} onComplete={(up) => { onUpdateTrainer(currentTrainer.id, {...up, isFirstLogin: false}); navigate('/trainer/home'); }} /> : <Navigate to="/trainer" replace />} />
+            <Route path="home" element={currentTrainer ? <TrainerHomeView facilities={facilities} trainer={currentTrainer} /> : <Navigate to="/trainer" replace />} />
+            <Route path="facility/:id" element={currentTrainer ? <TrainerFacilityHub facilities={facilities} classes={classes} trainer={currentTrainer} /> : <Navigate to="/trainer" replace />} />
+            <Route path="facility/:id/timetable/:classId" element={currentTrainer ? <TrainerTimetableView facilities={facilities} classes={classes} trainer={currentTrainer} trainers={trainers} locations={locations} classSlots={classSlots} onUpdateSlot={onUpdateSlot} /> : <Navigate to="/trainer" replace />} />
+            <Route path="facility/:id/class/:classId" element={currentTrainer ? <TrainerClassDetailView classes={classes} /> : <Navigate to="/trainer" replace />} />
+            <Route path="slot/:slotId" element={currentTrainer ? <TrainerSlotDetailView classSlots={classSlots} classes={classes} facilities={facilities} bookings={bookings} trainer={currentTrainer} trainers={trainers} onUpdateSlot={onUpdateSlot} onUpdateBooking={onUpdateBooking} /> : <Navigate to="/trainer" replace />} />
+            <Route path="schedules" element={currentTrainer ? <TrainerSchedulesTab trainer={currentTrainer} classSlots={classSlots} classes={classes} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
+            <Route path="bookings" element={currentTrainer ? <TrainerBookingsTab trainer={currentTrainer} bookings={bookings} classSlots={classSlots} classes={classes} /> : <Navigate to="/trainer" replace />} />
+            <Route path="profile" element={currentTrainer ? <TrainerProfileTab trainer={currentTrainer} onLogout={onTrainerLogout} onUpdateTrainer={onUpdateTrainer} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
           </Routes>
         </div>
         {showNav && <TrainerBottomNav />}

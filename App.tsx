@@ -89,12 +89,9 @@ const AppContent: React.FC = () => {
       const stored = localStorage.getItem(STORAGE_PREFIX + key);
       if (!stored || stored === 'undefined' || stored === 'null') return fallback;
       const parsed = JSON.parse(stored);
-      
-      // If we expect an array and it's empty but fallback has data, use fallback to avoid "empty site" syndrome
       if (Array.isArray(fallback) && fallback.length > 0 && Array.isArray(parsed) && parsed.length === 0) {
         return fallback;
       }
-      
       return parsed || fallback;
     } catch (e) {
       console.error(`Failed to hydrate ${key}:`, e);
@@ -204,6 +201,33 @@ const AppContent: React.FC = () => {
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
   };
 
+  const onAddBooking = (booking: Omit<Booking, 'id' | 'createdAt'>) => {
+    const newBooking: Booking = { ...booking, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now(), attendanceStatus: 'pending' };
+    
+    // Update the corresponding slot's currentBookings and status
+    setClassSlots(prev => prev.map(slot => {
+      if (slot.id === newBooking.slotId) {
+        const newCount = slot.currentBookings + newBooking.persons;
+        return {
+          ...slot,
+          currentBookings: newCount,
+          status: newCount >= slot.maxBookings ? 'full' : slot.status
+        };
+      }
+      return slot;
+    }));
+
+    // Reward Logic
+    const cConfig = rewardSettings.classes;
+    if (currentUser && cConfig.enabled && newBooking.type === 'class' && (cConfig.facilityIds.length === 0 || cConfig.facilityIds.includes(newBooking.facilityId))) {
+       addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, cConfig.points, newBooking.facilityId);
+       showToast(`Earned ${cConfig.points} points!`, 'success');
+    }
+
+    setBookings(prev => [newBooking, ...prev]);
+    return newBooking;
+  };
+
   const buyMembership = (m: Membership) => {
     if (!currentUser) return;
     let finalPrice = m.price;
@@ -214,7 +238,6 @@ const AppContent: React.FC = () => {
     const newUserMembership: UserMembership = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, membershipId: m.id, facilityId: m.facilityId, title: m.title, startDate: Date.now(), endDate: Date.now() + (m.durationDays * 86400000), price: finalPrice, allow24Hour: m.allow24Hour, startTime: m.startTime, endTime: m.endTime, daysOfWeek: m.daysOfWeek, status: 'active', purchasedAt: Date.now() };
     setUserMemberships(prev => [...prev, newUserMembership]);
     
-    // Facility-specific reward check
     const mConfig = rewardSettings.memberships;
     if (mConfig.enabled && (mConfig.facilityIds.length === 0 || mConfig.facilityIds.includes(m.facilityId))) {
        const pts = m.rewardPointsEnabled ? m.rewardPointsValue || mConfig.points : mConfig.points;
@@ -228,7 +251,6 @@ const AppContent: React.FC = () => {
     if (!currentUser) return;
     const newBB: BlockBooking = { id: Math.random().toString(36).substr(2, 9), blockId: block.id, userId: currentUser.id, userName: currentUser.fullName, userEmail: currentUser.email, facilityId: block.facilityId, trainerId: block.trainerId, startDate: block.startDate, participantNames, bookingAmountPaid: true, status: 'upcoming', createdAt: Date.now() };
     
-    // Facility-specific reward check
     const bConfig = rewardSettings.blocks;
     if (bConfig.enabled && (bConfig.facilityIds.length === 0 || bConfig.facilityIds.includes(block.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'block', newBB.id, bConfig.points, block.facilityId);
@@ -248,7 +270,6 @@ const AppContent: React.FC = () => {
     if (!currentUser) return;
     const newUserPass: UserPass = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, passId: pass.id, facilityId: pass.facilityId, name: pass.name, totalCredits: pass.credits, remainingCredits: pass.credits, personsPerBooking: pass.personsPerBooking, isAllClasses: pass.isAllClasses, allowedClassIds: pass.allowedClassIds, purchasedAt: Date.now(), status: 'active' };
     
-    // Facility-specific reward check
     const pConfig = rewardSettings.passes;
     if (pConfig.enabled && (pConfig.facilityIds.length === 0 || pConfig.facilityIds.includes(pass.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'pass', newUserPass.id, pConfig.points, pass.facilityId);
@@ -262,7 +283,6 @@ const AppContent: React.FC = () => {
   const addOrder = (order: Omit<Order, 'id' | 'createdAt'>) => {
     const newOrder: Order = { ...order, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now() };
     
-    // Facility-specific reward check
     const oConfig = rewardSettings.orders;
     if (currentUser && oConfig.enabled && (oConfig.facilityIds.length === 0 || oConfig.facilityIds.includes(newOrder.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'order', newOrder.id, oConfig.points, newOrder.facilityId);
@@ -280,20 +300,6 @@ const AppContent: React.FC = () => {
     const newUser: User = { ...userData, id: Math.random().toString(36).substr(2, 9), status: 'active', createdAt: Date.now(), paymentCards: userData.paymentCards || [], rewardPoints: 0 };
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
-  };
-
-  const onAddBooking = (booking: Omit<Booking, 'id' | 'createdAt'>) => {
-    const newBooking: Booking = { ...booking, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now(), attendanceStatus: 'pending' };
-    
-    // Facility-specific reward check
-    const cConfig = rewardSettings.classes;
-    if (currentUser && cConfig.enabled && newBooking.type === 'class' && (cConfig.facilityIds.length === 0 || cConfig.facilityIds.includes(newBooking.facilityId))) {
-       addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, cConfig.points, newBooking.facilityId);
-       showToast(`Earned ${cConfig.points} points!`, 'success');
-    }
-
-    setBookings(prev => [newBooking, ...prev]);
-    return newBooking;
   };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center font-semibold text-slate-400">Loading...</div>;
@@ -359,7 +365,7 @@ const AppContent: React.FC = () => {
               locations={locations} onAddLocation={(l) => setLocations(p => [...p, {...l, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
               onUpdateLocation={(id, up) => setLocations(p => p.map(l => l.id === id ? {...l, ...up} : l))}
               onDeleteLocation={(id) => setLocations(p => p.filter(l => l.id !== id))}
-              classSlots={classSlots} onAddClassSlot={(s) => setClassSlots(p => [...p, { ...s, id: Math.random().toString(36).substr(2,9), trainerStatus: 'pending', isDelivered: false }])}
+              classSlots={classSlots} onAddClassSlot={(s) => setClassSlots(p => [...p, { ...s, id: Math.random().toString(36).substr(2,9), trainerStatus: 'accepted', isDelivered: false }])}
               onUpdateClassSlot={updateSlot}
               onDeleteClassSlot={(id) => setClassSlots(p => p.filter(s => s.id !== id))}
               products={products} onAddProduct={(p) => setProducts(pr => [...pr, {...p, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}

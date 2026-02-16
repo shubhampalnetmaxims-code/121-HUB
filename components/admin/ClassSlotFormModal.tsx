@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Clock, Calendar, Users, MapPin, Activity, Check, RotateCcw } from 'lucide-react';
 import { Facility, Class, Trainer, Location, ClassSlot, DAYS_OF_WEEK } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
@@ -33,6 +32,15 @@ const ClassSlotFormModal: React.FC<ClassSlotFormModalProps> = ({
     endDate: slot?.endDate ? new Date(slot.endDate).toISOString().split('T')[0] : ''
   });
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
+
+  const selectedClass = classes.find(c => c.id === formData.classId);
+  const isPT = selectedClass?.name === 'Personal Training';
+
+  useEffect(() => {
+    if (isPT) {
+      setFormData(prev => ({ ...prev, maxBookings: 1 }));
+    }
+  }, [isPT]);
 
   const toggleDay = (idx: number) => {
     if (slot) {
@@ -80,8 +88,6 @@ const ClassSlotFormModal: React.FC<ClassSlotFormModalProps> = ({
   const filteredLocations = locations.filter(l => l.facilityIds.includes(formData.facilityId));
   const filteredTrainers = trainers.filter(t => t.facilityIds.includes(formData.facilityId));
 
-  const targetClass = classes.find(c => c.id === formData.classId);
-
   return (
     <>
       <div className="fixed inset-0 z-[160] overflow-hidden flex items-center justify-end">
@@ -96,7 +102,7 @@ const ClassSlotFormModal: React.FC<ClassSlotFormModalProps> = ({
             <div className="space-y-6">
               <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Target Facility</label>
-                <select required value={formData.facilityId} onChange={e => setFormData(p => ({ ...p, facilityId: e.target.value }))} className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold text-slate-900">
+                <select required value={formData.facilityId} onChange={e => setFormData(p => ({ ...p, facilityId: e.target.value, classId: '', trainerId: '', locationId: '' }))} className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold text-slate-900">
                   <option value="">Select Facility...</option>
                   {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
@@ -221,8 +227,18 @@ const ClassSlotFormModal: React.FC<ClassSlotFormModalProps> = ({
                   <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Max Booking</label>
                   <div className="relative">
                     <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input required type="number" min="1" value={formData.maxBookings} onChange={e => setFormData(p => ({ ...p, maxBookings: parseInt(e.target.value) || 1 }))} className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" placeholder="10" />
+                    <input 
+                      required 
+                      type="number" 
+                      min="1" 
+                      disabled={isPT}
+                      value={formData.maxBookings} 
+                      onChange={e => setFormData(p => ({ ...p, maxBookings: parseInt(e.target.value) || 1 }))} 
+                      className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold disabled:opacity-50" 
+                      placeholder="10" 
+                    />
                   </div>
+                  {isPT && <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mt-2 px-1">Fixed for Personal Training</p>}
                 </div>
               </div>
             </div>
@@ -238,7 +254,7 @@ const ClassSlotFormModal: React.FC<ClassSlotFormModalProps> = ({
       {isConfirmingSave && (
         <ConfirmationModal
           title="Save Timetable Slot?"
-          message={`Are you sure you want to save this slot for "${targetClass?.name || 'Session'}"?`}
+          message={`Are you sure you want to save this slot for "${selectedClass?.name || 'Session'}"?`}
           confirmText="Confirm Save"
           onConfirm={finalSave}
           onCancel={() => setIsConfirmingSave(false)}

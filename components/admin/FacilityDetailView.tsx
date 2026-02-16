@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save } from 'lucide-react';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock } from 'lucide-react';
 import { Facility, FEATURE_MODULES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
 import { useToast } from '../ToastContext';
@@ -23,11 +23,10 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const facility = facilities.find(f => f.id === id);
-  if (!facility) return <div className="p-20 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">Facility Not Found</div>;
-
-  const [localGallery, setLocalGallery] = useState<string[]>(facility.galleryImages || []);
-
-  const currentSettings = facility.settings || {
+  
+  // Local state for batch saving
+  const [localFeatures, setLocalFeatures] = useState<string[]>([]);
+  const [localSettings, setLocalSettings] = useState<NonNullable<Facility['settings']>>({
     canCancelBooking: true,
     canRescheduleBooking: true,
     canCancelOrder: true,
@@ -37,44 +36,70 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
     refundPolicyOrders: "",
     refundPolicyMemberships: "",
     refundPolicyBlocks: ""
-  };
+  });
+
+  useEffect(() => {
+    if (facility) {
+      setLocalFeatures(facility.features || []);
+      if (facility.settings) {
+        setLocalSettings(facility.settings);
+      }
+    }
+  }, [facility]);
+
+  if (!facility) return <div className="p-20 text-center font-bold text-slate-400 uppercase tracking-widest text-xs">Facility Not Found</div>;
+
+  const [localGallery, setLocalGallery] = useState<string[]>(facility.galleryImages || []);
 
   const toggleFeature = (featureId: string) => {
-    const currentFeatures = facility.features || [];
-    const isEnabling = !currentFeatures.includes(featureId);
-    const newFeatures = isEnabling
-      ? [...currentFeatures, featureId]
-      : currentFeatures.filter(fid => fid !== featureId);
-    
-    onUpdate(facility.id, { features: newFeatures });
-    
-    const moduleName = FEATURE_MODULES.find(m => m.id === featureId)?.name || 'Feature';
-    if (isEnabling) {
-      showToast(`${moduleName} enabled successfully`, 'success');
-    } else {
-      showToast(`${moduleName} disabled successfully`, 'warning');
-    }
+    setLocalFeatures(prev => {
+      const isEnabling = !prev.includes(featureId);
+      const next = isEnabling ? [...prev, featureId] : prev.filter(fid => fid !== featureId);
+      
+      // Auto-update settings based on feature toggles
+      const nextSettings = { ...localSettings };
+      
+      if (!isEnabling) {
+        // Disabling logic
+        if (featureId === 'classes' || featureId === 'timetable') {
+          nextSettings.canCancelBooking = false;
+          nextSettings.canRescheduleBooking = false;
+        } else if (featureId === 'marketplace') {
+          nextSettings.canCancelOrder = false;
+        } else if (featureId === 'memberships') {
+          nextSettings.canCancelMembership = false;
+        } else if (featureId === 'blocks') {
+          nextSettings.canCancelBlock = false;
+        }
+      } else {
+        // Enabling logic (Default to true for convenience)
+        if (featureId === 'classes' || featureId === 'timetable') {
+          nextSettings.canCancelBooking = true;
+          nextSettings.canRescheduleBooking = true;
+        } else if (featureId === 'marketplace') {
+          nextSettings.canCancelOrder = true;
+        } else if (featureId === 'memberships') {
+          nextSettings.canCancelMembership = true;
+        } else if (featureId === 'blocks') {
+          nextSettings.canCancelBlock = true;
+        }
+      }
+      
+      setLocalSettings(nextSettings);
+      return next;
+    });
   };
 
-  const updateSettings = (key: keyof NonNullable<Facility['settings']>, value: any) => {
+  const updateLocalSetting = (key: keyof NonNullable<Facility['settings']>, value: any) => {
+    setLocalSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleBatchSave = () => {
     onUpdate(facility.id, {
-      settings: { ...currentSettings, [key]: value }
+      features: localFeatures,
+      settings: localSettings
     });
-    
-    const labels: Record<string, string> = {
-      canCancelBooking: 'Cancel booking',
-      canRescheduleBooking: 'Reschedule',
-      canCancelOrder: 'Cancel order',
-      canCancelMembership: 'Cancel membership',
-      canCancelBlock: 'Cancel block'
-    };
-    
-    const label = labels[key] || 'Setting';
-    if (value) {
-      showToast(`${label} enabled for this facility`, 'success');
-    } else {
-      showToast(`${label} disabled for this facility`, 'warning');
-    }
+    showToast('Configuration updated successfully', 'success');
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,7 +108,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
       const reader = new FileReader();
       reader.onloadend = () => {
         setLocalGallery(prev => [...prev, reader.result as string]);
-        showToast('Image added successfully', 'success');
+        showToast('Image added to queue', 'success');
       };
       reader.readAsDataURL(file);
     }
@@ -91,7 +116,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
 
   const removeGalleryImage = (idx: number) => {
     setLocalGallery(prev => prev.filter((_, i) => i !== idx));
-    showToast('Image removed', 'success');
+    showToast('Image removed from queue', 'success');
   };
 
   const saveGallery = () => {
@@ -99,19 +124,43 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
     showToast('Facility images updated', 'success');
   };
 
-  const PolicyToggle = ({ icon: Icon, label, description, active, onChange }: { icon: any, label: string, description: string, active: boolean, onChange: (v: boolean) => void }) => (
-    <div className={`p-6 rounded-lg border transition-all flex items-center justify-between ${active ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white'}`}>
+  // Visibility logic for policies
+  const isClassesEnabled = localFeatures.includes('classes') || localFeatures.includes('timetable');
+  const isMarketplaceEnabled = localFeatures.includes('marketplace');
+  const isMembershipsEnabled = localFeatures.includes('memberships');
+  const isBlocksEnabled = localFeatures.includes('blocks');
+
+  const PolicyToggle = ({ 
+    icon: Icon, 
+    label, 
+    description, 
+    active, 
+    onChange, 
+    parentEnabled = true 
+  }: { 
+    icon: any, 
+    label: string, 
+    description: string, 
+    active: boolean, 
+    onChange: (v: boolean) => void,
+    parentEnabled?: boolean
+  }) => (
+    <div className={`p-6 rounded-lg border transition-all flex items-center justify-between ${!parentEnabled ? 'opacity-40 grayscale pointer-events-none bg-slate-50' : active ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white'}`}>
       <div className="flex items-center gap-5">
         <div className={`p-3.5 rounded-md ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="text-left">
-          <p className="font-bold text-base text-slate-900 leading-none mb-1 uppercase tracking-tight">{label}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-base text-slate-900 leading-none mb-1 uppercase tracking-tight">{label}</p>
+            {!parentEnabled && <Lock className="w-3 h-3 text-slate-400" />}
+          </div>
           <p className="text-xs text-slate-500 max-w-[280px] leading-tight font-medium">{description}</p>
         </div>
       </div>
       <input 
         type="checkbox" 
+        disabled={!parentEnabled}
         checked={active} 
         onChange={e => onChange(e.target.checked)} 
         className="w-6 h-6 accent-blue-600 rounded-sm cursor-pointer"
@@ -196,7 +245,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
           </div>
           <div className="grid grid-cols-1 gap-3">
             {FEATURE_MODULES.map(module => {
-              const isEnabled = facility.features?.includes(module.id);
+              const isEnabled = localFeatures.includes(module.id);
               const ModuleIcon = IconMap[module.icon] || ShoppingBag;
               return (
                 <div 
@@ -227,42 +276,56 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
               <ShieldCheck className="w-4 h-4" /> Hub Policies
             </h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1">
             <PolicyToggle 
               icon={XCircle} 
               label="Cancel Booking" 
               description="Allow members to cancel their upcoming session reservations."
-              active={currentSettings.canCancelBooking}
-              onChange={(v) => updateSettings('canCancelBooking', v)}
+              active={localSettings.canCancelBooking}
+              parentEnabled={isClassesEnabled}
+              onChange={(v) => updateLocalSetting('canCancelBooking', v)}
             />
             <PolicyToggle 
               icon={RefreshCw} 
               label="Reschedule Booking" 
               description="Allow members to move their session to another available time."
-              active={currentSettings.canRescheduleBooking}
-              onChange={(v) => updateSettings('canRescheduleBooking', v)}
+              active={localSettings.canRescheduleBooking}
+              parentEnabled={isClassesEnabled}
+              onChange={(v) => updateLocalSetting('canRescheduleBooking', v)}
             />
             <PolicyToggle 
               icon={ShoppingCart} 
               label="Cancel Order" 
               description="Allow members to cancel marketplace item orders."
-              active={currentSettings.canCancelOrder}
-              onChange={(v) => updateSettings('canCancelOrder', v)}
+              active={localSettings.canCancelOrder}
+              parentEnabled={isMarketplaceEnabled}
+              onChange={(v) => updateLocalSetting('canCancelOrder', v)}
             />
             <PolicyToggle 
               icon={CreditCard} 
               label="Cancel Membership" 
               description="Allow members to terminate their active subscription plans."
-              active={currentSettings.canCancelMembership}
-              onChange={(v) => updateSettings('canCancelMembership', v)}
+              active={localSettings.canCancelMembership}
+              parentEnabled={isMembershipsEnabled}
+              onChange={(v) => updateLocalSetting('canCancelMembership', v)}
             />
             <PolicyToggle 
               icon={Layers} 
               label="Cancel Block" 
               description="Allow members to withdraw from transformation programs."
-              active={currentSettings.canCancelBlock}
-              onChange={(v) => updateSettings('canCancelBlock', v)}
+              active={localSettings.canCancelBlock}
+              parentEnabled={isBlocksEnabled}
+              onChange={(v) => updateLocalSetting('canCancelBlock', v)}
             />
+          </div>
+          
+          <div className="pt-8 mt-8 border-t border-slate-50">
+             <button 
+              onClick={handleBatchSave}
+              className="w-full py-4 bg-slate-900 text-white rounded-md font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 hover:bg-black transition-all flex items-center justify-center gap-2"
+             >
+               <Save className="w-4 h-4" /> Save Policy Configuration
+             </button>
           </div>
         </section>
       </div>

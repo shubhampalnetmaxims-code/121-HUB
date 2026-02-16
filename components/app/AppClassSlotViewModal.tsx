@@ -47,6 +47,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
 }) => {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const isPersonalTraining = cls?.name === 'Personal Training';
   const [personCount, setPersonCount] = useState(1);
   const [names, setNames] = useState<string[]>(['']);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
@@ -57,7 +58,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
   const [selectedUserPassId, setSelectedUserPassId] = useState<string>('');
   const [selectedNewPassId, setSelectedNewPassId] = useState<string>('');
   
-  const MAX_PER_PERSON = 4;
+  const MAX_PER_PERSON = isPersonalTraining ? 1 : 4;
 
   const validUserPasses = userPasses.filter(up => {
     if (up.userId !== currentUser?.id) return false;
@@ -76,6 +77,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
   });
 
   const handlePersonCountChange = (count: number) => {
+    if (isPersonalTraining) return;
     const newCount = Math.max(1, Math.min(count, MAX_PER_PERSON));
     setPersonCount(newCount);
     const newNames = [...names];
@@ -123,7 +125,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
   }
 
   return (
-    <div className="absolute inset-0 z-[80] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden">
+    <div className="absolute inset-0 z-[80] bg-white flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden text-left">
       <div className="bg-slate-50/50 p-6 pt-12 border-b border-slate-100 flex items-center justify-between shrink-0">
         <div className="text-left">
           <h3 className="text-xl font-bold tracking-tight">Session Information</h3>
@@ -139,10 +141,10 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
               <h4 className="text-3xl font-black text-slate-900 tracking-tighter leading-none mb-2">{cls?.name || 'Unknown'}</h4>
               <div className="flex items-center gap-2">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
-                  slot.status === 'available' ? 'bg-orange-100 text-orange-600' : 
-                  slot.status === 'full' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  slot.status === 'available' ? 'bg-green-100 text-green-600' : 
+                  slot.status === 'full' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
                 }`}>
-                  {slot.status === 'available' ? 'Open for Booking' : slot.status === 'full' ? 'Session Full' : slot.status}
+                  {slot.status === 'available' ? 'Open for Booking' : slot.status === 'full' ? 'Fully Booked' : slot.status}
                 </span>
                 <span className="text-slate-300 text-xs font-bold">•</span>
                 <span className="text-slate-500 text-xs font-bold uppercase tracking-tight">{cls?.level}</span>
@@ -267,12 +269,17 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
         {slot.status !== 'full' ? (
           <section className="space-y-6 pt-4 border-t border-slate-100">
             <div className="flex items-center justify-between">
-                <h5 className="text-lg font-black text-slate-900 tracking-tight">Reservation</h5>
-                <div className="flex items-center bg-slate-100 rounded-xl p-1">
-                  <button onClick={() => handlePersonCountChange(personCount - 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">-</button>
-                  <span className="px-4 font-black text-slate-900 text-sm">{personCount}</span>
-                  <button onClick={() => handlePersonCountChange(personCount + 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">+</button>
-                </div>
+                <h5 className="text-lg font-black text-slate-900 tracking-tight uppercase">Reservation</h5>
+                {!isPersonalTraining && (
+                  <div className="flex items-center bg-slate-100 rounded-xl p-1">
+                    <button onClick={() => handlePersonCountChange(personCount - 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">-</button>
+                    <span className="px-4 font-black text-slate-900 text-sm">{personCount}</span>
+                    <button onClick={() => handlePersonCountChange(personCount + 1)} className="w-8 h-8 flex items-center justify-center font-bold text-slate-600">+</button>
+                  </div>
+                )}
+                {isPersonalTraining && (
+                  <span className="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">1-on-1 Session</span>
+                )}
             </div>
 
             <div className="space-y-3">
@@ -296,9 +303,9 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           </section>
         ) : (
           <section className="pt-4 border-t border-slate-100">
-            <div className="p-6 bg-slate-50 rounded-[32px] border border-slate-100 text-center">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Attendance Limit Reached</p>
-              <p className="text-xs text-slate-500 mt-1">This session is currently at full capacity. View other slots for availability.</p>
+            <div className="p-6 bg-red-50 rounded-[32px] border border-red-100 text-center">
+              <p className="text-xs font-black text-red-600 uppercase tracking-widest">Fully Booked</p>
+              <p className="text-xs text-red-500/70 mt-1 font-medium">This session has reached its attendance limit. Please check other available times.</p>
             </div>
           </section>
         )}
@@ -310,7 +317,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           disabled={slot.status === 'full'}
           className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
         >
-          {slot.status === 'full' ? 'Slot Fully Booked' : 'Preview Booking'}
+          {slot.status === 'full' ? 'Fully Booked' : 'Preview Booking'}
         </button>
       </div>
 
@@ -337,7 +344,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
           selectedNewPass={availablePasses.find(p => p.id === selectedNewPassId)}
           onBuyPass={onBuyPass}
           onUsePass={onUsePass}
-          // Fix: Propagating missing reward props to BookingPreviewModal
+          // Propagating reward props
           rewardSettings={rewardSettings}
           onRedeemPoints={onRedeemPoints}
         />

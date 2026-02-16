@@ -102,7 +102,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         <Routes>
           <Route index element={<FacilitiesView facilities={facilities} onAdd={onAdd} onUpdate={onUpdate} onDelete={onDelete} onOpenSidebar={() => setIsSidebarOpen(true)} onResetSystem={onResetSystem} />} />
           <Route path="facility/:id" element={<FacilityDetailView facilities={facilities} onUpdate={onUpdate} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
-          <Route path="classes" element={<ClassesView facilities={facilities} classes={classes} onAddClass={onAddClass} onUpdateClass={onUpdateClass} onDeleteClass={onDeleteClass} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
+          <Route path="classes" element={
+            <ClassesView 
+              facilities={facilities} 
+              classes={classes} 
+              trainers={trainers} 
+              locations={locations} 
+              classSlots={classSlots}
+              onAddClass={onAddClass} 
+              onUpdateClass={onUpdateClass} 
+              onDeleteClass={onDeleteClass} 
+              onOpenSidebar={() => setIsSidebarOpen(true)} 
+            />
+          } />
           <Route path="staff" element={<StaffView facilities={facilities} trainers={trainers} onAddTrainer={onAddTrainer} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} locations={locations} onAddLocation={onAddLocation} onUpdateLocation={onUpdateLocation} onDeleteLocation={onDeleteLocation} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="trainer/:trainerId" element={<TrainerDetailView trainers={trainers} classSlots={classSlots} bookings={bookings} classes={classes} facilities={facilities} onUpdateTrainer={onUpdateTrainer} onDeleteTrainer={onDeleteTrainer} onOpenSidebar={() => setIsSidebarOpen(true)} />} />
           <Route path="users" element={<UsersView users={users} onUpdateUser={onUpdateUser} onDeleteUser={onDeleteUser} onOpenSidebar={() => setIsSidebarOpen(true)} />} />

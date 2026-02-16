@@ -20,8 +20,7 @@ const TrainerBookingsView: React.FC<TrainerBookingsViewProps> = ({
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [slotFeedback, setSlotFeedback] = useState('');
 
-  // Accepted slots only
-  const activeSlots = classSlots.filter(s => s.trainerId === trainer.id && s.trainerStatus === 'accepted')
+  const mySlots = classSlots.filter(s => s.trainerId === trainer.id)
     .sort((a, b) => b.dayOfWeek - a.dayOfWeek || a.startTime.localeCompare(b.startTime));
 
   const handleMarkAttendance = (bookingId: string, status: Booking['attendanceStatus']) => {
@@ -161,7 +160,7 @@ const TrainerBookingsView: React.FC<TrainerBookingsViewProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4 pb-32 scrollbar-hide">
-        {activeSlots.length > 0 ? activeSlots.map(slot => {
+        {mySlots.length > 0 ? mySlots.map(slot => {
           const cls = classes.find(c => c.id === slot.classId);
           const fac = facilities.find(f => f.id === slot.facilityId);
           const isToday = slot.dayOfWeek === new Date().getDay();

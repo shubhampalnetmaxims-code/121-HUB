@@ -29,7 +29,11 @@ const CartView: React.FC<CartViewProps> = ({
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [useRewards, setUseRewards] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
-  const [selectedCardId, setSelectedCardId] = useState<string>(currentUser?.paymentCards.find(c => c.isPrimary)?.id || currentUser?.paymentCards[0]?.id || '');
+  const [selectedCardId, setSelectedCardId] = useState<string>(
+    currentUser?.paymentCards?.find(c => c.isPrimary)?.id || 
+    currentUser?.paymentCards?.[0]?.id || 
+    ''
+  );
 
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const vat = subtotal * 0.05; // 5% VAT

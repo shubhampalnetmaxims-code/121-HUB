@@ -58,9 +58,6 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
   const filteredSlots = classSlots.filter(s => {
     if (s.facilityId !== facility.id) return false;
     
-    // Logic: Only show slots that are accepted by the trainer
-    if (s.trainerStatus !== 'accepted') return false;
-
     // Status check for parent class
     const parentClass = classes.find(c => c.id === s.classId);
     if (!parentClass || parentClass.status === 'inactive') return false;
@@ -189,20 +186,21 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                       {daySlots.length > 0 ? daySlots.map(s => {
                         const cls = classes.find(c => c.id === s.classId);
                         const loc = locations.find(l => l.id === s.locationId);
+                        const isFull = s.status === 'full';
                         
                         return (
                           <div 
                             key={s.id} 
                             onClick={() => handleSlotClick(s)}
-                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-[0.98] transition-all cursor-pointer border bg-slate-50 border-slate-100 hover:border-blue-200`}
+                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-[0.98] transition-all cursor-pointer border ${isFull ? 'bg-slate-100 border-slate-200 grayscale' : 'bg-slate-50 border-slate-100 hover:border-blue-200'}`}
                           >
                             <div className="text-left relative">
                               <div className="flex items-center justify-between gap-1.5 mb-1">
                                 <div className="flex items-center gap-1.5 overflow-hidden">
-                                  <div className={`w-2 h-2 shrink-0 rounded-full ${s.status === 'available' ? 'bg-orange-500' : s.status === 'full' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
-                                  <h4 className={`font-bold text-xs line-clamp-1 text-slate-900`}>{cls?.name}</h4>
+                                  <div className={`w-2 h-2 shrink-0 rounded-full ${isFull ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                  <h4 className={`font-bold text-xs line-clamp-1 ${isFull ? 'text-slate-400' : 'text-slate-900'}`}>{cls?.name}</h4>
                                 </div>
-                                {cls?.pricePerSession !== undefined && (
+                                {!isFull && cls?.pricePerSession !== undefined && (
                                   <span className="text-[9px] font-black text-blue-600 shrink-0">${cls.pricePerSession}</span>
                                 )}
                               </div>
@@ -212,7 +210,11 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                               </div>
                             </div>
                             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                              <p className="text-[10px] font-bold text-slate-500">{trainers.find(t => t.id === s.trainerId)?.name || 'TBA'}</p>
+                              {isFull ? (
+                                <span className="text-[9px] font-black text-red-500 uppercase tracking-widest">Booked Fully</span>
+                              ) : (
+                                <p className="text-[10px] font-bold text-slate-500">{trainers.find(t => t.id === s.trainerId)?.name || 'TBA'}</p>
+                              )}
                             </div>
                           </div>
                         );

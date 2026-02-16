@@ -234,11 +234,6 @@ const TimetableView: React.FC<TimetableViewProps> = ({
                                     <Users className="w-3 h-3" /> {s.currentBookings}/{s.maxBookings}
                                   </div>
                                 </div>
-                                <div className="flex justify-start">
-                                   {s.trainerStatus === 'pending' && <span className="flex items-center gap-1 text-[7px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-1 py-0.5 rounded border border-amber-100"><Clock className="w-2 h-2" /> Pending Coach</span>}
-                                   {s.trainerStatus === 'accepted' && <span className="flex items-center gap-1 text-[7px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-1 py-0.5 rounded border border-green-100"><ShieldCheck className="w-2 h-2" /> Accepted</span>}
-                                   {s.trainerStatus === 'not-available' && <span className="flex items-center gap-1 text-[7px] font-black text-red-600 uppercase tracking-widest bg-red-50 px-1 py-0.5 rounded border border-red-100"><XCircle className="w-2 h-2" /> Declined</span>}
-                                </div>
                               </div>
                             </div>
                           );

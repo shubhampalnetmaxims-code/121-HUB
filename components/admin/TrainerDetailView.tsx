@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Mail, Phone, Menu, Calendar, ShieldCheck, Clock, MapPin, CheckCircle2, Star, Trash2, Edit3, XCircle, RefreshCw, Layers } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Menu, Calendar, ShieldCheck, Clock, MapPin, CheckCircle2, Star, Trash2, Edit3, XCircle, RefreshCw, Layers, Share2 } from 'lucide-react';
 import { Trainer, ClassSlot, Booking, Class, Facility } from '../../types';
 import { useToast } from '../ToastContext';
 import TrainerFormModal from './TrainerFormModal';
@@ -322,7 +322,7 @@ const TrainerDetailView: React.FC<TrainerDetailViewProps> = ({
                      <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl ${trainer.permissions.canCancel ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}><XCircle className="w-5 h-5" /></div>
                         <div className="text-left">
-                           <p className="font-bold text-slate-900 text-sm uppercase tracking-tight">Cancel Classes</p>
+                           <p className="font-bold text-slate-900 text-sm uppercase tracking-tight">Cancel classes</p>
                            <p className="text-[10px] text-slate-500 font-medium">Can terminate an entire session cycle.</p>
                         </div>
                      </div>
@@ -338,7 +338,7 @@ const TrainerDetailView: React.FC<TrainerDetailViewProps> = ({
                      <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-xl ${trainer.permissions.canReschedule ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}><RefreshCw className="w-5 h-5" /></div>
                         <div className="text-left">
-                           <p className="font-bold text-slate-900 text-sm uppercase tracking-tight">Reschedule Classes</p>
+                           <p className="font-bold text-slate-900 text-sm uppercase tracking-tight">Reschedule classes</p>
                            <p className="text-[10px] text-slate-500 font-medium">Can move session times independently.</p>
                         </div>
                      </div>
@@ -346,6 +346,22 @@ const TrainerDetailView: React.FC<TrainerDetailViewProps> = ({
                         type="checkbox" 
                         checked={trainer.permissions.canReschedule} 
                         onChange={e => onUpdateTrainer(trainer.id, { permissions: { ...trainer.permissions, canReschedule: e.target.checked } })}
+                        className="w-6 h-6 accent-blue-600 rounded cursor-pointer"
+                     />
+                  </div>
+
+                  <div className={`p-6 rounded-2xl border transition-all flex items-center justify-between ${trainer.permissions.canTransfer ? 'border-blue-600 bg-blue-50/10' : 'border-slate-100 bg-white'}`}>
+                     <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl ${trainer.permissions.canTransfer ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}><Share2 className="w-5 h-5" /></div>
+                        <div className="text-left">
+                           <p className="font-bold text-slate-900 text-sm uppercase tracking-tight">Transfer classes</p>
+                           <p className="text-[10px] text-slate-500 font-medium">Can reassign session to other coaches.</p>
+                        </div>
+                     </div>
+                     <input 
+                        type="checkbox" 
+                        checked={trainer.permissions.canTransfer} 
+                        onChange={e => onUpdateTrainer(trainer.id, { permissions: { ...trainer.permissions, canTransfer: e.target.checked } })}
                         className="w-6 h-6 accent-blue-600 rounded cursor-pointer"
                      />
                   </div>

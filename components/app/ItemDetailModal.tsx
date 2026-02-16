@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, Calendar, Clock, MapPin, DollarSign, ShieldCheck, Tag, Info, CheckCircle2, Ticket, CreditCard, Layers, Package, User, RefreshCcw } from 'lucide-react';
-import { Booking, Order, UserPass, UserMembership, Facility, Class, Trainer } from '../../types';
+import { X, Calendar, Clock, MapPin, DollarSign, ShieldCheck, Tag, Info, CheckCircle2, Ticket, CreditCard, Layers, Package, User, RefreshCcw, Star, MessageSquare } from 'lucide-react';
+import { Booking, Order, UserPass, UserMembership, Facility, Class, Trainer, ClassSlot } from '../../types';
 
 interface ItemDetailModalProps {
   type: 'booking' | 'order' | 'pass' | 'membership';
@@ -8,11 +8,12 @@ interface ItemDetailModalProps {
   facility: Facility | undefined;
   cls?: Class | undefined;
   trainer?: Trainer | undefined;
+  slot?: ClassSlot | undefined; // Added slot for common feedback
   onClose: () => void;
   actions?: React.ReactNode;
 }
 
-const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility, cls, trainer, onClose, actions }) => {
+const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility, cls, trainer, slot, onClose, actions }) => {
   const isBooking = type === 'booking';
   const isOrder = type === 'order';
   const isPass = type === 'pass';
@@ -65,6 +66,41 @@ const ItemDetailModal: React.FC<ItemDetailModalProps> = ({ type, item, facility,
            </div>
            {isBooking && <span className="text-[9px] font-black uppercase tracking-widest">{item.type} session</span>}
         </div>
+
+        {/* Feedback Section (Member View) */}
+        {isBooking && item.status === 'delivered' && (
+           <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Session Recap</label>
+              <div className="space-y-3">
+                {/* Personal Feedback */}
+                {item.feedbackFromTrainer && (
+                  <div className="p-6 bg-blue-600 rounded-[32px] text-white shadow-xl shadow-blue-600/20 relative overflow-hidden">
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-3">
+                        <MessageSquare className="w-4 h-4 text-blue-200" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-100">Private Message from Coach</span>
+                      </div>
+                      <p className="text-lg font-bold leading-relaxed tracking-tight italic">"{item.feedbackFromTrainer}"</p>
+                    </div>
+                    <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl" />
+                  </div>
+                )}
+                
+                {/* Global Class Review/Recap */}
+                {slot?.commonFeedback && (
+                  <div className="p-6 bg-slate-900 rounded-[32px] text-white relative overflow-hidden shadow-lg border border-white/5">
+                     <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Star className="w-4 h-4 text-amber-400" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-white/40">Global Class Review</span>
+                        </div>
+                        <p className="text-sm font-medium text-white/80 leading-relaxed italic">"{slot.commonFeedback}"</p>
+                     </div>
+                  </div>
+                )}
+              </div>
+           </section>
+        )}
 
         {/* Payment & Refund Status Visibility */}
         {(item.paymentStatus || isBooking || isOrder) && (

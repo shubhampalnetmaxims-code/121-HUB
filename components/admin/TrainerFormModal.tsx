@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Bold, Italic, List, CloudUpload, User, Mail, Phone, Check, ShieldCheck, RefreshCw, XCircle } from 'lucide-react';
+import { X, Bold, Italic, List, CloudUpload, User, Mail, Phone, Check, ShieldCheck, RefreshCw, XCircle, Share2 } from 'lucide-react';
 import { Facility, Trainer } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -21,7 +21,8 @@ const TrainerFormModal: React.FC<TrainerFormModalProps> = ({ trainer, facilities
     colorCode: trainer?.colorCode || '#2563eb',
     permissions: trainer?.permissions || {
       canCancel: true,
-      canReschedule: false
+      canReschedule: false,
+      canTransfer: false
     }
   });
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
@@ -102,7 +103,7 @@ const TrainerFormModal: React.FC<TrainerFormModalProps> = ({ trainer, facilities
                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                     <div className="flex items-center gap-3">
                        <XCircle className="w-4 h-4 text-slate-400" />
-                       <span className="text-sm font-bold text-slate-700">Cancel Classes</span>
+                       <span className="text-sm font-bold text-slate-700">Cancel classes</span>
                     </div>
                     <input 
                       type="checkbox" 
@@ -114,12 +115,24 @@ const TrainerFormModal: React.FC<TrainerFormModalProps> = ({ trainer, facilities
                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                     <div className="flex items-center gap-3">
                        <RefreshCw className="w-4 h-4 text-slate-400" />
-                       <span className="text-sm font-bold text-slate-700">Reschedule Classes</span>
+                       <span className="text-sm font-bold text-slate-700">Reschedule classes</span>
                     </div>
                     <input 
                       type="checkbox" 
                       checked={formData.permissions.canReschedule} 
                       onChange={e => setFormData(prev => ({ ...prev, permissions: { ...prev.permissions, canReschedule: e.target.checked } }))}
+                      className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer"
+                    />
+                 </div>
+                 <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                       <Share2 className="w-4 h-4 text-slate-400" />
+                       <span className="text-sm font-bold text-slate-700">Transfer classes</span>
+                    </div>
+                    <input 
+                      type="checkbox" 
+                      checked={formData.permissions.canTransfer} 
+                      onChange={e => setFormData(prev => ({ ...prev, permissions: { ...prev.permissions, canTransfer: e.target.checked } }))}
                       className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer"
                     />
                  </div>

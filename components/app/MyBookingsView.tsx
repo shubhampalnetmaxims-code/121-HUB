@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ChevronRight, XCircle, MoreVertical, ShieldCheck, AlertCircle, User as UserIcon, Layers, Ticket, DollarSign, CheckCircle2, TrendingUp, Info, X, FileText, ShoppingBag, Eye, RefreshCcw } from 'lucide-react';
-import { Booking, User, Facility, Class, Trainer, Block, BlockBooking, BlockWeeklyPayment, UserMembership, Order } from '../../types';
+import { Booking, User, Facility, Class, Trainer, Block, BlockBooking, BlockWeeklyPayment, UserMembership, Order, ClassSlot } from '../../types';
 import { useToast } from '../ToastContext';
 import ConfirmationModal from '../admin/ConfirmationModal';
 import BlockPaymentModal from './BlockPaymentModal';
@@ -10,6 +10,7 @@ import ItemDetailModal from './ItemDetailModal';
 interface MyBookingsViewProps {
   currentUser: User | null;
   bookings: Booking[];
+  classSlots: ClassSlot[]; // Added slots to props
   blockBookings: BlockBooking[];
   blockPayments: BlockWeeklyPayment[];
   facilities: Facility[];
@@ -30,6 +31,7 @@ interface MyBookingsViewProps {
 const MyBookingsView: React.FC<MyBookingsViewProps> = ({ 
   currentUser, 
   bookings = [], 
+  classSlots = [],
   blockBookings = [], 
   blockPayments = [], 
   facilities = [], 
@@ -208,6 +210,7 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
           facility={facilities.find(f => f.id === viewingDetail.item.facilityId)}
           cls={viewingDetail.type === 'booking' ? classes.find(c => c.id === viewingDetail.item.classId) : undefined}
           trainer={viewingDetail.type === 'booking' ? trainers.find(t => t.id === viewingDetail.item.trainerId) : undefined}
+          slot={viewingDetail.type === 'booking' ? classSlots.find(s => s.id === viewingDetail.item.slotId) : undefined}
           onClose={() => setViewingDetail(null)}
           actions={
             <>

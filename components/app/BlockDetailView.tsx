@@ -36,7 +36,11 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [useRewards, setUseRewards] = useState(false); // Added redemption state
-  const [selectedCardId, setSelectedCardId] = useState<string>(currentUser?.paymentCards.find(c => c.isPrimary)?.id || currentUser?.paymentCards[0]?.id || '');
+  const [selectedCardId, setSelectedCardId] = useState<string>(
+    currentUser?.paymentCards?.find(c => c.isPrimary)?.id || 
+    currentUser?.paymentCards?.[0]?.id || 
+    ''
+  );
 
   const block = blocks.find(b => b.id === blockId);
   const trainer = block ? trainers.find(t => t.id === block.trainerId) : null;
