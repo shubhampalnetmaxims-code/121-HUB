@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings } from '../../types';
-import { LayoutDashboard } from 'lucide-react';
+// Fix: Added SupportTicket to imports from types
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket } from '../../types';
 import EntryView from './EntryView';
 import HomeView from './HomeView';
 import FacilityHubView from './FacilityHubView';
@@ -22,15 +23,16 @@ import MembershipListView from './MembershipListView';
 import MyMembershipsView from './MyMembershipsView';
 import BlockListView from './BlockListView';
 import BlockDetailView from './BlockDetailView';
-import UnderDevelopmentApp from './UnderDevelopmentApp';
 import ActivityView from './ActivityView';
 import MeasurementsView from './MeasurementsView';
 import PhotoLogView from './PhotoLogView';
 import RewardsHistoryView from './RewardsHistoryView';
+// Fix: Import SupportView component
+import SupportView from './SupportView';
 
-const FacilityLoader = ({ facilities, render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
+const FacilityLoader = ({ facilities = [], render }: { facilities: Facility[], render: (f: Facility) => React.ReactNode }) => {
   const { id } = useParams<{ id: string }>();
-  const f = facilities.find(fac => fac.id === id);
+  const f = (facilities || []).find(fac => fac.id === id);
   if (!f) return <div className="p-10 text-center font-bold text-slate-400">Loading Hub...</div>;
   return <>{render(f)}</>;
 };
@@ -55,7 +57,6 @@ interface AppHubProps {
   blockPayments: BlockWeeklyPayment[];
   measurements: Measurement[];
   photoLogs: PhotoLog[];
-  // Added reward properties to sync with the other AppHub version
   rewardTransactions: RewardTransaction[];
   rewardSettings: RewardSettings;
   onRedeemPoints: (points: number, source: string, refId: string) => void;
@@ -81,16 +82,61 @@ interface AppHubProps {
   onAddMeasurement: (m: Omit<Measurement, 'id'>) => void;
   onAddPhotoLog: (p: Omit<PhotoLog, 'id'>) => void;
   onDeletePhotoLog: (id: string) => void;
+  // Fix: Added missing ticket properties to AppHubProps for this alternative path version
+  tickets: SupportTicket[];
+  onAddTicket: (t: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>, initialMessage: string) => void;
+  onReplyTicket: (id: string, message: string, senderType: 'user' | 'admin') => void;
 }
 
 const AppHub: React.FC<AppHubProps> = ({ 
-  facilities, classes, trainers, locations, classSlots, products, bookings, cart, orders, users,
-  passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, 
-  rewardTransactions, rewardSettings, onRedeemPoints, // Destructured new props
-  currentUser, onRegisterUser, onUpdateUser, onLogout, onDeleteUser, onAddBooking, 
-  onUpdateBooking, onUpdateBlockBooking, onUpdateOrder, onUpdateUserMembership,
-  onAddToCart, updateCartQuantity, removeFromCart, onAddOrder, onBuyPass, onUsePass, onBookBlock, onPayWeeklyBlock, onBuyMembership,
-  onAddMeasurement, onAddPhotoLog, onDeletePhotoLog
+  facilities = [], 
+  classes = [], 
+  trainers = [], 
+  locations = [], 
+  classSlots = [], 
+  products = [], 
+  bookings = [], 
+  cart = [], 
+  orders = [], 
+  users = [],
+  passes = [], 
+  userPasses = [], 
+  memberships = [], 
+  userMemberships = [], 
+  blocks = [], 
+  blockBookings = [], 
+  blockPayments = [], 
+  measurements = [], 
+  photoLogs = [], 
+  rewardTransactions = [], 
+  rewardSettings, 
+  onRedeemPoints,
+  currentUser, 
+  onRegisterUser, 
+  onUpdateUser, 
+  onLogout, 
+  onDeleteUser, 
+  onAddBooking, 
+  onUpdateBooking, 
+  onUpdateBlockBooking, 
+  onUpdateOrder, 
+  onUpdateUserMembership,
+  onAddToCart, 
+  updateCartQuantity, 
+  removeFromCart, 
+  onAddOrder, 
+  onBuyPass, 
+  onUsePass, 
+  onBookBlock, 
+  onPayWeeklyBlock, 
+  onBuyMembership,
+  onAddMeasurement, 
+  onAddPhotoLog, 
+  onDeletePhotoLog,
+  // Fix: Destructure added ticket properties
+  tickets = [],
+  onAddTicket,
+  onReplyTicket
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -112,28 +158,26 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="onboarding" element={<OnboardingFlow users={users} onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />
             <Route path="home" element={<HomeView facilities={facilities} onShowInfo={setSelectedInfoFacility} currentUser={currentUser} />} />
             <Route path="market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
-            {/* Pass reward settings to CartView */}
             <Route path="cart" element={<CartView cart={cart} updateQuantity={updateCartQuantity} remove={removeFromCart} currentUser={currentUser} onAddOrder={onAddOrder} onAuthTrigger={handleAuthTrigger} onUpdateUser={onUpdateUser} rewardSettings={rewardSettings} onRedeemPoints={onRedeemPoints} />} />
             <Route path="activity" element={<ActivityView />} />
             <Route path="measurements" element={<MeasurementsView currentUser={currentUser} measurements={measurements} onAddMeasurement={onAddMeasurement} onAuthTrigger={handleAuthTrigger} />} />
-            <Route path="photo-logs" element={<PhotoLogView currentUser={currentUser} photoLogs={photoLogs} onAddPhotoLog={onAddPhotoLog} onDeletePhotoLog={id => onDeletePhotoLog(id)} onAuthTrigger={handleAuthTrigger} />} />
-            {/* Replaced UnderDevelopmentApp with RewardsHistoryView */}
-            {/* Fix: Pass missing 'facilities' prop to RewardsHistoryView (required by line 121 error) */}
+            <Route path="photo-logs" element={<PhotoLogView currentUser={currentUser} photoLogs={photoLogs} onAddPhotoLog={onAddPhotoLog} onDeletePhotoLog={onDeletePhotoLog} onAuthTrigger={handleAuthTrigger} />} />
             <Route path="rewards" element={<RewardsHistoryView currentUser={currentUser} transactions={rewardTransactions} settings={rewardSettings} facilities={facilities} />} />
             <Route path="profile" element={<ProfileView currentUser={currentUser} bookings={bookings} facilities={facilities} classes={classes} orders={orders} onLogout={onLogout} onDeleteAccount={onDeleteUser} onAuthTrigger={handleAuthTrigger} userPasses={userPasses} userMemberships={userMemberships} />} />
             <Route path="profile/payments" element={<MyPaymentsView currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="profile/orders" element={<MyOrdersView currentUser={currentUser} orders={orders} facilities={facilities} />} />
             <Route path="profile/passes" element={<MyPassesView currentUser={currentUser} userPasses={userPasses} facilities={facilities} classes={classes} />} />
             <Route path="profile/memberships" element={<MyMembershipsView currentUser={currentUser} userMemberships={userMemberships} facilities={facilities} />} />
-            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} userMemberships={userMemberships} orders={orders} onUpdateBooking={onUpdateBooking} onUpdateBlockBooking={onUpdateBlockBooking} onUpdateOrder={onUpdateOrder} onUpdateUserMembership={onUpdateUserMembership} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
+            <Route path="bookings" element={<MyBookingsView currentUser={currentUser} bookings={bookings} classSlots={classSlots} blockBookings={blockBookings} blockPayments={blockPayments} facilities={facilities} classes={classes} trainers={trainers} blocks={blocks} userMemberships={userMemberships} orders={orders} onUpdateBooking={onUpdateBooking} onUpdateBlockBooking={onUpdateBlockBooking} onUpdateOrder={onUpdateOrder} onUpdateUserMembership={onUpdateUserMembership} onAuthTrigger={handleAuthTrigger} onPayWeeklyBlock={onPayWeeklyBlock} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id" element={<FacilityHubView facilities={facilities} trainers={trainers} onShowInfo={setSelectedInfoFacility} />} />
             <Route path="facility/:id/market" element={<MarketView facilities={facilities} products={products} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onAddToCart={onAddToCart} cart={cart} />} />
             <Route path="facility/:id/classes" element={<ClassListView facilities={facilities} classes={classes} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/passes" element={<PassListView facilities={facilities} passes={passes} onBuyPass={onBuyPass} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id/memberships" element={<MembershipListView facilities={facilities} memberships={memberships} onBuyMembership={onBuyMembership} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id/blocks" element={<BlockListView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
-            {/* Pass reward settings to BlockDetailView */}
             <Route path="facility/:id/block/:blockId" element={<BlockDetailView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onBookBlock={onBookBlock} onUpdateUser={onUpdateUser} rewardSettings={rewardSettings} onRedeemPoints={onRedeemPoints} />} />
+            {/* Fix: Added route for support page in member app */}
+            <Route path="support" element={<SupportView currentUser={currentUser} userType="customer" tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket} />} />
             <Route 
               path="facility/:id/timetable" 
               element={

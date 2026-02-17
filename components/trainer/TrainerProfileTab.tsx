@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut, Mail, Phone, Building, ShieldCheck, Edit3, Save, Star, Award, Camera } from 'lucide-react';
+import { User, LogOut, Mail, Phone, Building, ShieldCheck, Edit3, Save, Star, Award, Camera, HelpCircle } from 'lucide-react';
 import { Trainer, Facility } from '../../types';
 import { useToast } from '../ToastContext';
 
@@ -33,21 +33,23 @@ const TrainerProfileTab: React.FC<TrainerProfileTabProps> = ({ trainer, faciliti
     <div className="h-full flex flex-col bg-white overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-10 border-b border-slate-100 shrink-0 flex justify-between items-center">
         <h2 className="text-xl font-bold tracking-tight text-slate-900 uppercase">Coach Profile</h2>
-        {!isEditing ? (
-          <button 
-            onClick={() => setIsEditing(true)}
-            className="p-2 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-50 transition-colors"
-          >
-            <Edit3 className="w-5 h-5" />
-          </button>
-        ) : (
-          <button 
-            onClick={handleSave}
-            className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
-          >
-            <Save className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="p-2 bg-slate-50 text-blue-600 rounded-xl hover:bg-blue-50 transition-colors"
+            >
+              <Edit3 className="w-5 h-5" />
+            </button>
+          ) : (
+            <button 
+              onClick={handleSave}
+              className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
+            >
+              <Save className="w-5 h-5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 pb-24 space-y-6 scrollbar-hide">
@@ -75,6 +77,21 @@ const TrainerProfileTab: React.FC<TrainerProfileTabProps> = ({ trainer, faciliti
               <span className="text-xs font-bold text-slate-500">{trainer.phone}</span>
             </div>
           </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-4">
+           <button onClick={() => navigate('/trainer/support')} className="p-5 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                 <HelpCircle className="w-5 h-5" />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Get Support</span>
+           </button>
+           <button onClick={onLogout} className="p-5 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                 <LogOut className="w-5 h-5" />
+              </div>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Sign Out</span>
+           </button>
         </section>
 
         <section className="space-y-4">
@@ -143,13 +160,6 @@ const TrainerProfileTab: React.FC<TrainerProfileTabProps> = ({ trainer, faciliti
               ))}
            </div>
         </section>
-
-        <button 
-          onClick={onLogout}
-          className="w-full py-5 bg-red-50 text-red-600 rounded-[28px] font-black text-[11px] uppercase tracking-[0.2em] active:scale-[0.98] transition-all border border-red-100 flex items-center justify-center gap-2 shadow-sm"
-        >
-          <LogOut className="w-4 h-4" /> Sign Out Session
-        </button>
       </div>
     </div>
   );

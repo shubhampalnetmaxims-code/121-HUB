@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Trainer, ClassSlot, Booking, Class, Facility, Location as FacilityLocation } from '../../types';
+// Fix: Added SupportTicket to imports from types
+import { Trainer, ClassSlot, Booking, Class, Facility, Location as FacilityLocation, SupportTicket } from '../../types';
 import TrainerLogin from './TrainerLogin';
 import TrainerHomeView from './TrainerHomeView';
 import TrainerFacilityHub from './TrainerFacilityHub';
@@ -12,6 +14,8 @@ import TrainerBookingsTab from './TrainerBookingsTab';
 import TrainerProfileSetup from './TrainerProfileSetup';
 import TrainerProfileTab from './TrainerProfileTab';
 import { LayoutGrid, Calendar, ClipboardList, User } from 'lucide-react';
+// Fix: Import SupportView component for trainer portal
+import SupportView from '../app/SupportView';
 
 interface TrainerAppProps {
   trainers: Trainer[];
@@ -26,6 +30,10 @@ interface TrainerAppProps {
   onUpdateTrainer: (id: string, updates: Partial<Trainer>) => void;
   onUpdateSlot: (id: string, updates: Partial<ClassSlot>) => void;
   onUpdateBooking: (id: string, updates: Partial<Booking>) => void;
+  // Fix: Added missing ticket properties to TrainerAppProps
+  tickets: SupportTicket[];
+  onAddTicket: (t: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>, initialMessage: string) => void;
+  onReplyTicket: (id: string, message: string, senderType: 'user' | 'admin') => void;
 }
 
 const TrainerBottomNav = () => {
@@ -64,7 +72,9 @@ const TrainerBottomNav = () => {
 };
 
 const TrainerApp: React.FC<TrainerAppProps> = ({ 
-  trainers, classSlots, bookings, classes, facilities, locations, currentTrainer, onTrainerLogin, onTrainerLogout, onUpdateTrainer, onUpdateSlot, onUpdateBooking
+  trainers, classSlots, bookings, classes, facilities, locations, currentTrainer, onTrainerLogin, onTrainerLogout, onUpdateTrainer, onUpdateSlot, onUpdateBooking,
+  // Fix: Destructure added ticket properties
+  tickets, onAddTicket, onReplyTicket
 }) => {
   const navigate = useNavigate();
   const showNav = currentTrainer && !currentTrainer.isFirstLogin;
@@ -91,6 +101,8 @@ const TrainerApp: React.FC<TrainerAppProps> = ({
             <Route path="schedules" element={currentTrainer ? <TrainerSchedulesTab trainer={currentTrainer} classSlots={classSlots} classes={classes} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
             <Route path="bookings" element={currentTrainer ? <TrainerBookingsTab trainer={currentTrainer} bookings={bookings} classSlots={classSlots} classes={classes} /> : <Navigate to="/trainer" replace />} />
             <Route path="profile" element={currentTrainer ? <TrainerProfileTab trainer={currentTrainer} onLogout={onTrainerLogout} onUpdateTrainer={onUpdateTrainer} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
+            {/* Fix: Added support route for trainer portal */}
+            <Route path="support" element={currentTrainer ? <SupportView currentUser={currentTrainer} userType="trainer" tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket} /> : <Navigate to="/trainer" replace />} />
           </Routes>
         </div>
         {showNav && <TrainerBottomNav />}

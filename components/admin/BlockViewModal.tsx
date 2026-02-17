@@ -11,6 +11,10 @@ interface BlockViewModalProps {
 }
 
 const BlockViewModal: React.FC<BlockViewModalProps> = ({ block, facilityName, trainerName, onClose }) => {
+  // Fix: Calculating derived values since bookingAmount and weeklyAmount do not exist on type Block
+  const bookingAmount = block.reservedAmount || block.totalAmount;
+  const weeklyAmount = (block.totalAmount - (block.reservedAmount || 0)) / block.numWeeks;
+
   return (
     <div className="fixed inset-0 z-[160] overflow-hidden flex items-center justify-end">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}></div>
@@ -23,7 +27,7 @@ const BlockViewModal: React.FC<BlockViewModalProps> = ({ block, facilityName, tr
            <button onClick={onClose} className="p-3 bg-white rounded-2xl hover:bg-slate-100 transition-colors shadow-sm"><X className="w-6 h-6" /></button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-32 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-32 scrollbar-hide text-left">
            <section className="bg-slate-900 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl shadow-slate-900/20">
               <div className="relative z-10 space-y-6">
                 <div className="flex justify-between items-start">
@@ -49,8 +53,8 @@ const BlockViewModal: React.FC<BlockViewModalProps> = ({ block, facilityName, tr
               <div className="p-6 bg-slate-50 border border-slate-100 rounded-[32px]">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Pricing Breakdown</p>
                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-400">Join Fee</span><span className="text-slate-900">${block.bookingAmount}</span></div>
-                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-400">Weekly x {block.numWeeks}</span><span className="text-slate-900">${block.weeklyAmount}</span></div>
+                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-400">Join Fee</span><span className="text-slate-900">${bookingAmount.toFixed(2)}</span></div>
+                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-400">Weekly x {block.numWeeks}</span><span className="text-slate-900">${weeklyAmount.toFixed(2)}</span></div>
                  </div>
               </div>
               <div className="p-6 bg-slate-50 border border-slate-100 rounded-[32px]">

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { X, Layers, Calendar, Clock, Users, DollarSign, Info, Check, Plus } from 'lucide-react';
+import { X, Layers, Calendar, Clock, Users, DollarSign, Info, Check, Plus, AlertCircle } from 'lucide-react';
 import { Facility, Block, Trainer, DAYS_OF_WEEK } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -27,18 +26,13 @@ const BlockFormModal: React.FC<BlockFormModalProps> = ({ block, facilities, trai
     duration: block?.duration || '1 hour',
     maxPersons: block?.maxPersons || 12,
     maxPersonsPerBooking: block?.maxPersonsPerBooking || 1,
-    bookingAmount: block?.bookingAmount || 0,
-    weeklyAmount: block?.weeklyAmount || 0,
+    paymentType: block?.paymentType || 'full' as 'full' | 'reserved',
+    totalAmount: block?.totalAmount || 0,
+    reservedAmount: block?.reservedAmount || 0,
     status: block?.status || 'active'
   });
   
-  const [totalAmount, setTotalAmount] = useState(0);
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
-
-  useEffect(() => {
-    const total = formData.bookingAmount + (formData.weeklyAmount * formData.numWeeks);
-    setTotalAmount(total);
-  }, [formData.bookingAmount, formData.weeklyAmount, formData.numWeeks]);
 
   const toggleDay = (idx: number) => {
     setFormData(prev => ({
@@ -57,8 +51,7 @@ const BlockFormModal: React.FC<BlockFormModalProps> = ({ block, facilities, trai
   const finalSave = () => {
     onSave({ 
       ...formData, 
-      startDate: new Date(formData.startDate).getTime(),
-      totalAmount 
+      startDate: new Date(formData.startDate).getTime()
     });
     setIsConfirmingSave(false);
   };
@@ -157,27 +150,59 @@ const BlockFormModal: React.FC<BlockFormModalProps> = ({ block, facilities, trai
             </div>
 
             <div className="pt-4 border-t border-slate-100 space-y-4">
-               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Structure ($)</label>
-               <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Joining Amount</p>
-                    <div className="flex items-center gap-2">
-                       <DollarSign className="w-4 h-4 text-slate-400" />
-                       <input type="number" min="0" value={formData.bookingAmount} onChange={e => setFormData(p => ({ ...p, bookingAmount: parseFloat(e.target.value) || 0 }))} className="bg-transparent outline-none font-black text-xl w-full" />
-                    </div>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Weekly Amount</p>
-                    <div className="flex items-center gap-2">
-                       <DollarSign className="w-4 h-4 text-slate-400" />
-                       <input type="number" min="0" value={formData.weeklyAmount} onChange={e => setFormData(p => ({ ...p, weeklyAmount: parseFloat(e.target.value) || 0 }))} className="bg-transparent outline-none font-black text-xl w-full" />
-                    </div>
-                  </div>
+               <div className="flex items-center justify-between mb-2">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing Structure ($)</label>
+                 <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button 
+                      type="button" 
+                      onClick={() => setFormData(p => ({ ...p, paymentType: 'full' }))}
+                      className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${formData.paymentType === 'full' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      Flat Rate (Whole)
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setFormData(p => ({ ...p, paymentType: 'reserved' }))}
+                      className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-widest transition-all ${formData.paymentType === 'reserved' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+                    >
+                      Reserved Amount
+                    </button>
+                 </div>
                </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Total Amount</p>
+                    <div className="flex items-center gap-2">
+                       <DollarSign className="w-4 h-4 text-slate-400" />
+                       <input type="number" min="0" value={formData.totalAmount} onChange={e => setFormData(p => ({ ...p, totalAmount: parseFloat(e.target.value) || 0 }))} className="bg-transparent outline-none font-black text-xl w-full" />
+                    </div>
+                  </div>
+                  
+                  {formData.paymentType === 'reserved' && (
+                    <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <p className="text-[9px] font-bold text-blue-600 uppercase mb-2">Upfront Reservation Amount</p>
+                      <div className="flex items-center gap-2">
+                         <DollarSign className="w-4 h-4 text-blue-400" />
+                         <input type="number" min="0" value={formData.reservedAmount} onChange={e => setFormData(p => ({ ...p, reservedAmount: parseFloat(e.target.value) || 0 }))} className="bg-transparent outline-none font-black text-xl w-full text-blue-900" />
+                      </div>
+                    </div>
+                  )}
+               </div>
+
+               {formData.paymentType === 'reserved' && (
+                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3 animate-in fade-in duration-300">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed uppercase">
+                      User Message: "You have to pay whole amount before starting of the block in the facility."
+                    </p>
+                 </div>
+               )}
+
                <div className="p-6 bg-slate-900 rounded-[28px] text-white flex justify-between items-center shadow-xl shadow-slate-900/10">
                   <div>
-                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Block Valuation</p>
-                    <p className="text-2xl font-black">${totalAmount.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Payable During Booking</p>
+                    <p className="text-2xl font-black">${formData.paymentType === 'full' ? formData.totalAmount.toFixed(2) : formData.reservedAmount.toFixed(2)}</p>
                   </div>
                   <Check className="w-8 h-8 text-blue-500 opacity-20" />
                </div>
@@ -194,7 +219,7 @@ const BlockFormModal: React.FC<BlockFormModalProps> = ({ block, facilities, trai
       {isConfirmingSave && (
         <ConfirmationModal
           title="Publish Block?"
-          message={`Confirm all details and publish "${formData.name}". This will be visible to all members at ${facilities.find(f => f.id === formData.facilityId)?.name}.`}
+          message={`Confirm all details and publish "${formData.name}". Pricing: ${formData.paymentType === 'full' ? 'Flat Rate Whole' : 'Reserved Amount'}.`}
           confirmText="Yes, Publish"
           onConfirm={finalSave}
           onCancel={() => setIsConfirmingSave(false)}

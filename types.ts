@@ -1,3 +1,24 @@
+export interface TicketMessage {
+  id: string;
+  senderId: string;
+  senderType: 'user' | 'admin';
+  message: string;
+  createdAt: number;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userType: 'customer' | 'trainer';
+  subject: string;
+  status: 'open' | 'replied' | 'resolved';
+  createdAt: number;
+  updatedAt: number;
+  messages: TicketMessage[];
+}
+
 export interface Facility {
   id: string;
   name: string;
@@ -49,9 +70,9 @@ export interface Block {
   duration: string;
   maxPersons: number;
   maxPersonsPerBooking: number;
-  bookingAmount: number;
-  weeklyAmount: number;
+  paymentType: 'full' | 'reserved';
   totalAmount: number;
+  reservedAmount?: number;
   status: 'active' | 'inactive';
   createdAt: number;
 }
@@ -68,7 +89,13 @@ export interface BlockBooking {
   participantNames: string[];
   bookingAmountPaid: boolean;
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  paymentStatus?: 'paid' | 'pending' | 'failed' | 'refunded';
+  amount: number;
+  cancelledAt?: number;
   createdAt: number;
+  totalSessions?: number;
+  sessionsUsed?: number;
+  validityUntil?: number;
 }
 
 export interface BlockWeeklyPayment {
@@ -95,6 +122,8 @@ export interface Trainer {
   experience?: string;
   colorCode: string;
   createdAt: number;
+  status: 'active' | 'inactive';
+  appAccess: 'allowed' | 'restricted';
   permissions: {
     canCancel: boolean;
     canReschedule: boolean;
@@ -139,13 +168,19 @@ export interface Booking {
   trainerId: string;
   locationId: string;
   bookingDate: number;
+  originalBookingDate?: number;
   startTime: string;
   persons: number;
   participantNames: string[];
   status: 'upcoming' | 'rescheduled' | 'cancelled' | 'delivered';
   attendanceStatus: 'pending' | 'present' | 'absent'; 
+  cancelledBy?: 'trainer' | 'customer' | 'admin';
+  cancelledAt?: number;
   feedbackFromTrainer?: string; 
+  userFeedback?: string;
+  userRating?: number;
   paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded';
+  transactionId?: string;
   type: 'class' | 'block' | 'pass';
   amount: number;
   createdAt: number;
@@ -182,7 +217,10 @@ export interface UserPass {
   isAllClasses: boolean;
   allowedClassIds: string[];
   purchasedAt: number;
-  status: 'active' | 'exhausted' | 'expired';
+  validityUntil?: number;
+  status: 'active' | 'exhausted' | 'expired' | 'blocked';
+  pricePaid?: number;
+  paymentStatus?: 'paid' | 'pending' | 'failed';
 }
 
 export interface Membership {
@@ -218,8 +256,10 @@ export interface UserMembership {
   startTime?: string;
   endTime?: string;
   daysOfWeek: number[];
-  status: 'active' | 'expired' | 'cancelled';
+  status: 'active' | 'expired' | 'cancelled' | 'blocked';
   purchasedAt: number;
+  paymentStatus?: 'paid' | 'pending' | 'failed';
+  autoRenew?: boolean;
 }
 
 export interface Measurement {
@@ -238,6 +278,7 @@ export interface Measurement {
   bmi: number;
   bodyFatPercentage?: number;
   leanBodyMass?: number;
+  muscleMass?: number;
 }
 
 export interface PhotoLog {
@@ -294,10 +335,12 @@ export interface Order {
   serviceCharge: number;
   total: number;
   status: 'placed' | 'picked-up' | 'cancelled';
-  paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded';
+  paymentStatus?: 'paid' | 'processing' | 'completed' | 'refunded' | 'pending' | 'failed';
   createdAt: number;
   rewardPointsUsed?: number;
   rewardDiscount?: number;
+  pickupNote?: string;
+  cancelledAt?: number;
 }
 
 export interface PaymentCard {
@@ -355,6 +398,8 @@ export interface User {
   createdAt: number;
   paymentCards: PaymentCard[];
   rewardPoints: number;
+  dateOfBirth?: number;
+  location?: string;
 }
 
 export interface AppNotification {
@@ -393,7 +438,7 @@ const DEFAULT_SETTINGS = {
   canCancelOrder: true,
   canCancelMembership: true,
   canCancelBlock: true,
-  refundPolicyClasses: "Full refund if cancelled 24 hours before session.",
+  refundPolicyClasses: "Full refund if cancelled 48 hours before session.",
   refundPolicyOrders: "Full refund if cancelled before pickup.",
   refundPolicyMemberships: "Partial refund based on remaining duration.",
   refundPolicyBlocks: "Refund only possible before program start date."
@@ -439,7 +484,7 @@ export const DEFAULT_FACILITIES: Facility[] = [
     icon: 'Flower2', 
     imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop', 
     galleryImages: [
-      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=1000&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=1000&auto=format&fit=crop'
     ],
     isActive: true, 
@@ -462,20 +507,22 @@ export const DEFAULT_USERS: User[] = [
     paymentCards: [
       { id: 'card-1', holderName: 'SHUBHAM KUMAR', cardNumber: '•••• •••• •••• 4242', brand: 'Visa', expiryDate: '12/28', isPrimary: true, createdAt: Date.now() }
     ], 
-    rewardPoints: 250 
+    rewardPoints: 250,
+    dateOfBirth: new Date('1998-05-15').getTime(),
+    location: 'Mumbai, India'
   },
-  { id: 'u-neil', email: 'neil@test.com', fullName: 'Neil Aldrin', phone: '+1 555-0101', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 100 },
-  { id: 'u-sara', email: 'sara@test.com', fullName: 'Sara Connor', phone: '+1 555-0202', gender: 'Female', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 150 },
-  { id: 'u-mike', email: 'mike@test.com', fullName: 'Mike Tyson', phone: '+1 555-0303', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 200 },
-  { id: 'u-lara', email: 'lara@test.com', fullName: 'Lara Croft', phone: '+1 555-0404', gender: 'Female', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 300 }
+  { id: 'u-neil', email: 'neil@test.com', fullName: 'Neil Aldrin', phone: '+1 555-0101', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 100, location: 'New York, USA' },
+  { id: 'u-sara', email: 'sara@test.com', fullName: 'Sara Connor', phone: '+1 555-0202', gender: 'Female', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 150, location: 'Los Angeles, USA' },
+  { id: 'u-mike', email: 'mike@test.com', fullName: 'Mike Tyson', phone: '+1 555-0303', gender: 'Male', paymentMethod: 'added', status: 'active', createdAt: Date.now(), paymentCards: [], rewardPoints: 200, location: 'Las Vegas, USA' },
+  { id: 'u-lara', email: 'lara@test.com', fullName: 'lara@test.com', phone: '+1 555-0404', gender: 'Female', paymentMethod: 'added', status: 'blocked', createdAt: Date.now(), paymentCards: [], rewardPoints: 300, location: 'London, UK' }
 ];
 
 export const DEFAULT_TRAINERS: Trainer[] = [
-  { id: 't-rahul', name: 'Rahul Verma', email: 'rahul.verma@121fit.com', phone: '9876543210', facilityIds: ['1', '2', '3'], colorCode: '#FF6B6B', createdAt: Date.now(), isFirstLogin: false, description: 'Master of high intensity and heavy compound lifting.', speciality: 'HIIT, Strength Training', experience: '8 Years', permissions: { canCancel: true, canReschedule: true, canTransfer: true } },
-  { id: 't-ankit', name: 'Ankit Sharma', email: 'ankit.sharma@121fit.com', phone: '9876543221', facilityIds: ['2'], colorCode: '#4ECDC4', createdAt: Date.now(), isFirstLogin: false, description: 'Dance fitness expert and group cardio specialist.', speciality: 'Zumba, Cardio Blast', experience: '5 Years', permissions: { canCancel: false, canReschedule: true, canTransfer: false } },
-  { id: 't-sneha', name: 'Sneha Kapoor', email: 'sneha.kapoor@121fit.com', phone: '9876543232', facilityIds: ['3'], colorCode: '#6C5CE7', createdAt: Date.now(), isFirstLogin: false, description: 'Yoga and meditation guru focusing on mindfulness.', speciality: 'Yoga Flow, Meditation', experience: '10 Years', permissions: { canCancel: true, canReschedule: false, canTransfer: true } },
-  { id: 't-aman', name: 'Aman Singh', email: 'aman.singh@121fit.com', phone: '9876543243', facilityIds: ['1'], colorCode: '#F9CA24', createdAt: Date.now(), isFirstLogin: false, description: 'Functional training and cross-fit specialist.', speciality: 'Cross Training', experience: '4 Years', permissions: { canCancel: true, canReschedule: true, canTransfer: true } },
-  { id: 't-neha', name: 'Neha Joshi', email: 'neha.joshi@121fit.com', phone: '9876543254', facilityIds: ['2'], colorCode: '#1ABC9C', createdAt: Date.now(), isFirstLogin: false, description: 'Conditioning coach for fat loss and metabolic reset.', speciality: 'Functional Training', experience: '6 Years', permissions: { canCancel: false, canReschedule: true, canTransfer: false } }
+  { id: 't-rahul', name: 'Rahul Verma', email: 'rahul.verma@121fit.com', phone: '9876543210', facilityIds: ['1', '2', '3'], colorCode: '#FF6B6B', createdAt: Date.now(), isFirstLogin: false, description: 'Master of high intensity and heavy compound lifting.', speciality: 'HIIT, Strength Training', experience: '8 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: true, canReschedule: true, canTransfer: true } },
+  { id: 't-ankit', name: 'Ankit Sharma', email: 'ankit.sharma@121fit.com', phone: '9876543221', facilityIds: ['2'], colorCode: '#4ECDC4', createdAt: Date.now(), isFirstLogin: false, description: 'Dance fitness expert and group cardio specialist.', speciality: 'Zumba, Cardio Blast', experience: '5 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: false, canReschedule: true, canTransfer: false } },
+  { id: 't-sneha', name: 'Sneha Kapoor', email: 'sneha.kapoor@121fit.com', phone: '9876543232', facilityIds: ['3'], colorCode: '#6C5CE7', createdAt: Date.now(), isFirstLogin: false, description: 'Yoga and meditation guru focusing on mindfulness.', speciality: 'Yoga Flow, Meditation', experience: '10 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: true, canReschedule: false, canTransfer: true } },
+  { id: 't-aman', name: 'Aman Singh', email: 'aman.singh@121fit.com', phone: '9876543243', facilityIds: ['1'], colorCode: '#F9CA24', createdAt: Date.now(), isFirstLogin: false, description: 'Functional training and cross-fit specialist.', speciality: 'Cross Training', experience: '4 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: true, canReschedule: true, canTransfer: true } },
+  { id: 't-neha', name: 'Neha Joshi', email: 'neha.joshi@121fit.com', phone: '9876543254', facilityIds: ['2'], colorCode: '#1ABC9C', createdAt: Date.now(), isFirstLogin: false, description: 'Conditioning coach for fat loss and metabolic reset.', speciality: 'Functional Training', experience: '6 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: false, canReschedule: true, canTransfer: false } }
 ];
 
 export const DEFAULT_CLASSES: Class[] = [
@@ -500,7 +547,6 @@ export const DEFAULT_LOCATIONS: Location[] = [
 ];
 
 export const DEFAULT_CLASS_SLOTS: ClassSlot[] = [
-  // Rahul's Slots
   { id: 'slot-1', facilityId: '1', classId: 'c-strength', trainerId: 't-rahul', locationId: 'loc-andheri', dayOfWeek: 1, startTime: '07:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 8, maxBookings: 12 },
   { id: 'slot-rahul-2', facilityId: '1', classId: 'c-hiit', trainerId: 't-rahul', locationId: 'loc-bandra', dayOfWeek: 1, startTime: '18:00', duration: '45 mins', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 10, maxBookings: 15 },
   { id: 'slot-rahul-3', facilityId: '2', classId: 'c-zumba', trainerId: 't-rahul', locationId: 'loc-parel', dayOfWeek: 2, startTime: '09:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 12, maxBookings: 20 },
@@ -509,77 +555,84 @@ export const DEFAULT_CLASS_SLOTS: ClassSlot[] = [
   { id: 'slot-pt-3', facilityId: '2', classId: 'c-pt-121', trainerId: 't-rahul', locationId: 'loc-malad', dayOfWeek: 5, startTime: '12:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 0, maxBookings: 1 },
   { id: 'slot-rahul-4', facilityId: '3', classId: 'c-meditation', trainerId: 't-rahul', locationId: 'loc-juhu', dayOfWeek: 3, startTime: '17:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 5, maxBookings: 10 },
   { id: 'slot-rahul-5', facilityId: '1', classId: 'c-boxing', trainerId: 't-rahul', locationId: 'loc-powai', dayOfWeek: 4, startTime: '19:30', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 6, maxBookings: 8 },
-  
-  // Others
   { id: 'slot-2', facilityId: '3', classId: 'c-yoga', trainerId: 't-sneha', locationId: 'loc-juhu', dayOfWeek: 2, startTime: '18:30', duration: '1.5 hours', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 5, maxBookings: 15 },
   { id: 'slot-ankit-1', facilityId: '2', classId: 'c-zumba', trainerId: 't-ankit', locationId: 'loc-malad', dayOfWeek: 5, startTime: '08:00', duration: '1 hour', status: 'available', trainerStatus: 'accepted', isDelivered: false, currentBookings: 15, maxBookings: 20 }
 ];
 
-// Re-generating DEFAULT_BOOKINGS with a capacity-aware loop to prevent over-booking Personal Training slots.
 export const DEFAULT_BOOKINGS: Booking[] = (() => {
-  const bookingsArr: Booking[] = [];
-  const occupancyMap: Record<string, number> = {};
+  const b: Booking[] = [];
+  const now = Date.now();
+  const dayInMs = 86400000;
 
-  // Initialize occupancy from currentBookings in slots (if needed)
-  DEFAULT_CLASS_SLOTS.forEach(s => occupancyMap[s.id] = 0);
-
-  // Attempt to generate 100 random-ish bookings but strictly respect maxBookings
-  for (let i = 0; i < 100; i++) {
-    const slotIdx = i % DEFAULT_CLASS_SLOTS.length;
-    const slot = DEFAULT_CLASS_SLOTS[slotIdx];
-    const userIdx = i % DEFAULT_USERS.length;
-    const user = DEFAULT_USERS[userIdx];
-    const cls = DEFAULT_CLASSES.find(c => c.id === slot.classId);
-
-    if (occupancyMap[slot.id] < slot.maxBookings) {
-      bookingsArr.push({
-        id: `bk-bulk-${i}`,
-        userId: user.id,
-        userName: user.fullName,
-        userEmail: user.email,
-        facilityId: slot.facilityId,
-        classId: slot.classId,
-        slotId: slot.id,
-        trainerId: slot.trainerId,
-        locationId: slot.locationId,
-        bookingDate: Date.now() + (Math.floor(Math.random() * 5) * 86400000),
-        startTime: slot.startTime,
-        persons: 1,
-        participantNames: [user.fullName],
-        status: 'upcoming',
-        attendanceStatus: 'pending',
-        type: 'class',
-        amount: cls?.pricePerSession || 25,
-        createdAt: Date.now() - (i * 3600000)
-      });
-      occupancyMap[slot.id]++;
-    }
+  // Upcoming (10)
+  for(let i=0; i<10; i++) {
+    b.push({
+      id: `bk-up-${i}`, userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com',
+      facilityId: '1', classId: 'c-strength', slotId: 'slot-1', trainerId: 't-rahul', locationId: 'loc-andheri',
+      bookingDate: now + (i + 1) * dayInMs, startTime: '07:00', persons: 1, participantNames: ['Shubham Kumar'],
+      status: 'upcoming', attendanceStatus: 'pending', amount: 25, type: 'class', transactionId: `TXN-UP-${1000 + i}`,
+      createdAt: now - dayInMs, paymentStatus: i % 3 === 0 ? 'processing' : 'paid',
+      usedPassId: i < 5 ? 'up-1' : undefined
+    });
   }
 
-  // Add the specific old booking for audit testing
-  bookingsArr.push({ 
-    id: 'b-old-1', 
-    userId: 'u-shubham', 
-    userName: 'Shubham Kumar', 
-    userEmail: 'shubham@gmail.com', 
-    facilityId: '1', 
-    classId: 'c-strength', 
-    slotId: 'slot-1', 
-    trainerId: 't-rahul', 
-    locationId: 'loc-andheri', 
-    bookingDate: Date.now() - 86400000, 
-    startTime: '07:00', 
-    persons: 1, 
-    participantNames: ['Shubham Kumar'], 
-    status: 'delivered', 
-    attendanceStatus: 'present', 
-    paymentStatus: 'paid', 
-    type: 'class', 
-    amount: 25, 
-    createdAt: Date.now() - 172800000 
+  // Rescheduled (10)
+  for(let i=0; i<10; i++) {
+    b.push({
+      id: `bk-rs-${i}`, userId: 'u-neil', userName: 'Neil Aldrin', userEmail: 'neil@test.com',
+      facilityId: '2', classId: 'c-zumba', slotId: 'slot-rahul-3', trainerId: 't-rahul', locationId: 'loc-parel',
+      bookingDate: now + (i + 5) * dayInMs, originalBookingDate: now + (i + 1) * dayInMs,
+      startTime: '09:00', persons: 1, participantNames: ['Neil Aldrin'],
+      status: 'rescheduled', attendanceStatus: 'pending', amount: 15, type: 'class', transactionId: `TXN-RS-${2000 + i}`,
+      createdAt: now - dayInMs * 2, paymentStatus: 'paid'
+    });
+  }
+
+  // Cancelled (10)
+  for(let i=0; i<10; i++) {
+    const isTrainer = i % 2 === 0;
+    const isEarly = i < 5; 
+    b.push({
+      id: `bk-ca-${i}`, userId: 'u-sara', userName: 'Sara Connor', userEmail: 'sara@test.com',
+      facilityId: '1', classId: 'c-hiit', slotId: 'slot-rahul-2', trainerId: 't-rahul', locationId: 'loc-bandra',
+      bookingDate: now + (i + 1) * dayInMs, startTime: '18:00', persons: 1, participantNames: ['Sara Connor'],
+      status: 'cancelled', attendanceStatus: 'pending', amount: 20, type: 'class', transactionId: `TXN-CA-${3000 + i}`,
+      createdAt: now - dayInMs * 3, paymentStatus: i < 3 ? 'refunded' : 'paid',
+      cancelledBy: isTrainer ? 'trainer' : 'customer',
+      cancelledAt: now - (isEarly ? 3 * dayInMs : 0.5 * dayInMs)
+    });
+  }
+
+  // Delivered (10)
+  for(let i=0; i<10; i++) {
+    b.push({
+      id: `bk-de-${i}`, userId: 'u-mike', userName: 'Mike Tyson', userEmail: 'mike@test.com',
+      facilityId: '3', classId: 'c-yoga', slotId: 'slot-2', trainerId: 't-sneha', locationId: 'loc-juhu',
+      bookingDate: now - (i + 1) * dayInMs, startTime: '18:30', persons: 1, participantNames: ['Mike Tyson'],
+      status: 'delivered', attendanceStatus: 'present', amount: 35, type: 'class', transactionId: `TXN-DE-${4000 + i}`,
+      createdAt: now - dayInMs * 10, paymentStatus: 'completed',
+      userRating: i % 2 === 0 ? 5 : undefined,
+      userFeedback: i % 2 === 0 ? "Fantastic flow, really feeling the stretch." : undefined,
+      feedbackFromTrainer: i % 3 === 0 ? "Excellent balance today, Mike. Keep it up!" : undefined,
+      usedPassId: i < 3 ? 'up-mike-1' : undefined
+    });
+  }
+
+  // Extra pass bookings to satisfy Sold Pass history requirement
+  b.push({
+    id: 'bk-pass-1', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com',
+    facilityId: '1', classId: 'c-strength', slotId: 'slot-1', trainerId: 't-rahul', locationId: 'loc-andheri',
+    bookingDate: now - 86400000, startTime: '07:00', persons: 1, participantNames: ['Shubham Kumar'],
+    status: 'delivered', attendanceStatus: 'present', amount: 0, type: 'pass', usedPassId: 'up-1', createdAt: now - 86400000, paymentStatus: 'paid'
+  });
+  b.push({
+    id: 'bk-pass-2', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com',
+    facilityId: '1', classId: 'c-strength', slotId: 'slot-1', trainerId: 't-rahul', locationId: 'loc-andheri',
+    bookingDate: now - (86400000 * 2), startTime: '07:00', persons: 1, participantNames: ['Shubham Kumar'],
+    status: 'delivered', attendanceStatus: 'present', amount: 0, type: 'pass', usedPassId: 'up-1', createdAt: now - (86400000 * 2), paymentStatus: 'paid'
   });
 
-  return bookingsArr;
+  return b;
 })();
 
 export const DEFAULT_PRODUCTS: Product[] = [
@@ -591,7 +644,6 @@ export const DEFAULT_PRODUCTS: Product[] = [
 
 export const DEFAULT_PASSES: Pass[] = [
   { id: 'pass-gym', facilityId: '1', name: 'Gym Strength Pass', price: 120, credits: 10, personsPerBooking: 1, allowedClassIds: ['c-strength'], isAllClasses: false, description: 'Bulk sessions for strength floor access.', quantity: 100, status: 'active', createdAt: Date.now() },
-  { id: 'pass-zen', facilityId: '3', name: 'Zen Yoga Pass', price: 100, credits: 12, personsPerBooking: 1, allowedClassIds: ['c-yoga', 'c-meditation'], isAllClasses: false, description: 'Holistic wellness bundle for Zen classes.', quantity: 50, status: 'active', createdAt: Date.now() },
   { id: 'pass-fit', facilityId: '2', name: 'Fitness Combo Pass', price: 90, credits: 8, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Flexible entry for all Fitness hub classes.', quantity: 50, status: 'active', createdAt: Date.now() }
 ];
 
@@ -600,31 +652,69 @@ export const DEFAULT_MEMBERSHIPS: Membership[] = [
 ];
 
 export const DEFAULT_BLOCKS: Block[] = [
-  { id: 'b-hiit-4wk', facilityId: '1', trainerId: 't-rahul', name: 'HIIT 4 Week Block', about: 'Intense metabolic conditioning cycle.', expect: 'Fat loss and endurance improvements.', numWeeks: 4, daysOfWeek: [1,3,5], startDate: Date.now() - 604800000, startTime: '07:00', duration: '1 hour', maxPersons: 10, maxPersonsPerBooking: 1, bookingAmount: 50, weeklyAmount: 25, totalAmount: 150, status: 'active', createdAt: Date.now() },
-  { id: 'b-yoga-beg', facilityId: '3', trainerId: 't-sneha', name: 'Yoga Beginner Block', about: 'Foundational yoga for alignment and peace.', expect: 'Master basic asanas and breathing.', numWeeks: 3, daysOfWeek: [2,4], startDate: Date.now() + 86400000, startTime: '18:30', duration: '1 hour', maxPersons: 12, maxPersonsPerBooking: 1, bookingAmount: 40, weeklyAmount: 20, totalAmount: 100, status: 'active', createdAt: Date.now() }
+  { id: 'b-hiit-4wk', facilityId: '1', trainerId: 't-rahul', name: 'HIIT 4 Week Block', about: 'Intense metabolic conditioning cycle.', expect: 'Fat loss and endurance improvements.', numWeeks: 4, daysOfWeek: [1,3,5], startDate: Date.now() + (86400000 * 2), startTime: '18:00', duration: '1 hour', maxPersons: 10, maxPersonsPerBooking: 1, paymentType: 'full', totalAmount: 150, status: 'active', createdAt: Date.now() },
+  { id: 'b-boxing-101', facilityId: '1', trainerId: 't-aman', name: 'Boxing 101 Fundamentals', about: 'Core mechanics of professional boxing.', expect: 'Improved footwork and strike accuracy.', numWeeks: 8, daysOfWeek: [2,4], startDate: Date.now() - (86400000 * 10), startTime: '18:00', duration: '1.5 hours', maxPersons: 15, maxPersonsPerBooking: 2, paymentType: 'reserved', totalAmount: 240, reservedAmount: 50, status: 'active', createdAt: Date.now() },
+  { id: 'b-yoga-zen', facilityId: '3', trainerId: 't-sneha', name: 'Yoga Zen Masterclass', about: 'Deep spiritual and physical alignment.', expect: 'Flexibility and mindfulness growth.', numWeeks: 6, daysOfWeek: [0], startDate: Date.now() - (86400000 * 60), startTime: '10:00', duration: '2 hours', maxPersons: 20, maxPersonsPerBooking: 1, paymentType: 'full', totalAmount: 120, status: 'active', createdAt: Date.now() }
 ];
+
+export const DEFAULT_BLOCK_BOOKINGS: BlockBooking[] = (() => {
+  const bb: BlockBooking[] = [];
+  const now = Date.now();
+  const day = 86400000;
+
+  // Upcoming Block (HIIT 4 Week)
+  bb.push({
+    id: 'bb-1', blockId: 'b-hiit-4wk', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com',
+    facilityId: '1', trainerId: 't-rahul', startDate: now + (day * 2), participantNames: ['Shubham Kumar'],
+    bookingAmountPaid: true, status: 'upcoming', paymentStatus: 'paid', amount: 150, createdAt: now - day
+  });
+  bb.push({
+    id: 'bb-2', blockId: 'b-hiit-4wk', userId: 'u-neil', userName: 'Neil Aldrin', userEmail: 'neil@test.com',
+    facilityId: '1', trainerId: 't-rahul', startDate: now + (day * 2), participantNames: ['Neil Aldrin'],
+    bookingAmountPaid: true, status: 'upcoming', paymentStatus: 'pending', amount: 150, createdAt: now - day
+  });
+
+  // Ongoing Block (Boxing 101)
+  bb.push({
+    id: 'bb-3', blockId: 'b-boxing-101', userId: 'u-sara', userName: 'Sara Connor', userEmail: 'sara@test.com',
+    facilityId: '1', trainerId: 't-aman', startDate: now - (day * 10), participantNames: ['Sara Connor', 'John Connor'],
+    bookingAmountPaid: true, status: 'ongoing', paymentStatus: 'paid', amount: 240, createdAt: now - (day * 12)
+  });
+
+  // Completed Block (Yoga Zen)
+  bb.push({
+    id: 'bb-4', blockId: 'b-yoga-zen', userId: 'u-mike', userName: 'Mike Tyson', userEmail: 'mike@test.com',
+    facilityId: '3', trainerId: 't-sneha', startDate: now - (day * 60), participantNames: ['Mike Tyson'],
+    bookingAmountPaid: true, status: 'completed', paymentStatus: 'paid', amount: 120, createdAt: now - (day * 65)
+  });
+
+  // Cancelled Bookings
+  bb.push({
+    id: 'bb-5', blockId: 'b-hiit-4wk', userId: 'u-lara', userName: 'Lara Croft', userEmail: 'lara@test.com',
+    facilityId: '1', trainerId: 't-rahul', startDate: now + (day * 2), participantNames: ['Lara Croft'],
+    bookingAmountPaid: true, status: 'cancelled', paymentStatus: 'paid', amount: 150, createdAt: now - day, cancelledAt: now - 5000 
+  });
+  // Non-eligible for refund (cancelled less than 48h before start - this one is at now+2days, so cancel at now+1day would be ineligible)
+  bb.push({
+    id: 'bb-6', blockId: 'b-hiit-4wk', userId: 'u-mike', userName: 'Mike Tyson', userEmail: 'mike@test.com',
+    facilityId: '1', trainerId: 't-rahul', startDate: now + (day * 0.5), participantNames: ['Mike Tyson'],
+    bookingAmountPaid: true, status: 'cancelled', paymentStatus: 'paid', amount: 150, createdAt: now - day, cancelledAt: now
+  });
+
+  return bb;
+})();
 
 export const DEFAULT_ORDERS: Order[] = [
-  { id: 'o-old-1', orderNumber: 'ORD-G123', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'it-1', productId: 'p-gloves', name: 'Gym Gloves', price: 15, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 15, vat: 0.75, serviceCharge: 2.5, total: 18.25, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 864000000 }
-];
-
-export const DEFAULT_BLOCK_BOOKINGS: BlockBooking[] = [
-  { id: 'bb-hiit-shubham', blockId: 'b-hiit-4wk', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', trainerId: 't-rahul', startDate: Date.now() - 604800000, participantNames: ['Shubham Kumar'], bookingAmountPaid: true, status: 'ongoing', createdAt: Date.now() - 604800000 }
-];
-
-export const DEFAULT_BLOCK_PAYMENTS: BlockWeeklyPayment[] = [
-  { id: 'py-wk1', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 1, amount: 25, dueDate: Date.now() - 604800000, status: 'paid' },
-  { id: 'py-wk2', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 2, amount: 25, dueDate: Date.now(), status: 'paid' },
-  { id: 'py-wk3', blockBookingId: 'bb-hiit-shubham', userId: 'u-shubham', weekNumber: 3, amount: 25, dueDate: Date.now() + 604800000, status: 'pending' }
+  { id: 'o-1', orderNumber: 'ORD-A101', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'it-1', productId: 'p-gloves', name: 'Gym Gloves', price: 15, size: 'M', quantity: 1, image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 15, vat: 0.75, serviceCharge: 2.5, total: 18.25, status: 'placed', paymentStatus: 'paid', createdAt: Date.now() - 3600000 },
+  { id: 'o-2', orderNumber: 'ORD-B202', userId: 'u-neil', userName: 'Neil Aldrin', userEmail: 'neil@test.com', facilityId: '2', items: [{ id: 'it-2', productId: 'p-bottle', name: 'Water Bottle', price: 12, size: '750ml', quantity: 1, image: 'https://images.unsplash.com/photo-1602143307185-84447545512d?q=80&w=400&auto=format&fit=crop', facilityId: '2' }], subtotal: 12, vat: 0.6, serviceCharge: 2.5, total: 15.1, status: 'placed', paymentStatus: 'pending', createdAt: Date.now() - 7200000 },
+  { id: 'o-3', orderNumber: 'ORD-C303', userId: 'u-sara', userName: 'Sara Connor', userEmail: 'sara@test.com', facilityId: '1', items: [{ id: 'it-3', productId: 'p-tshirt', name: 'Gym T-Shirt', price: 20, size: 'L', quantity: 1, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 20, vat: 1, serviceCharge: 2.5, total: 23.5, status: 'picked-up', paymentStatus: 'paid', createdAt: Date.now() - 172800000, pickupNote: 'Member picked up in person at front desk.' },
+  { id: 'o-4', orderNumber: 'ORD-D404', userId: 'u-mike', userName: 'Mike Tyson', userEmail: 'mike@test.com', facilityId: '3', items: [{ id: 'it-4', productId: 'p-mat', name: 'Yoga Mat', price: 25, size: 'NA', quantity: 1, image: 'https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop', facilityId: '3' }], subtotal: 25, vat: 1.25, serviceCharge: 2.5, total: 28.75, status: 'placed', paymentStatus: 'failed', createdAt: Date.now() - 259200000 },
+  { id: 'o-5', orderNumber: 'ORD-E505', userId: 'u-shubham', userName: 'Shubham Kumar', userEmail: 'shubham@gmail.com', facilityId: '1', items: [{ id: 'it-5', productId: 'p-gloves', name: 'Gym Gloves', price: 15, size: 'M', quantity: 2, image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 30, vat: 1.5, serviceCharge: 2.5, total: 34.0, status: 'cancelled', paymentStatus: 'paid', createdAt: Date.now() - 1000000, cancelledAt: Date.now() - 10000 },
+  { id: 'o-6', orderNumber: 'ORD-F606', userId: 'u-lara', userName: 'Lara Croft', userEmail: 'lara@test.com', facilityId: '1', items: [{ id: 'it-6', productId: 'p-tshirt', name: 'Gym T-Shirt', price: 20, size: 'S', quantity: 1, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop', facilityId: '1' }], subtotal: 20, vat: 1, serviceCharge: 2.5, total: 23.5, status: 'cancelled', paymentStatus: 'refunded', createdAt: Date.now() - (86400000 * 5), cancelledAt: Date.now() - (86400000 * 3) }
 ];
 
 export const DEFAULT_REWARD_TRANSACTIONS: RewardTransaction[] = [
-  { id: 'tx-1', userId: 'u-shubham', date: Date.now() - 1000000, type: 'earned', source: 'booking', referenceId: 'b-old-1', points: 400, remainingBalance: 400, facilityId: '1' },
-  { id: 'tx-2', userId: 'u-shubham', date: Date.now() - 900000, type: 'earned', source: 'block', referenceId: 'bb-hiit-shubham', points: 300, remainingBalance: 700, facilityId: '1' },
-  { id: 'tx-3', userId: 'u-shubham', date: Date.now() - 800000, type: 'earned', source: 'pass', referenceId: 'pass-gym-ref', points: 200, remainingBalance: 900, facilityId: '1' },
-  { id: 'tx-4', userId: 'u-shubham', date: Date.now() - 700000, type: 'earned', source: 'order', referenceId: 'o-old-1', points: 150, remainingBalance: 1050, facilityId: '1' },
-  { id: 'tx-5', userId: 'u-shubham', date: Date.now() - 600000, type: 'earned', source: 'membership', referenceId: 'm-gym-ref', points: 200, remainingBalance: 1250, facilityId: '1' },
-  { id: 'tx-6', userId: 'u-shubham', date: Date.now() - 500000, type: 'used', source: 'manual', referenceId: 'discount-ref', points: 1000, remainingBalance: 250, facilityId: '1' }
+  { id: 'tx-1', userId: 'u-shubham', date: Date.now() - 1000000, type: 'earned', source: 'booking', referenceId: 'b-old-1', points: 400, remainingBalance: 400, facilityId: '1' }
 ];
 
 export const DEFAULT_REWARD_SETTINGS: RewardSettings = {
@@ -635,3 +725,90 @@ export const DEFAULT_REWARD_SETTINGS: RewardSettings = {
   memberships: { enabled: true, points: 200, facilityIds: [] },
   redemption: { enabled: true, pointsToValue: 1000, monetaryValue: 10, minPointsRequired: 1000, enabledModules: ['booking', 'block', 'pass', 'order'] }
 };
+
+export const DEFAULT_USER_PASSES: UserPass[] = [
+  { id: 'up-1', userId: 'u-shubham', passId: 'pass-gym', facilityId: '1', name: 'Gym Strength Pass', totalCredits: 10, remainingCredits: 6, personsPerBooking: 1, isAllClasses: false, allowedClassIds: ['c-strength'], purchasedAt: Date.now() - 86400000 * 5, status: 'active', validityUntil: Date.now() + 86400000 * 30, pricePaid: 120, paymentStatus: 'paid' },
+  { id: 'up-neil-1', userId: 'u-neil', passId: 'pass-fit', facilityId: '2', name: 'Fitness Combo Pass', totalCredits: 8, remainingCredits: 0, personsPerBooking: 1, isAllClasses: true, allowedClassIds: [], purchasedAt: Date.now() - 86400000 * 20, status: 'exhausted', pricePaid: 90, paymentStatus: 'paid' },
+  { id: 'up-sara-1', userId: 'u-sara', passId: 'pass-gym', facilityId: '1', name: 'Gym Strength Pass', totalCredits: 10, remainingCredits: 10, personsPerBooking: 1, isAllClasses: false, allowedClassIds: ['c-strength'], purchasedAt: Date.now() - 86400000, status: 'blocked', pricePaid: 120, paymentStatus: 'paid' },
+  { id: 'up-mike-1', userId: 'u-mike', passId: 'pass-fit', facilityId: '2', name: 'Fitness Combo Pass', totalCredits: 8, remainingCredits: 4, personsPerBooking: 1, isAllClasses: true, allowedClassIds: [], purchasedAt: Date.now() - 86400000 * 45, status: 'expired', pricePaid: 90, paymentStatus: 'paid', validityUntil: Date.now() - 86400000 * 15 },
+  { id: 'up-lara-1', userId: 'u-lara', passId: 'pass-gym', facilityId: '1', name: 'Gym Strength Pass', totalCredits: 10, remainingCredits: 10, personsPerBooking: 1, isAllClasses: false, allowedClassIds: ['c-strength'], purchasedAt: Date.now(), status: 'active', pricePaid: 120, paymentStatus: 'pending' },
+  // Additional scenarios for Sold Pass audit testing
+  { id: 'up-shubham-failed', userId: 'u-shubham', passId: 'pass-fit', facilityId: '2', name: 'Failed Fitness Pass', totalCredits: 8, remainingCredits: 8, personsPerBooking: 1, isAllClasses: true, allowedClassIds: [], purchasedAt: Date.now(), status: 'active', pricePaid: 90, paymentStatus: 'failed' },
+  { id: 'up-lara-blocked', userId: 'u-lara', passId: 'pass-gym', facilityId: '1', name: 'Archived Gym Pass', totalCredits: 10, remainingCredits: 2, personsPerBooking: 1, isAllClasses: false, allowedClassIds: ['c-strength'], purchasedAt: Date.now() - (86400000 * 10), status: 'blocked', pricePaid: 120, paymentStatus: 'paid' }
+];
+
+export const DEFAULT_USER_MEMBERSHIPS: UserMembership[] = [
+  { id: 'um-1', userId: 'u-shubham', membershipId: 'm-gym-monthly', facilityId: '1', title: '121 Gym Monthly', startDate: Date.now() - 86400000 * 15, endDate: Date.now() + 86400000 * 15, price: 60, allow24Hour: true, daysOfWeek: [0,1,2,3,4,5,6], status: 'active', purchasedAt: Date.now() - 86400000 * 15, paymentStatus: 'paid', autoRenew: true }
+];
+
+export const DEFAULT_MEASUREMENTS: Measurement[] = [
+  { id: 'm-1', userId: 'u-shubham', date: Date.now() - 86400000 * 60, weight: 82, height: 175, age: 25, bmi: 26.8, bodyFatPercentage: 22, chest: 102, waist: 92, muscleMass: 42.5 }
+];
+
+export const DEFAULT_PHOTO_LOGS: PhotoLog[] = [
+  { id: 'ph-1', userId: 'u-shubham', date: Date.now() - 86400000 * 60, imageUrl: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', note: 'Starting point.' }
+];
+
+export const DEFAULT_TICKETS: SupportTicket[] = [
+  {
+    id: 'tk-101',
+    userId: 'u-shubham',
+    userName: 'Shubham Kumar',
+    userEmail: 'shubham@gmail.com',
+    userType: 'customer',
+    subject: 'Booking Reschedule Issue',
+    status: 'replied',
+    createdAt: Date.now() - (86400000 * 2),
+    updatedAt: Date.now() - 3600000,
+    messages: [
+      { id: 'm1', senderId: 'u-shubham', senderType: 'user', message: 'I am unable to reschedule my session for tomorrow in the 121 Gym hub.', createdAt: Date.now() - (86400000 * 2) },
+      { id: 'm2', senderId: 'admin', senderType: 'admin', message: 'Hello Shubham, looking into this for you. Could you specify which session it is?', createdAt: Date.now() - (86400000 * 1.5) },
+      { id: 'm2b', senderId: 'u-shubham', senderType: 'user', message: 'It is the Strength Training session at 7 AM.', createdAt: Date.now() - 3600000 }
+    ]
+  },
+  {
+    id: 'tk-102',
+    userId: 't-rahul',
+    userName: 'Rahul Verma',
+    userEmail: 'rahul.verma@121fit.com',
+    userType: 'trainer',
+    subject: 'Equipment Maintenance Request',
+    status: 'open',
+    createdAt: Date.now() - 7200000,
+    updatedAt: Date.now() - 7200000,
+    messages: [
+      { id: 'm3', senderId: 't-rahul', senderType: 'user', message: 'The squat rack in Area 1 needs urgent oiling and safety check.', createdAt: Date.now() - 7200000 }
+    ]
+  },
+  {
+    id: 'tk-103',
+    userId: 'u-neil',
+    userName: 'Neil Aldrin',
+    userEmail: 'neil@test.com',
+    userType: 'customer',
+    subject: 'Reward Points Sync',
+    status: 'resolved',
+    createdAt: Date.now() - (86400000 * 5),
+    updatedAt: Date.now() - (86400000 * 3),
+    messages: [
+      { id: 'm4', senderId: 'u-neil', senderType: 'user', message: 'My points from the last marketplace order are not showing in my wallet.', createdAt: Date.now() - (86400000 * 5) },
+      { id: 'm5', senderId: 'admin', senderType: 'admin', message: 'We have manually synced your account. You should see 50 points now.', createdAt: Date.now() - (86400000 * 4) },
+      { id: 'm6', senderId: 'u-neil', senderType: 'user', message: 'Confirmed. Thank you for the quick help!', createdAt: Date.now() - (86400000 * 3) }
+    ]
+  },
+  {
+    id: 'tk-104',
+    userId: 't-sneha',
+    userName: 'Sneha Kapoor',
+    userEmail: 'sneha.kapoor@121fit.com',
+    userType: 'trainer',
+    subject: 'Shift Swap Protocol',
+    status: 'replied',
+    createdAt: Date.now() - 86400000,
+    updatedAt: Date.now() - 43200000,
+    messages: [
+      { id: 'm7', senderId: 't-sneha', senderType: 'user', message: 'Can I swap my Friday session with Rahul? He has agreed.', createdAt: Date.now() - 86400000 },
+      { id: 'm8', senderId: 'admin', senderType: 'admin', message: 'Please use the Shift Transfer Proxy in your Trainer App under Permissions to initiate the swap request formally.', createdAt: Date.now() - 43200000 }
+    ]
+  }
+];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_TICKETS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -80,6 +80,7 @@ const AppContent: React.FC = () => {
   const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>([]);
   const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>([]);
   const [rewardSettings, setRewardSettings] = useState<RewardSettings>(DEFAULT_REWARD_SETTINGS);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentTrainer, setCurrentTrainer] = useState<Trainer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,7 +93,7 @@ const AppContent: React.FC = () => {
       if (Array.isArray(fallback) && fallback.length > 0 && Array.isArray(parsed) && parsed.length === 0) {
         return fallback;
       }
-      return parsed || fallback;
+      return (parsed !== null && parsed !== undefined) ? parsed : fallback;
     } catch (e) {
       console.error(`Failed to hydrate ${key}:`, e);
       return fallback;
@@ -120,23 +121,27 @@ const AppContent: React.FC = () => {
     setCart(safeHydrate('cart', []));
     setOrders(safeHydrate('orders', DEFAULT_ORDERS));
     setPasses(safeHydrate('passes', DEFAULT_PASSES));
-    setUserPasses(safeHydrate('user_passes', []));
+    setUserPasses(safeHydrate('user_passes', DEFAULT_USER_PASSES));
     setMemberships(safeHydrate('memberships', DEFAULT_MEMBERSHIPS));
-    setUserMemberships(safeHydrate('user_memberships', []));
+    setUserMemberships(safeHydrate('user_memberships', DEFAULT_USER_MEMBERSHIPS));
     setBlocks(safeHydrate('blocks', DEFAULT_BLOCKS));
     setBlockBookings(safeHydrate('block_bookings', DEFAULT_BLOCK_BOOKINGS));
-    setBlockPayments(safeHydrate('block_payments', DEFAULT_BLOCK_PAYMENTS));
-    setMeasurements(safeHydrate('measurements', []));
-    setPhotoLogs(safeHydrate('photo_logs', []));
+    setBlockPayments(safeHydrate('block_payments', []));
+    setMeasurements(safeHydrate('measurements', DEFAULT_MEASUREMENTS));
+    setPhotoLogs(safeHydrate('photo_logs', DEFAULT_PHOTO_LOGS));
     setRewardTransactions(safeHydrate('reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
     setRewardSettings(safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
-    setCurrentUser(safeHydrate('current_user', null));
+    setTickets(safeHydrate('tickets', DEFAULT_TICKETS));
+    
+    const savedUser = safeHydrate('current_user', null);
+    setCurrentUser(savedUser || DEFAULT_USERS[0]); 
+    
     setCurrentTrainer(safeHydrate('current_trainer', null));
     setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && facilities.length > 0) {
       localStorage.setItem(STORAGE_PREFIX + 'facilities', JSON.stringify(facilities));
       localStorage.setItem(STORAGE_PREFIX + 'classes', JSON.stringify(classes));
       localStorage.setItem(STORAGE_PREFIX + 'trainers', JSON.stringify(trainers));
@@ -158,12 +163,57 @@ const AppContent: React.FC = () => {
       localStorage.setItem(STORAGE_PREFIX + 'photo_logs', JSON.stringify(photoLogs));
       localStorage.setItem(STORAGE_PREFIX + 'reward_transactions', JSON.stringify(rewardTransactions));
       localStorage.setItem(STORAGE_PREFIX + 'reward_settings', JSON.stringify(rewardSettings));
+      localStorage.setItem(STORAGE_PREFIX + 'tickets', JSON.stringify(tickets));
       if (currentUser) localStorage.setItem(STORAGE_PREFIX + 'current_user', JSON.stringify(currentUser));
       else localStorage.removeItem(STORAGE_PREFIX + 'current_user');
       if (currentTrainer) localStorage.setItem(STORAGE_PREFIX + 'current_trainer', JSON.stringify(currentTrainer));
       else localStorage.removeItem(STORAGE_PREFIX + 'current_trainer');
     }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, currentTrainer, isLoading]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, tickets, currentUser, currentTrainer, isLoading]);
+
+  const onAddTicket = (t: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>, initialMessage: string) => {
+    const newTicket: SupportTicket = {
+      ...t,
+      id: `tk-${Math.random().toString(36).substr(2, 6)}`,
+      status: 'open',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: [{
+        id: Math.random().toString(36).substr(2, 9),
+        senderId: t.userId,
+        senderType: 'user',
+        message: initialMessage,
+        createdAt: Date.now()
+      }]
+    };
+    setTickets(prev => [newTicket, ...prev]);
+    showToast('Support ticket raised successfully', 'success');
+  };
+
+  const onReplyTicket = (ticketId: string, message: string, senderType: 'user' | 'admin') => {
+    setTickets(prev => prev.map(t => {
+      if (t.id === ticketId) {
+        const newMessage = {
+          id: Math.random().toString(36).substr(2, 9),
+          senderId: senderType === 'admin' ? 'admin' : t.userId,
+          senderType,
+          message,
+          createdAt: Date.now()
+        };
+        return {
+          ...t,
+          status: senderType === 'admin' ? 'replied' : t.status,
+          updatedAt: Date.now(),
+          messages: [...t.messages, newMessage]
+        };
+      }
+      return t;
+    }));
+  };
+
+  const onUpdateTicketStatus = (id: string, status: SupportTicket['status']) => {
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, status, updatedAt: Date.now() } : t));
+  };
 
   const addRewardTransaction = (userId: string, type: 'earned' | 'used', source: RewardTransaction['source'], referenceId: string, points: number, facilityId?: string) => {
     const user = users.find(u => u.id === userId);
@@ -203,27 +253,18 @@ const AppContent: React.FC = () => {
 
   const onAddBooking = (booking: Omit<Booking, 'id' | 'createdAt'>) => {
     const newBooking: Booking = { ...booking, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now(), attendanceStatus: 'pending' };
-    
-    // Update the corresponding slot's currentBookings and status
     setClassSlots(prev => prev.map(slot => {
       if (slot.id === newBooking.slotId) {
         const newCount = slot.currentBookings + newBooking.persons;
-        return {
-          ...slot,
-          currentBookings: newCount,
-          status: newCount >= slot.maxBookings ? 'full' : slot.status
-        };
+        return { ...slot, currentBookings: newCount, status: newCount >= slot.maxBookings ? 'full' : slot.status };
       }
       return slot;
     }));
-
-    // Reward Logic
     const cConfig = rewardSettings.classes;
     if (currentUser && cConfig.enabled && newBooking.type === 'class' && (cConfig.facilityIds.length === 0 || cConfig.facilityIds.includes(newBooking.facilityId))) {
        addRewardTransaction(currentUser.id, 'earned', 'booking', newBooking.id, cConfig.points, newBooking.facilityId);
        showToast(`Earned ${cConfig.points} points!`, 'success');
     }
-
     setBookings(prev => [newBooking, ...prev]);
     return newBooking;
   };
@@ -237,7 +278,6 @@ const AppContent: React.FC = () => {
     }
     const newUserMembership: UserMembership = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, membershipId: m.id, facilityId: m.facilityId, title: m.title, startDate: Date.now(), endDate: Date.now() + (m.durationDays * 86400000), price: finalPrice, allow24Hour: m.allow24Hour, startTime: m.startTime, endTime: m.endTime, daysOfWeek: m.daysOfWeek, status: 'active', purchasedAt: Date.now() };
     setUserMemberships(prev => [...prev, newUserMembership]);
-    
     const mConfig = rewardSettings.memberships;
     if (mConfig.enabled && (mConfig.facilityIds.length === 0 || mConfig.facilityIds.includes(m.facilityId))) {
        const pts = m.rewardPointsEnabled ? m.rewardPointsValue || mConfig.points : mConfig.points;
@@ -249,17 +289,16 @@ const AppContent: React.FC = () => {
 
   const bookBlock = (block: Block, participantNames: string[]) => {
     if (!currentUser) return;
-    const newBB: BlockBooking = { id: Math.random().toString(36).substr(2, 9), blockId: block.id, userId: currentUser.id, userName: currentUser.fullName, userEmail: currentUser.email, facilityId: block.facilityId, trainerId: block.trainerId, startDate: block.startDate, participantNames, bookingAmountPaid: true, status: 'upcoming', createdAt: Date.now() };
-    
+    const newBB: BlockBooking = { id: Math.random().toString(36).substr(2, 9), blockId: block.id, userId: currentUser.id, userName: currentUser.fullName, userEmail: currentUser.email, facilityId: block.facilityId, trainerId: block.trainerId, startDate: block.startDate, participantNames, bookingAmountPaid: true, status: 'upcoming', amount: block.reservedAmount || block.totalAmount, createdAt: Date.now() };
     const bConfig = rewardSettings.blocks;
     if (bConfig.enabled && (bConfig.facilityIds.length === 0 || bConfig.facilityIds.includes(block.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'block', newBB.id, bConfig.points, block.facilityId);
       showToast(`Earned ${bConfig.points} points!`, 'success');
     }
-
     const newPayments: BlockWeeklyPayment[] = [];
+    const calculatedWeeklyAmount = (block.totalAmount - (block.reservedAmount || 0)) / block.numWeeks;
     for (let i = 1; i <= block.numWeeks; i++) {
-      newPayments.push({ id: Math.random().toString(36).substr(2, 9), blockBookingId: newBB.id, userId: currentUser.id, weekNumber: i, amount: block.weeklyAmount, dueDate: block.startDate + (i - 1) * 7 * 86400000, status: 'pending' });
+      newPayments.push({ id: Math.random().toString(36).substr(2, 9), blockBookingId: newBB.id, userId: currentUser.id, weekNumber: i, amount: calculatedWeeklyAmount, dueDate: block.startDate + (i - 1) * 7 * 86400000, status: 'pending' });
     }
     setBlockBookings(prev => [...prev, newBB]);
     setBlockPayments(prev => [...prev, ...newPayments]);
@@ -268,27 +307,23 @@ const AppContent: React.FC = () => {
 
   const buyPass = (pass: Pass) => {
     if (!currentUser) return;
-    const newUserPass: UserPass = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, passId: pass.id, facilityId: pass.facilityId, name: pass.name, totalCredits: pass.credits, remainingCredits: pass.credits, personsPerBooking: pass.personsPerBooking, isAllClasses: pass.isAllClasses, allowedClassIds: pass.allowedClassIds, purchasedAt: Date.now(), status: 'active' };
-    
+    const newUserPass: UserPass = { id: Math.random().toString(36).substr(2, 9), userId: currentUser.id, passId: pass.id, facilityId: pass.facilityId, name: pass.name, totalCredits: pass.credits, remainingCredits: pass.credits, personsPerBooking: pass.personsPerBooking, isAllClasses: pass.isAllClasses, allowedClassIds: pass.allowedClassIds, purchasedAt: Date.now(), status: 'active', pricePaid: pass.price, paymentStatus: 'paid' };
     const pConfig = rewardSettings.passes;
     if (pConfig.enabled && (pConfig.facilityIds.length === 0 || pConfig.facilityIds.includes(pass.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'pass', newUserPass.id, pConfig.points, pass.facilityId);
       showToast(`Earned ${pConfig.points} points!`, 'success');
     }
-
     setUserPasses(prev => [...prev, newUserPass]);
     showToast('Pass purchased!', 'success');
   };
 
   const addOrder = (order: Omit<Order, 'id' | 'createdAt'>) => {
     const newOrder: Order = { ...order, id: Math.random().toString(36).substr(2, 9), paymentStatus: 'paid', createdAt: Date.now() };
-    
     const oConfig = rewardSettings.orders;
     if (currentUser && oConfig.enabled && (oConfig.facilityIds.length === 0 || oConfig.facilityIds.includes(newOrder.facilityId))) {
       addRewardTransaction(currentUser.id, 'earned', 'order', newOrder.id, oConfig.points, newOrder.facilityId);
       showToast(`Earned ${oConfig.points} points!`, 'success');
     }
-
     setOrders(prev => [newOrder, ...prev]);
     setCart([]);
     return newOrder;
@@ -334,26 +369,14 @@ const AppContent: React.FC = () => {
               onBookBlock={bookBlock} onPayWeeklyBlock={(id) => setBlockPayments(p => p.map(py => py.id === id ? {...py, status: 'paid'} : py))} onBuyMembership={buyMembership}
               onAddMeasurement={(m) => setMeasurements(p => [...p, {...m, id: Math.random().toString(36).substr(2, 9)}])} onAddPhotoLog={(ph) => setPhotoLogs(p => [...p, {...ph, id: Math.random().toString(36).substr(2, 9)}])}
               onDeletePhotoLog={(id) => setPhotoLogs(p => p.filter(ph => ph.id !== id))}
+              tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket}
             />
           } />
-          
           <Route path="/trainer/*" element={
-            <TrainerApp 
-              trainers={trainers} 
-              classSlots={classSlots} 
-              bookings={bookings} 
-              classes={classes}
-              facilities={facilities}
-              locations={locations}
-              currentTrainer={currentTrainer} 
-              onTrainerLogin={(t) => setCurrentTrainer(t)} 
-              onTrainerLogout={() => setCurrentTrainer(null)}
-              onUpdateTrainer={updateTrainer}
-              onUpdateSlot={updateSlot}
-              onUpdateBooking={updateBooking}
+            <TrainerApp trainers={trainers} classSlots={classSlots} bookings={bookings} classes={classes} facilities={facilities} locations={locations} currentTrainer={currentTrainer} onTrainerLogin={(t) => setCurrentTrainer(t)} onTrainerLogout={() => setCurrentTrainer(null)} onUpdateTrainer={updateTrainer} onUpdateSlot={updateSlot} onUpdateBooking={updateBooking} 
+              tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket}
             />
           } />
-
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin/*" element={
             <AdminPanel 
@@ -362,9 +385,9 @@ const AppContent: React.FC = () => {
               trainers={trainers} onAddTrainer={(t) => setTrainers(p => [...p, { ...t, id: Math.random().toString(36).substr(2,9), createdAt: Date.now(), isFirstLogin: true, password: '', speciality: '', experience: '' }])}
               onUpdateTrainer={updateTrainer}
               onDeleteTrainer={(id) => setTrainers(p => p.filter(t => t.id !== id))}
-              locations={locations} onAddLocation={(l) => setLocations(p => [...p, {...l, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
-              onUpdateLocation={(id, up) => setLocations(p => p.map(l => l.id === id ? {...l, ...up} : l))}
-              onDeleteLocation={(id) => setLocations(p => p.filter(l => l.id !== id))}
+              locations={locations} onAddLocation={(l) => setLocations(prev => [...prev, {...l, id: Math.random().toString(36).substr(2,9), createdAt: Date.now()}])}
+              onUpdateLocation={(id, up) => setLocations(prev => prev.map(loc => loc.id === id ? {...loc, ...up} : loc))}
+              onDeleteLocation={(id) => setLocations(prev => prev.filter(loc => loc.id !== id))}
               classSlots={classSlots} onAddClassSlot={(s) => setClassSlots(p => [...p, { ...s, id: Math.random().toString(36).substr(2,9), trainerStatus: 'accepted', isDelivered: false }])}
               onUpdateClassSlot={updateSlot}
               onDeleteClassSlot={(id) => setClassSlots(p => p.filter(s => s.id !== id))}
@@ -385,9 +408,14 @@ const AppContent: React.FC = () => {
               bookings={bookings} onUpdateBooking={updateBooking}
               orders={orders} onUpdateOrder={(id, up) => setOrders(p => p.map(o => o.id === id ? {...o, ...up} : o))}
               blockBookings={blockBookings} blockPayments={blockPayments} userPasses={userPasses} userMemberships={userMemberships}
+              onUpdateUserMembership={(id, up) => setUserMemberships(p => p.map(m => m.id === id ? {...m, ...up} : m))}
+              onUpdateBlockBooking={(id, up) => setBlockBookings(p => p.map(b => b.id === id ? {...b, ...up} : b))}
+              onUpdateUserPass={(id, up) => setUserPasses(p => p.map(up => up.id === id ? {...up, ...up} : up))}
+              onDeleteUserPass={(id) => setUserPasses(p => p.filter(up => up.id !== id))}
               measurements={measurements} photoLogs={photoLogs} rewardSettings={rewardSettings} rewardTransactions={rewardTransactions}
               onUpdateRewardSettings={(s) => setRewardSettings(s)}
               onResetSystem={handleResetSystem}
+              tickets={tickets} onReplyTicket={onReplyTicket} onUpdateTicketStatus={onUpdateTicketStatus}
             />
           } />
         </Routes>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Layers, Calendar, Clock, ArrowRight, User } from 'lucide-react';
@@ -36,6 +35,7 @@ const BlockListView: React.FC<BlockListViewProps> = ({ facilities, blocks, train
       <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32 scrollbar-hide">
         {facilityBlocks.length > 0 ? facilityBlocks.map(block => {
           const trainer = trainers.find(t => t.id === block.trainerId);
+          const displayPrice = block.paymentType === 'full' ? block.totalAmount : block.reservedAmount;
           return (
             <div key={block.id} className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm group">
                <div className="p-6 space-y-6">
@@ -71,8 +71,8 @@ const BlockListView: React.FC<BlockListViewProps> = ({ facilities, blocks, train
                        <p className="font-bold text-slate-900 text-sm">{trainer?.name}</p>
                     </div>
                     <div className="text-right">
-                       <p className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Entry Price</p>
-                       <p className="font-black text-slate-900 text-lg">${block.bookingAmount}</p>
+                       <p className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">{block.paymentType === 'full' ? 'Full Price' : 'Reservation'}</p>
+                       <p className="font-black text-slate-900 text-lg">${displayPrice?.toFixed(2)}</p>
                     </div>
                  </div>
 

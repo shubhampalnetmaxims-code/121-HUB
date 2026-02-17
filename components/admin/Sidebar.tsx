@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, BookOpen, Layers, Ticket, CreditCard, 
   ShoppingBag, Users, ArrowLeft, X, CalendarDays, ClipboardList,
-  Gift
+  Gift, HelpCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -50,12 +50,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <SidebarItem to="/admin/staff" icon={Users} label="Trainers" onClick={onClose} />
           <SidebarItem to="/admin/users" icon={Users} label="Users" onClick={onClose} />
           <SidebarItem to="/admin/timetable" icon={CalendarDays} label="Timetable" onClick={onClose} />
-          <SidebarItem to="/admin/marketplace" icon="Products" label="Products" onClick={onClose} />
-          <SidebarItem to="/admin/passes" icon={Ticket} label="Passes" onClick={onClose} />
+          <SidebarItem to="/admin/marketplace" icon={ShoppingBag} label="Products" onClick={onClose} />
+          <SidebarItem to="/admin/passes" icon={Ticket} label="Sold Passes" onClick={onClose} />
           <SidebarItem to="/admin/memberships" icon={CreditCard} label="Memberships" onClick={onClose} />
           <SidebarItem to="/admin/blocks" icon={Layers} label="Blocks" onClick={onClose} />
-          <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Bookings" onClick={onClose} />
+          <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Booking & Orders" onClick={onClose} />
           <SidebarItem to="/admin/rewards" icon={Gift} label="Rewards" onClick={onClose} />
+          <SidebarItem to="/admin/support" icon={HelpCircle} label="Support" onClick={onClose} />
         </nav>
         <Link to="/" className="flex items-center gap-3 px-4 py-4 text-slate-500 hover:text-white transition-all text-sm font-bold border-t border-slate-800 mt-6 shrink-0">
           <ArrowLeft className="w-4 h-4" />

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Menu, BookOpen, Edit3, Trash2, Clock, Package, Image as ImageIcon, Search, Filter, User, CheckCircle2, XCircle, ChevronDown } from 'lucide-react';
-import { Facility, Class, Trainer, Location, ClassSlot } from '../../types';
+import { Plus, Menu, BookOpen, Edit3, Trash2, Clock, Package, Image as ImageIcon, Search, Filter, User, CheckCircle2, XCircle, ChevronDown, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Facility, Class, Trainer, Location, ClassSlot, Booking } from '../../types';
 import ClassFormModal from './ClassFormModal';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -10,6 +10,7 @@ interface ClassesViewProps {
   trainers: Trainer[];
   locations: Location[];
   classSlots: ClassSlot[];
+  bookings: Booking[];
   onAddClass: (c: any) => void;
   onUpdateClass: (id: string, updates: any) => void;
   onDeleteClass: (id: string) => void;
@@ -17,12 +18,22 @@ interface ClassesViewProps {
 }
 
 const ClassesView: React.FC<ClassesViewProps> = ({ 
-  facilities, classes, trainers, locations, classSlots, onAddClass, onUpdateClass, onDeleteClass, onOpenSidebar 
+  facilities = [], 
+  classes = [], 
+  trainers = [], 
+  locations = [], 
+  classSlots = [], 
+  bookings = [], 
+  onAddClass, 
+  onUpdateClass, 
+  onDeleteClass, 
+  onOpenSidebar 
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeletionBlocked, setShowDeletionBlocked] = useState<string | null>(null);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,7 +42,8 @@ const ClassesView: React.FC<ClassesViewProps> = ({
   const [facilityFilter, setFacilityFilter] = useState<string>('all');
 
   const filteredClasses = useMemo(() => {
-    return classes.filter(c => {
+    const safeClasses = classes || [];
+    return safeClasses.filter(c => {
       // Search by name
       if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       
@@ -43,7 +55,8 @@ const ClassesView: React.FC<ClassesViewProps> = ({
 
       // Filter by Trainer (via ClassSlots)
       if (trainerFilter !== 'all') {
-        const hasTrainer = classSlots.some(slot => slot.classId === c.id && slot.trainerId === trainerFilter);
+        const safeSlots = classSlots || [];
+        const hasTrainer = safeSlots.some(slot => slot.classId === c.id && slot.trainerId === trainerFilter);
         if (!hasTrainer) return false;
       }
 
@@ -52,8 +65,9 @@ const ClassesView: React.FC<ClassesViewProps> = ({
   }, [classes, classSlots, searchQuery, statusFilter, trainerFilter, facilityFilter]);
 
   const grouped = useMemo(() => {
-    return facilities.reduce((acc, f) => {
-      const facilityClasses = filteredClasses.filter(c => c.facilityId === f.id);
+    const safeFacilities = facilities || [];
+    return safeFacilities.reduce((acc, f) => {
+      const facilityClasses = (filteredClasses || []).filter(c => c.facilityId === f.id);
       if (facilityClasses.length > 0 || (facilityFilter === f.id || facilityFilter === 'all')) {
         acc[f.id] = facilityClasses;
       }
@@ -66,11 +80,17 @@ const ClassesView: React.FC<ClassesViewProps> = ({
     setIsFormOpen(true);
   };
 
-  const handleSave = (data: any) => {
-    if (editingClass) onUpdateClass(editingClass.id, data);
-    else onAddClass(data);
-    setIsFormOpen(false);
-    setEditingClass(null);
+  const handleDeleteAttempt = (classId: string) => {
+    // USER REQUIREMENT: Throw error if any booking is made for the class
+    // We check the 'bookings' prop passed from AdminPanel
+    const safeBookings = bookings || [];
+    const hasBookings = safeBookings.some(b => b.classId === classId);
+    
+    if (hasBookings) {
+      setShowDeletionBlocked(classId);
+    } else {
+      setDeletingId(classId);
+    }
   };
 
   const confirmDelete = () => {
@@ -103,7 +123,6 @@ const ClassesView: React.FC<ClassesViewProps> = ({
             </button>
           </div>
 
-          {/* Filter Bar */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <div className="relative flex-1 min-w-[240px]">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -137,7 +156,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({
                 className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer max-w-[120px]"
               >
                 <option value="all">All Hubs</option>
-                {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                {(facilities || []).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
 
@@ -149,7 +168,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({
                 className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer max-w-[120px]"
               >
                 <option value="all">All Coaches</option>
-                {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {(trainers || []).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
           </div>
@@ -157,8 +176,9 @@ const ClassesView: React.FC<ClassesViewProps> = ({
       </header>
 
       <div className="p-4 md:p-8 space-y-12 pb-24">
+        {/* Fix: Explicitly type Object.entries result to avoid 'unknown' inference for facClasses on lines 192/198 (per error report) */}
         {(Object.entries(grouped) as [string, Class[]][]).map(([facId, facClasses]) => {
-          const f = facilities.find(fac => fac.id === facId);
+          const f = (facilities || []).find(fac => fac.id === facId);
           if (!f) return null;
           
           if (facilityFilter !== 'all' && facilityFilter !== facId) return null;
@@ -192,7 +212,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({
                       </div>
                       <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleEdit(c)} className="p-2 bg-white/95 backdrop-blur rounded-md text-blue-600 hover:bg-blue-600 hover:text-white shadow-md transition-all border border-slate-200"><Edit3 className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setDeletingId(c.id)} className="p-2 bg-white/95 backdrop-blur rounded-md text-red-600 hover:bg-red-600 hover:text-white shadow-md transition-all border border-slate-200"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteAttempt(c.id)} className="p-2 bg-white/95 backdrop-blur rounded-md text-red-600 hover:bg-red-600 hover:text-white shadow-md transition-all border border-slate-200"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                     <div className="p-6 text-left flex-1 flex flex-col">
@@ -256,7 +276,12 @@ const ClassesView: React.FC<ClassesViewProps> = ({
           facilities={facilities} 
           initialFacilityId={selectedFacilityId}
           onClose={() => setIsFormOpen(false)} 
-          onSave={handleSave} 
+          onSave={(data) => {
+            if (editingClass) onUpdateClass(editingClass.id, data);
+            else onAddClass(data);
+            setIsFormOpen(false);
+            setEditingClass(null);
+          }} 
         />
       )}
 
@@ -269,6 +294,43 @@ const ClassesView: React.FC<ClassesViewProps> = ({
           onConfirm={confirmDelete}
           onCancel={() => setDeletingId(null)}
         />
+      )}
+
+      {showDeletionBlocked && (
+        <div className="fixed inset-0 z-[260] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-lg p-8 text-center space-y-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-200">
+            <div className="w-16 h-16 rounded-md border bg-red-50 text-red-600 border-red-100 flex items-center justify-center mx-auto shadow-sm">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <div className="space-y-2 text-left">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight uppercase text-center">Cannot Delete Class</h3>
+              <p className="text-slate-500 text-sm font-medium leading-relaxed text-center">
+                This class has <b>existing member bookings</b> in the system. To protect historical data and fulfill upcoming sessions, deletion is restricted.
+              </p>
+              <div className="p-4 bg-blue-50 rounded-md border border-blue-100 mt-4">
+                 <p className="text-[10px] font-black text-blue-600 uppercase mb-1">Recommended Action</p>
+                 <p className="text-[11px] font-bold text-blue-800 leading-tight">Change the status to <b>Inactive</b>. This will hide the class from the User App but keep the records safe for current members.</p>
+              </div>
+            </div>
+            <div className="space-y-2 pt-2">
+              <button 
+                onClick={() => {
+                  onUpdateClass(showDeletionBlocked, { status: 'inactive' });
+                  setShowDeletionBlocked(null);
+                }} 
+                className="w-full py-3 bg-slate-900 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-md transition-all active:scale-95"
+              >
+                Set as Inactive
+              </button>
+              <button 
+                onClick={() => setShowDeletionBlocked(null)} 
+                className="w-full py-3 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-600 transition-colors"
+              >
+                Back to Curriculum
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

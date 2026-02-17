@@ -18,20 +18,30 @@ interface AppTimetableViewProps {
   availablePasses: Pass[];
   onBuyPass: (p: Pass) => void;
   onUsePass: (userPassId: string, credits: number) => void;
-  // Added reward properties
   rewardSettings: RewardSettings;
   onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const AppTimetableView: React.FC<AppTimetableViewProps> = ({
-  facility, classes, trainers, locations, classSlots, onAuthTrigger, currentUser, onAddBooking, onUpdateUser,
-  userPasses, availablePasses, onBuyPass, onUsePass,
-  rewardSettings, onRedeemPoints // Destructured new props
+  facility, 
+  classes = [], 
+  trainers = [], 
+  locations = [], 
+  classSlots = [], 
+  onAuthTrigger, 
+  currentUser, 
+  onAddBooking, 
+  onUpdateUser,
+  userPasses = [], 
+  availablePasses = [], 
+  onBuyPass, 
+  onUsePass,
+  rewardSettings, 
+  onRedeemPoints
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Read pre-selected class ID from navigation state if it exists
   const preSelectedClassId = (location.state as { preSelectedClassId?: string })?.preSelectedClassId;
 
   const [classFilter, setClassFilter] = useState<string>(preSelectedClassId || 'all');
@@ -55,26 +65,36 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
 
   const displayedDates = viewType === 'week' ? weekDays : [anchorDate];
 
-  const filteredSlots = classSlots.filter(s => {
-    if (s.facilityId !== facility.id) return false;
+  const filteredSlots = useMemo(() => {
+    const safeSlots = classSlots || [];
+    const safeClasses = classes || [];
+    const safeTrainers = trainers || [];
     
-    // Status check for parent class
-    const parentClass = classes.find(c => c.id === s.classId);
-    if (!parentClass || parentClass.status === 'inactive') return false;
+    return safeSlots.filter(s => {
+      if (s.facilityId !== facility?.id) return false;
+      
+      const parentClass = safeClasses.find(c => c.id === s.classId);
+      // USER REQUIREMENT: Hide slots if parent class is inactive
+      if (!parentClass || parentClass.status === 'inactive') return false;
 
-    if (classFilter !== 'all' && s.classId !== classFilter) return false;
-    if (trainerFilter !== 'all' && s.trainerId !== trainerFilter) return false;
-    if (locationFilter !== 'all' && s.locationId !== locationFilter) return false;
-    return true;
-  });
+      // USER REQUIREMENT: Hide slots if assigned coach is inactive
+      const coach = safeTrainers.find(t => t.id === s.trainerId);
+      if (coach && coach.status === 'inactive') return false;
+
+      if (classFilter !== 'all' && s.classId !== classFilter) return false;
+      if (trainerFilter !== 'all' && s.trainerId !== trainerFilter) return false;
+      if (locationFilter !== 'all' && s.locationId !== locationFilter) return false;
+      return true;
+    });
+  }, [classSlots, classes, trainers, facility, classFilter, trainerFilter, locationFilter]);
 
   const getSlotsForDate = (date: Date) => {
     const dayIdx = date.getDay();
     const dateTime = date.getTime();
+    const currentFiltered = filteredSlots || [];
     
-    return filteredSlots.filter(s => {
+    return currentFiltered.filter(s => {
       if (s.dayOfWeek !== dayIdx) return false;
-      // Range check
       if (s.startDate && dateTime < s.startDate) return false;
       if (s.endDate && dateTime > s.endDate) return false;
       return true;
@@ -109,6 +129,8 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
     ? `${getFormatDate(weekDays[0])} - ${getFormatDate(weekDays[6])}`
     : anchorDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
+  if (!facility) return <div className="p-10 text-center font-bold text-slate-400">Loading Facility...</div>;
+
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden text-left">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
@@ -127,24 +149,23 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
 
       <div className="flex-1 overflow-y-auto pb-40">
         <div className="p-4 space-y-4">
-          {/* Filters */}
           <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
             <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="shrink-0 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-wider outline-none">
               <option value="all">All Classes</option>
-              {classes.filter(c => c.facilityId === facility.id && c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {(classes || []).filter(c => c.facilityId === facility.id && c.status === 'active').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <select value={trainerFilter} onChange={e => setTrainerFilter(e.target.value)} className="shrink-0 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-wider outline-none">
               <option value="all">All Trainers</option>
-              {trainers.filter(t => t.facilityIds.includes(facility.id)).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {/* Only show active trainers in filter */}
+              {(trainers || []).filter(t => (t.facilityIds || []).includes(facility.id) && t.status === 'active').map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
             <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)} className="shrink-0 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-wider outline-none">
               <option value="all">All Areas</option>
-              {locations.filter(l => l.facilityIds.includes(facility.id)).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              {(locations || []).filter(l => (l.facilityIds || []).includes(facility.id)).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
 
-          {/* Date Nav */}
-          <div className="flex flex-col items-center justify-center py-4 bg-slate-50 rounded-[32px] border border-slate-100">
+          <div className="flex flex-col items-center justify-center py-4 bg-slate-50 rounded-[32px] border border-slate-100 shadow-inner">
             <div className="flex items-center gap-4 mb-4">
               <button onClick={() => navigateDate(-1)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><ChevronLeft className="w-6 h-6" /></button>
               <div className="relative">
@@ -167,7 +188,6 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
             </div>
           </div>
 
-          {/* Slots List */}
           <div className="space-y-3">
             {displayedDates.map(date => {
               const daySlots = getSlotsForDate(date);
@@ -184,8 +204,8 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                   <div className="flex-1 bg-white border border-l-0 border-slate-100 rounded-r-2xl p-4 overflow-x-auto scrollbar-hide">
                     <div className="flex gap-3">
                       {daySlots.length > 0 ? daySlots.map(s => {
-                        const cls = classes.find(c => c.id === s.classId);
-                        const loc = locations.find(l => l.id === s.locationId);
+                        const cls = (classes || []).find(c => c.id === s.classId);
+                        const loc = (locations || []).find(l => l.id === s.locationId);
                         const isFull = s.status === 'full';
                         
                         return (
@@ -213,7 +233,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                               {isFull ? (
                                 <span className="text-[9px] font-black text-red-500 uppercase tracking-widest">Booked Fully</span>
                               ) : (
-                                <p className="text-[10px] font-bold text-slate-500">{trainers.find(t => t.id === s.trainerId)?.name || 'TBA'}</p>
+                                <p className="text-[10px] font-bold text-slate-500">{(trainers || []).find(t => t.id === s.trainerId)?.name || 'TBA'}</p>
                               )}
                             </div>
                           </div>
@@ -233,9 +253,9 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
       {viewingSlot && (
         <AppClassSlotViewModal
           slot={viewingSlot}
-          cls={classes.find(c => c.id === viewingSlot.classId)}
-          trainer={trainers.find(t => t.id === viewingSlot.trainerId)}
-          location={locations.find(l => l.id === viewingSlot.locationId)}
+          cls={(classes || []).find(c => c.id === viewingSlot.classId)}
+          trainer={(trainers || []).find(t => t.id === viewingSlot.trainerId)}
+          location={(locations || []).find(l => l.id === viewingSlot.locationId)}
           onClose={() => setViewingSlot(null)}
           onAuthTrigger={onAuthTrigger}
           currentUser={currentUser}
@@ -245,7 +265,6 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
           availablePasses={availablePasses}
           onBuyPass={onBuyPass}
           onUsePass={onUsePass}
-          // Propagating reward props
           rewardSettings={rewardSettings}
           onRedeemPoints={onRedeemPoints}
         />

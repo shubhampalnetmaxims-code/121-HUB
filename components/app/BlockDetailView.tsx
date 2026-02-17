@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// Added Coins to imports
-import { X, Layers, Calendar, Clock, User, DollarSign, Info, ShieldCheck, CheckCircle, MapPin, Users, ArrowLeft, UserPlus, CreditCard, Check, Plus, Coins } from 'lucide-react';
+import { X, Layers, Calendar, Clock, User, DollarSign, Info, ShieldCheck, CheckCircle, MapPin, Users, ArrowLeft, UserPlus, CreditCard, Check, Plus, Coins, AlertCircle } from 'lucide-react';
 import { Facility, Block, Trainer, User as UserType, PaymentCard, RewardSettings } from '../../types';
 import { useToast } from '../ToastContext';
 import { useNotifications } from '../NotificationContext';
@@ -15,14 +14,13 @@ interface BlockDetailViewProps {
   currentUser: UserType | null;
   onBookBlock: (block: Block, participants: string[]) => void;
   onUpdateUser: (id: string, updates: Partial<UserType>) => void;
-  // Added missing reward props
   rewardSettings: RewardSettings;
   onRedeemPoints: (points: number, source: string, refId: string) => void;
 }
 
 const BlockDetailView: React.FC<BlockDetailViewProps> = ({ 
   facilities, blocks, trainers, onAuthTrigger, currentUser, onBookBlock, onUpdateUser,
-  rewardSettings, onRedeemPoints // Destructured new props
+  rewardSettings, onRedeemPoints
 }) => {
   const { id, blockId } = useParams();
   const navigate = useNavigate();
@@ -35,7 +33,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [useRewards, setUseRewards] = useState(false); // Added redemption state
+  const [useRewards, setUseRewards] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string>(
     currentUser?.paymentCards?.find(c => c.isPrimary)?.id || 
     currentUser?.paymentCards?.[0]?.id || 
@@ -47,12 +45,12 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
   
   if (!block) return null;
 
-  const baseTotal = block.bookingAmount * personCount;
-  const canRedeem = currentUser && 
-                  rewardSettings.redemption.enabled && 
-                  rewardSettings.redemption.enabledModules.includes('block') &&
-                  currentUser.rewardPoints >= rewardSettings.redemption.minPointsRequired &&
-                  baseTotal > 0;
+  const unitAmount = block.paymentType === 'full' ? block.totalAmount : (block.reservedAmount || 0);
+  const baseTotal = unitAmount * personCount;
+  
+  const redemptionEnabled = rewardSettings.redemption.enabled && rewardSettings.redemption.enabledModules.includes('block');
+  const hasMinPoints = currentUser && currentUser.rewardPoints >= rewardSettings.redemption.minPointsRequired;
+  const canRedeem = currentUser && redemptionEnabled && hasMinPoints && baseTotal > 0;
 
   const pointsToUse = useRewards && currentUser ? Math.min(currentUser.rewardPoints, Math.floor(baseTotal / rewardSettings.redemption.monetaryValue * rewardSettings.redemption.pointsToValue)) : 0;
   const rewardDiscount = (pointsToUse / rewardSettings.redemption.pointsToValue) * rewardSettings.redemption.monetaryValue;
@@ -83,13 +81,13 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
   };
 
   const handleFinalPayment = async () => {
-    if (!selectedCardId) return;
+    if (finalTotal > 0 && !selectedCardId) {
+      showToast("Please select or add a payment card", "error");
+      return;
+    }
     setIsProcessing(true);
     await new Promise(r => setTimeout(r, 2000));
     
-    // Note: Implementation of redemption in bookBlock would require updating App.tsx 
-    // which is not in the scope of files to be updated here.
-    // We proceed to complete the booking as requested by the original props.
     onBookBlock(block, names);
     
     setIsProcessing(false);
@@ -128,8 +126,8 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
             <div className="flex justify-between items-start">
                <div className="p-3 bg-white/10 rounded-2xl"><Layers className="w-8 h-8 text-blue-400" /></div>
                <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Booking Amount</p>
-                  <p className="text-4xl font-black text-blue-400">${block.bookingAmount}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Entry Valuation</p>
+                  <p className="text-4xl font-black text-blue-400">${unitAmount.toFixed(2)}</p>
                </div>
             </div>
             <div>
@@ -148,7 +146,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
             <Info className="w-3.5 h-3.5" />
             <h4 className="text-[9px] font-black uppercase tracking-widest">About this program</h4>
           </div>
-          <div className="p-6 bg-slate-50 border border-slate-100 rounded-[32px] space-y-6">
+          <div className="p-6 bg-slate-50 border border-slate-100 rounded-[32px] space-y-6 shadow-inner">
              <p className="text-slate-900 font-bold leading-relaxed">{block.about}</p>
              <div className="pt-4 border-t border-slate-200">
                 <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Member Expectations</p>
@@ -156,6 +154,16 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
              </div>
           </div>
         </section>
+
+        {block.paymentType === 'reserved' && (
+          <section className="bg-amber-50 rounded-[32px] p-6 border border-amber-100 flex items-start gap-4 shadow-sm animate-in zoom-in-95 duration-500">
+             <AlertCircle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+             <div className="text-left">
+                <p className="text-xs font-black text-amber-900 uppercase tracking-tight mb-1">Reservation Notice</p>
+                <p className="text-[11px] font-bold text-amber-700 leading-relaxed uppercase">You have to pay whole amount before starting of the block in the facility.</p>
+             </div>
+          </section>
+        )}
 
         {canRedeem && (
           <section className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100">
@@ -214,7 +222,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
                       newNames[idx] = e.target.value;
                       setNames(newNames);
                     }}
-                    className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all shadow-inner"
                   />
                 </div>
               ))}
@@ -222,16 +230,26 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
         </section>
 
         <section className="bg-blue-50/50 rounded-[32px] p-8 border border-blue-100/50 space-y-4">
-           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Payment Cycle Summary</p>
-           <div className="flex justify-between text-sm font-bold text-slate-500"><span>Booking Deposit</span><span>${baseTotal.toFixed(2)}</span></div>
+           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Economic Ledger</p>
+           <div className="flex justify-between text-sm font-bold text-slate-500">
+             <span>{block.paymentType === 'full' ? 'Program Fee' : 'Booking Reservation'}</span>
+             <span>${baseTotal.toFixed(2)}</span>
+           </div>
            {pointsToUse > 0 && (
              <div className="flex justify-between text-sm font-bold text-green-600">
                <span>Reward Redemption ({pointsToUse} pts)</span>
                <span>-${rewardDiscount.toFixed(2)}</span>
              </div>
            )}
-           <div className="flex justify-between text-sm font-bold text-slate-500"><span>Weekly x {block.numWeeks}</span><span>${(block.weeklyAmount * personCount).toFixed(2)} / week</span></div>
-           <div className="pt-4 border-t border-slate-200 flex justify-between items-center"><span className="text-xl font-black text-slate-900">Total Program</span><span className="text-2xl font-black text-blue-600">${((block.totalAmount * personCount) - rewardDiscount).toFixed(2)}</span></div>
+           <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+              <span className="text-xl font-black text-slate-900 uppercase">Payable Today</span>
+              <span className="text-2xl font-black text-blue-600">${finalTotal.toFixed(2)}</span>
+           </div>
+           {block.paymentType === 'reserved' && (
+             <div className="pt-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Facility Balance: ${( (block.totalAmount - block.reservedAmount!) * personCount ).toFixed(2)}</p>
+             </div>
+           )}
         </section>
       </div>
 
@@ -249,7 +267,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
            <div className="bg-slate-50/50 p-6 pt-12 border-b border-slate-100 flex items-center justify-between shrink-0">
              <div className="text-left">
                <h3 className="text-xl font-bold tracking-tight uppercase">Confirm Booking</h3>
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">One-time Join Fee</p>
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{block.paymentType === 'full' ? 'Full Program Fee' : 'Reservation Only'}</p>
              </div>
              <button onClick={() => setIsCheckingOut(false)} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors shrink-0">
                <X className="w-6 h-6" />
@@ -279,7 +297,7 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
                     </div>
                   )}
                   <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                     <span className="text-lg font-black text-slate-900 tracking-tight">Pay Today</span>
+                     <span className="text-lg font-black text-slate-900 tracking-tight uppercase">Payable Now</span>
                      <span className="text-3xl font-black text-blue-600">${finalTotal.toFixed(2)}</span>
                   </div>
                </div>
@@ -317,8 +335,10 @@ const BlockDetailView: React.FC<BlockDetailViewProps> = ({
                      onChange={e => setAcceptedTerms(e.target.checked)}
                      className="w-6 h-6 rounded-lg accent-blue-600 mt-0.5 shrink-0" 
                    />
-                   <span className="text-xs font-bold text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
-                     I understand that a weekly recurring fee of ${(block.weeklyAmount * personCount).toFixed(2)} will be required starting from the program launch date.
+                   <span className="text-xs font-bold text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors uppercase tracking-tight">
+                     {block.paymentType === 'reserved' 
+                        ? 'I understand I must pay the remaining balance at the facility before the program starts.' 
+                        : 'I accept the terms and conditions for this transformation program.'}
                    </span>
                 </label>
              </section>

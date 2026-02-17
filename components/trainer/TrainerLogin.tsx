@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 /* Added missing 'Check' import from lucide-react */
-import { Mail, ArrowRight, UserCircle, ShieldCheck, Lock, Eye, EyeOff, KeyRound, Check } from 'lucide-react';
+import { Mail, ArrowRight, UserCircle, ShieldCheck, Lock, Eye, EyeOff, KeyRound, Check, ShieldAlert } from 'lucide-react';
 import { Trainer } from '../../types';
 import { useToast } from '../ToastContext';
 
@@ -32,6 +32,12 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
       return;
     }
 
+    // USER REQUIREMENT: Check App Access status
+    if (trainer.appAccess === 'restricted') {
+      showToast('Access Suspended: Contact hub administrator.', 'error');
+      return;
+    }
+
     setTargetTrainer(trainer);
 
     if (trainer.password) {
@@ -46,6 +52,14 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!targetTrainer) return;
+
+    // Double check restriction on every credential check
+    const currentStatus = trainers.find(t => t.id === targetTrainer.id);
+    if (currentStatus?.appAccess === 'restricted') {
+      showToast('Account Restricted. Entry denied.', 'error');
+      setStep('email');
+      return;
+    }
 
     if (password === targetTrainer.password) {
       onLogin(targetTrainer);
@@ -94,9 +108,9 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
   };
 
   return (
-    <div className="h-full bg-white flex flex-col p-8 text-left animate-in fade-in duration-500 overflow-y-auto scrollbar-hide">
+    <div className="h-full bg-white flex flex-col p-8 text-left animate-in fade-in duration-500 overflow-y-auto scrollbar-hide font-sans">
       <div className="mb-10 flex flex-col items-center pt-8 shrink-0">
-        <div className="w-20 h-20 bg-slate-900 text-white rounded-[32px] flex items-center justify-center mb-6 shadow-xl shadow-slate-200">
+        <div className="w-20 h-20 bg-slate-900 text-white rounded-[32px] flex items-center justify-center mb-6 shadow-xl shadow-slate-200 border-4 border-slate-50">
            <UserCircle className="w-10 h-10" />
         </div>
         <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight text-center leading-tight">
@@ -104,9 +118,9 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
            step === 'set-password' ? 'Set Credentials' :
            step === 'otp' ? 'Verify Identity' : 'Trainer Portal'}
         </h2>
-        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-2">
-          {step === 'password' ? 'Returning Coach Entry' : 
-           step === 'set-password' ? 'Establishing Alphanumeric Key' :
+        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">
+          {step === 'password' ? 'Authorized Node Entry' : 
+           step === 'set-password' ? 'Establishing Security Key' :
            step === 'otp' ? 'Safety Verification' : '121 Wellness Network'}
         </p>
       </div>
@@ -124,7 +138,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
                   placeholder="coach@121fit.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all"
+                  className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all shadow-inner"
                 />
               </div>
               <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 px-1">Institutional Identity Required</p>
@@ -151,7 +165,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-14 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all"
+                  className="w-full pl-12 pr-14 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all shadow-inner"
                 />
                 <button 
                   type="button"
@@ -201,7 +215,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
                     placeholder="Min 6 characters"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all"
+                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all shadow-inner"
                   />
                 </div>
               </div>
@@ -214,7 +228,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
                     placeholder="Repeat password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all"
+                    className="w-full pl-12 pr-4 py-5 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-bold text-slate-900 focus:ring-4 focus:ring-blue-600/10 transition-all shadow-inner"
                   />
                 </div>
               </div>
@@ -242,7 +256,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
                 maxLength={4}
                 value={otp}
                 onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-6 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-black text-4xl text-center tracking-[0.5em] focus:ring-4 focus:ring-blue-600/10"
+                className="w-full px-4 py-6 bg-slate-50 border border-slate-100 rounded-[24px] outline-none font-black text-4xl text-center tracking-[0.5em] focus:ring-4 focus:ring-blue-600/10 shadow-inner"
               />
               <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 px-1">Verification required to reset password</p>
             </div>
@@ -266,7 +280,7 @@ const TrainerLogin: React.FC<TrainerLoginProps> = ({ trainers, onLogin, onUpdate
 
       <div className="mt-10 pt-10 border-t border-slate-50 opacity-40 flex items-center justify-center gap-3">
          <ShieldCheck className="w-4 h-4" />
-         <p className="text-[8px] font-black uppercase tracking-widest">End-to-End Secure Hub Entry</p>
+         <p className="text-[8px] font-black uppercase tracking-widest">End-to-End Secure Protocol Node</p>
       </div>
     </div>
   );

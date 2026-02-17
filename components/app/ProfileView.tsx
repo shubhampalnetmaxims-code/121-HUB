@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User as UserType, Booking, Facility, Class, Order, UserPass, UserMembership } from '../../types';
-import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ShieldCheck, AlertTriangle, FileText, Trophy } from 'lucide-react';
+import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ShieldCheck, AlertTriangle, FileText, Trophy, HelpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileViewProps {
@@ -102,22 +102,10 @@ const ProfileView: React.FC<ProfileViewProps> = ({
             <GridMenuItem icon={ShoppingBag} label="Orders" color="text-orange-600" bg="bg-orange-50" onClick={() => navigate('/app/profile/orders')} />
             <GridMenuItem icon={Ticket} label="Passes" color="text-purple-600" bg="bg-purple-50" onClick={() => navigate('/app/profile/passes')} />
             <GridMenuItem icon={ShieldCheck} label="Memberships" color="text-green-600" bg="bg-green-50" onClick={() => navigate('/app/profile/memberships')} />
-            <GridMenuItem icon={FileText} label="Invoices" color="text-slate-600" bg="bg-slate-100" onClick={() => navigate('/app/profile/orders', { state: { view: 'invoices' } })} />
+            <GridMenuItem icon={HelpCircle} label="Support" color="text-blue-600" bg="bg-blue-50" onClick={() => navigate('/app/support')} />
             <GridMenuItem icon={LogOut} label="Logout" color="text-slate-400" onClick={handleLogout} />
             <GridMenuItem icon={Trash2} label="Delete Account" color="text-red-600" bg="bg-red-50" onClick={() => setIsDeleteConfirmOpen(true)} />
           </div>
-        </section>
-
-        <section className="p-6 bg-slate-900 rounded-2xl text-white space-y-4 relative overflow-hidden">
-           <div className="relative z-10">
-             <div className="flex items-center gap-3 mb-2">
-               <ShieldCheck className="w-5 h-5 text-blue-400" />
-               <h4 className="font-bold tracking-tight uppercase text-sm">Community Member</h4>
-             </div>
-             <p className="text-[10px] text-white/50 leading-relaxed font-medium uppercase tracking-tight">
-               Joined {new Date(currentUser.createdAt).toLocaleDateString()}. Thank you for being part of the 121 Wellness network.
-             </p>
-           </div>
         </section>
       </div>
 

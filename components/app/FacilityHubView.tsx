@@ -28,7 +28,8 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
   const hasPasses = facility.features?.includes('passes');
   const hasMemberships = facility.features?.includes('memberships');
   
-  const facilityTrainers = trainers.filter(t => t.facilityIds.includes(facility.id));
+  // USER REQUIREMENT: Filter out inactive trainers from the team list
+  const facilityTrainers = trainers.filter(t => t.facilityIds.includes(facility.id) && t.status === 'active');
 
   const handleModuleNavigation = (moduleId: string) => {
     switch (moduleId) {

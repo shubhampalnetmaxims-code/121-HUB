@@ -29,6 +29,12 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
 
   const filteredSlots = classSlots.filter(s => {
     if (s.facilityId !== id) return false;
+    
+    const parentClass = classes.find(c => c.id === s.classId);
+    // TRAINER LOGIC: If class is inactive, only show it IF it has bookings (already handled by slot existing, 
+    // but we check parent class status explicitly here to enforce the 'hidden if inactive unless booked' logic)
+    if (parentClass?.status === 'inactive' && s.currentBookings === 0) return false;
+
     if (classFilter !== 'all' && s.classId !== classFilter) return false;
     if (staffFilter !== 'all' && s.trainerId !== staffFilter) return false;
     return true;
@@ -77,7 +83,8 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
                 className="pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none appearance-none"
               >
                 <option value="all">All Classes</option>
-                {classes.filter(c => c.facilityId === id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {/* Note: Trainers can see even inactive classes if they are filtering, but generally active only in dropdown */}
+                {classes.filter(c => c.facilityId === id).map(c => <option key={c.id} value={c.id}>{c.name} {c.status === 'inactive' ? '(Inactive)' : ''}</option>)}
               </select>
               <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 rotate-90" />
            </div>
@@ -96,7 +103,6 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto pb-32">
-        {/* Date Range Selector Card */}
         <div className="p-4">
            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -119,7 +125,6 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
            </div>
         </div>
 
-        {/* Timetable Loop */}
         <div className="px-4 space-y-4">
           {displayedDates.map(date => {
             const dayIdx = date.getDay();
@@ -127,14 +132,12 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
             
             return (
               <div key={date.toISOString()} className="bg-white rounded-[28px] border border-slate-100 shadow-sm overflow-hidden flex min-h-[160px]">
-                {/* Red Left Gutter */}
                 <div className="w-14 bg-red-600 flex items-center justify-center relative overflow-hidden shrink-0">
                   <span className="text-white font-black text-xs uppercase tracking-[0.3em] whitespace-nowrap -rotate-90">
                     {DAYS_OF_WEEK[dayIdx].substr(0, 3)} {date.getDate()}
                   </span>
                 </div>
 
-                {/* Slot Content */}
                 <div className="flex-1 p-5 flex flex-col justify-center">
                   {daySlots.length > 0 ? (
                     <div className="space-y-4">
@@ -148,16 +151,19 @@ const TrainerTimetableView: React.FC<TrainerTimetableViewProps> = ({
                           <div 
                             key={slot.id} 
                             onClick={() => navigate(`/trainer/slot/${slot.id}`)}
-                            className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 space-y-3 active:scale-[0.98] transition-all"
+                            className={`p-4 rounded-2xl border border-slate-100 space-y-3 active:scale-[0.98] transition-all ${slotCls?.status === 'inactive' ? 'bg-amber-50/50 grayscale-[0.3]' : 'bg-slate-50/50'}`}
                           >
                              <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-2">
-                                   <div className="w-2 h-2 rounded-full bg-orange-500 shadow-sm" />
+                                   <div className={`w-2 h-2 rounded-full shadow-sm ${slotCls?.status === 'inactive' ? 'bg-slate-400' : 'bg-orange-500'}`} />
                                    <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight truncate max-w-[120px]">{slotCls?.name}</h4>
                                 </div>
                                 <div className="flex flex-col items-end gap-1">
                                   {isMyShift && (
                                     <span className="px-1.5 py-0.5 bg-blue-600 text-white rounded text-[7px] font-black uppercase tracking-widest">My Shift</span>
+                                  )}
+                                  {slotCls?.status === 'inactive' && (
+                                    <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded text-[7px] font-black uppercase tracking-widest">Inactive Class</span>
                                   )}
                                 </div>
                              </div>
