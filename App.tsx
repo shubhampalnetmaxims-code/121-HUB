@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_TICKETS } from './types';
 import LandingPage from './components/LandingPage';
@@ -11,6 +11,29 @@ import { NotificationProvider, useNotifications } from './components/Notificatio
 import { Layout, ShieldCheck, UserCircle } from 'lucide-react';
 
 const STORAGE_PREFIX = '121fit_v2_';
+
+// Robust hydration helper defined outside to be used in lazy initializers
+const safeHydrate = <T,>(key: string, fallback: T): T => {
+  try {
+    const stored = localStorage.getItem(STORAGE_PREFIX + key);
+    if (!stored || stored === 'undefined' || stored === 'null') return fallback;
+    
+    const parsed = JSON.parse(stored);
+    
+    // If we expect an array and it has data, but the stored one is empty, 
+    // it's likely a fresh install/deploy, so we prefer the fallback dummy data.
+    if (Array.isArray(fallback) && fallback.length > 0) {
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        return fallback;
+      }
+    }
+    
+    return (parsed !== null && parsed !== undefined) ? parsed : fallback;
+  } catch (e) {
+    console.error(`Failed to hydrate ${key}:`, e);
+    return fallback;
+  }
+};
 
 const GlobalHeader: React.FC = () => {
   const location = useLocation();
@@ -59,46 +82,43 @@ const GlobalHeader: React.FC = () => {
 const AppContent: React.FC = () => {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [trainers, setTrainers] = useState<Trainer[]>([]);
-  const [locations, setLocations] = useState<StaffLocation[]>([]);
-  const [classSlots, setClassSlots] = useState<ClassSlot[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [passes, setPasses] = useState<Pass[]>([]);
-  const [userPasses, setUserPasses] = useState<UserPass[]>([]);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [userMemberships, setUserMemberships] = useState<UserMembership[]>([]);
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [blockBookings, setBlockBookings] = useState<BlockBooking[]>([]);
-  const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>([]);
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
-  const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>([]);
-  const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>([]);
-  const [rewardSettings, setRewardSettings] = useState<RewardSettings>(DEFAULT_REWARD_SETTINGS);
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentTrainer, setCurrentTrainer] = useState<Trainer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const safeHydrate = <T,>(key: string, fallback: T): T => {
-    try {
-      const stored = localStorage.getItem(STORAGE_PREFIX + key);
-      if (!stored || stored === 'undefined' || stored === 'null') return fallback;
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(fallback) && fallback.length > 0 && Array.isArray(parsed) && parsed.length === 0) {
-        return fallback;
-      }
-      return (parsed !== null && parsed !== undefined) ? parsed : fallback;
-    } catch (e) {
-      console.error(`Failed to hydrate ${key}:`, e);
-      return fallback;
-    }
-  };
+  // Lazy state initialization: Run safeHydrate immediately during state creation
+  const [facilities, setFacilities] = useState<Facility[]>(() => safeHydrate('facilities', DEFAULT_FACILITIES));
+  const [classes, setClasses] = useState<Class[]>(() => safeHydrate('classes', DEFAULT_CLASSES));
+  const [trainers, setTrainers] = useState<Trainer[]>(() => safeHydrate('trainers', DEFAULT_TRAINERS));
+  const [locations, setLocations] = useState<StaffLocation[]>(() => safeHydrate('locations', DEFAULT_LOCATIONS));
+  const [classSlots, setClassSlots] = useState<ClassSlot[]>(() => safeHydrate('slots', DEFAULT_CLASS_SLOTS));
+  const [products, setProducts] = useState<Product[]>(() => safeHydrate('products', DEFAULT_PRODUCTS));
+  const [users, setUsers] = useState<User[]>(() => safeHydrate('users', DEFAULT_USERS));
+  const [bookings, setBookings] = useState<Booking[]>(() => safeHydrate('bookings', DEFAULT_BOOKINGS));
+  const [cart, setCart] = useState<CartItem[]>(() => safeHydrate('cart', []));
+  const [orders, setOrders] = useState<Order[]>(() => safeHydrate('orders', DEFAULT_ORDERS));
+  const [passes, setPasses] = useState<Pass[]>(() => safeHydrate('passes', DEFAULT_PASSES));
+  const [userPasses, setUserPasses] = useState<UserPass[]>(() => safeHydrate('user_passes', DEFAULT_USER_PASSES));
+  const [memberships, setMemberships] = useState<Membership[]>(() => safeHydrate('memberships', DEFAULT_MEMBERSHIPS));
+  const [userMemberships, setUserMemberships] = useState<UserMembership[]>(() => safeHydrate('user_memberships', DEFAULT_USER_MEMBERSHIPS));
+  const [blocks, setBlocks] = useState<Block[]>(() => safeHydrate('blocks', DEFAULT_BLOCKS));
+  const [blockBookings, setBlockBookings] = useState<BlockBooking[]>(() => safeHydrate('block_bookings', DEFAULT_BLOCK_BOOKINGS));
+  const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>(() => safeHydrate('block_payments', []));
+  const [measurements, setMeasurements] = useState<Measurement[]>(() => safeHydrate('measurements', DEFAULT_MEASUREMENTS));
+  const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>(() => safeHydrate('photo_logs', DEFAULT_PHOTO_LOGS));
+  const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>(() => safeHydrate('reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
+  const [rewardSettings, setRewardSettings] = useState<RewardSettings>(() => safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => safeHydrate('tickets', DEFAULT_TICKETS));
+  
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = safeHydrate('current_user', null);
+    return saved || DEFAULT_USERS[0];
+  });
+  
+  const [currentTrainer, setCurrentTrainer] = useState<Trainer | null>(() => safeHydrate('current_trainer', null));
+  const [isReady, setIsReady] = useState(false);
+
+  // Mark system as ready once initial render is handled
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
 
   const handleResetSystem = () => {
     if (window.confirm("Are you sure? This will wipe all current changes and restore the original dummy data.")) {
@@ -109,67 +129,27 @@ const AppContent: React.FC = () => {
     }
   };
 
+  // Effect to persist data to localStorage whenever any state changes
   useEffect(() => {
-    setFacilities(safeHydrate('facilities', DEFAULT_FACILITIES));
-    setClasses(safeHydrate('classes', DEFAULT_CLASSES));
-    setTrainers(safeHydrate('trainers', DEFAULT_TRAINERS));
-    setLocations(safeHydrate('locations', DEFAULT_LOCATIONS));
-    setClassSlots(safeHydrate('slots', DEFAULT_CLASS_SLOTS));
-    setProducts(safeHydrate('products', DEFAULT_PRODUCTS));
-    setUsers(safeHydrate('users', DEFAULT_USERS));
-    setBookings(safeHydrate('bookings', DEFAULT_BOOKINGS));
-    setCart(safeHydrate('cart', []));
-    setOrders(safeHydrate('orders', DEFAULT_ORDERS));
-    setPasses(safeHydrate('passes', DEFAULT_PASSES));
-    setUserPasses(safeHydrate('user_passes', DEFAULT_USER_PASSES));
-    setMemberships(safeHydrate('memberships', DEFAULT_MEMBERSHIPS));
-    setUserMemberships(safeHydrate('user_memberships', DEFAULT_USER_MEMBERSHIPS));
-    setBlocks(safeHydrate('blocks', DEFAULT_BLOCKS));
-    setBlockBookings(safeHydrate('block_bookings', DEFAULT_BLOCK_BOOKINGS));
-    setBlockPayments(safeHydrate('block_payments', []));
-    setMeasurements(safeHydrate('measurements', DEFAULT_MEASUREMENTS));
-    setPhotoLogs(safeHydrate('photo_logs', DEFAULT_PHOTO_LOGS));
-    setRewardTransactions(safeHydrate('reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
-    setRewardSettings(safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
-    setTickets(safeHydrate('tickets', DEFAULT_TICKETS));
-    
-    const savedUser = safeHydrate('current_user', null);
-    setCurrentUser(savedUser || DEFAULT_USERS[0]); 
-    
-    setCurrentTrainer(safeHydrate('current_trainer', null));
-    setIsLoading(false);
-  }, []);
+    if (!isReady) return;
 
-  useEffect(() => {
-    if (!isLoading && facilities.length > 0) {
-      localStorage.setItem(STORAGE_PREFIX + 'facilities', JSON.stringify(facilities));
-      localStorage.setItem(STORAGE_PREFIX + 'classes', JSON.stringify(classes));
-      localStorage.setItem(STORAGE_PREFIX + 'trainers', JSON.stringify(trainers));
-      localStorage.setItem(STORAGE_PREFIX + 'locations', JSON.stringify(locations));
-      localStorage.setItem(STORAGE_PREFIX + 'slots', JSON.stringify(classSlots));
-      localStorage.setItem(STORAGE_PREFIX + 'products', JSON.stringify(products));
-      localStorage.setItem(STORAGE_PREFIX + 'users', JSON.stringify(users));
-      localStorage.setItem(STORAGE_PREFIX + 'bookings', JSON.stringify(bookings));
-      localStorage.setItem(STORAGE_PREFIX + 'cart', JSON.stringify(cart));
-      localStorage.setItem(STORAGE_PREFIX + 'orders', JSON.stringify(orders));
-      localStorage.setItem(STORAGE_PREFIX + 'passes', JSON.stringify(passes));
-      localStorage.setItem(STORAGE_PREFIX + 'user_passes', JSON.stringify(userPasses));
-      localStorage.setItem(STORAGE_PREFIX + 'memberships', JSON.stringify(memberships));
-      localStorage.setItem(STORAGE_PREFIX + 'user_memberships', JSON.stringify(userMemberships));
-      localStorage.setItem(STORAGE_PREFIX + 'blocks', JSON.stringify(blocks));
-      localStorage.setItem(STORAGE_PREFIX + 'block_bookings', JSON.stringify(blockBookings));
-      localStorage.setItem(STORAGE_PREFIX + 'block_payments', JSON.stringify(blockPayments));
-      localStorage.setItem(STORAGE_PREFIX + 'measurements', JSON.stringify(measurements));
-      localStorage.setItem(STORAGE_PREFIX + 'photo_logs', JSON.stringify(photoLogs));
-      localStorage.setItem(STORAGE_PREFIX + 'reward_transactions', JSON.stringify(rewardTransactions));
-      localStorage.setItem(STORAGE_PREFIX + 'reward_settings', JSON.stringify(rewardSettings));
-      localStorage.setItem(STORAGE_PREFIX + 'tickets', JSON.stringify(tickets));
-      if (currentUser) localStorage.setItem(STORAGE_PREFIX + 'current_user', JSON.stringify(currentUser));
-      else localStorage.removeItem(STORAGE_PREFIX + 'current_user');
-      if (currentTrainer) localStorage.setItem(STORAGE_PREFIX + 'current_trainer', JSON.stringify(currentTrainer));
-      else localStorage.removeItem(STORAGE_PREFIX + 'current_trainer');
-    }
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, tickets, currentUser, currentTrainer, isLoading]);
+    const dataToStore: Record<string, any> = {
+      facilities, classes, trainers, locations, slots: classSlots, products,
+      users, bookings, cart, orders, passes, user_passes: userPasses,
+      memberships, user_memberships: userMemberships, blocks, block_bookings: blockBookings,
+      block_payments: blockPayments, measurements, photo_logs: photoLogs,
+      reward_transactions: rewardTransactions, reward_settings: rewardSettings, tickets,
+      current_user: currentUser, current_trainer: currentTrainer
+    };
+
+    Object.entries(dataToStore).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+      } else {
+        localStorage.removeItem(STORAGE_PREFIX + key);
+      }
+    });
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, tickets, currentUser, currentTrainer, isReady]);
 
   const onAddTicket = (t: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>, initialMessage: string) => {
     const newTicket: SupportTicket = {
@@ -336,8 +316,6 @@ const AppContent: React.FC = () => {
     setUsers(prev => [...prev, newUser]);
     setCurrentUser(newUser);
   };
-
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center font-semibold text-slate-400">Loading...</div>;
 
   return (
     <HashRouter>
