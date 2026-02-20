@@ -1,18 +1,34 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Lock, User, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, User, ArrowRight, Mail } from 'lucide-react';
 import { useToast } from './ToastContext';
+import { AdminUser } from '../types';
 
-const AdminLogin: React.FC = () => {
+interface AdminLoginProps {
+  adminUsers: AdminUser[];
+  onLogin: (admin: AdminUser) => void;
+}
+
+const AdminLogin: React.FC<AdminLoginProps> = ({ adminUsers, onLogin }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
+    const admin = adminUsers.find(u => 
+      (u.username === identifier || u.email === identifier) && 
+      u.password === password
+    );
+    
+    if (admin) {
+      if (admin.status === 'suspended') {
+        showToast('Account suspended. Contact system administrator.', 'error');
+        return;
+      }
+      onLogin(admin);
       showToast('Admin session authorized', 'success');
       navigate('/admin');
     } else {
@@ -23,7 +39,7 @@ const AdminLogin: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg p-10 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-lg p-10 shadow-sm border border-slate-200 text-left">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 bg-blue-600 text-white rounded-lg flex items-center justify-center mb-4 shadow-sm">
               <ShieldCheck className="w-8 h-8" />
@@ -34,15 +50,16 @@ const AdminLogin: React.FC = () => {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Username</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Institutional Email or Handle</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-3.5 pl-12 pr-4 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-medium"
-                  placeholder="admin"
+                  placeholder="admin@121fit.com"
                 />
               </div>
             </div>
@@ -53,6 +70,7 @@ const AdminLogin: React.FC = () => {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="password"
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-md py-3.5 pl-12 pr-4 focus:ring-1 focus:ring-blue-500 outline-none transition-all font-medium"
@@ -70,6 +88,15 @@ const AdminLogin: React.FC = () => {
             </button>
           </form>
           
+          <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-left">
+             <p className="text-[10px] font-black text-blue-600 uppercase mb-2">Prototype Access Codes</p>
+             <div className="space-y-1 text-[9px] font-bold text-slate-500 uppercase">
+                <p>Master: <span className="text-blue-900">admin@121fit.com / admin</span></p>
+                <p>Gym Mgr: <span className="text-blue-900">gym.manager@121fit.com / password</span></p>
+                <p>Fitness Mgr: <span className="text-blue-900">fitness.mgr@121fit.com / password</span></p>
+             </div>
+          </div>
+
           <button 
             onClick={() => navigate('/')}
             className="w-full mt-6 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors"

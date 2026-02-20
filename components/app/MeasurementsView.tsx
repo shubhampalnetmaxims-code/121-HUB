@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Plus, History, Activity, Scale, Ruler, User as UserIcon, Calendar, Check } from 'lucide-react';
+import { ChevronLeft, Plus, History, Activity, Scale, Ruler, User as UserIcon, Calendar, Check, TrendingUp, Info } from 'lucide-react';
 import { User, Measurement } from '../../types';
 import { useToast } from '../ToastContext';
 
@@ -10,6 +11,55 @@ interface MeasurementsViewProps {
   onAddMeasurement: (m: Omit<Measurement, 'id'>) => void;
   onAuthTrigger: () => void;
 }
+
+const SimpleLineChart = ({ data, color, height = 100 }: { data: number[], color: string, height?: number }) => {
+  if (data.length < 2) return <div className="h-full flex items-center justify-center text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Insufficient data for trend</div>;
+
+  const min = Math.min(...data) * 0.95;
+  const max = Math.max(...data) * 1.05;
+  const range = max - min;
+  const width = 300;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const areaPoints = `0,${height} ${points} ${width},${height}`;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={`grad-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.2 }} />
+          <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
+        </linearGradient>
+      </defs>
+      <path d={areaPoints} fill={`url(#grad-${color})`} />
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+        className="drop-shadow-sm"
+      />
+      {data.map((val, i) => (
+        <circle 
+          key={i} 
+          cx={(i / (data.length - 1)) * width} 
+          cy={height - ((val - min) / range) * height} 
+          r="4" 
+          fill="white" 
+          stroke={color} 
+          strokeWidth="2" 
+        />
+      ))}
+    </svg>
+  );
+};
 
 const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measurements, onAddMeasurement, onAuthTrigger }) => {
   const navigate = useNavigate();
@@ -42,8 +92,16 @@ const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measur
     );
   }
 
-  const userMeasurements = measurements.filter(m => m.userId === currentUser.id).sort((a, b) => b.date - a.date);
-  const latest = userMeasurements[0];
+  const userMeasurements = useMemo(() => 
+    measurements.filter(m => m.userId === currentUser.id).sort((a, b) => a.date - b.date),
+    [measurements, currentUser.id]
+  );
+  
+  const historyList = [...userMeasurements].reverse();
+  const latest = historyList[0];
+
+  const weightTrend = useMemo(() => userMeasurements.map(m => m.weight), [userMeasurements]);
+  const bmiTrend = useMemo(() => userMeasurements.map(m => m.bmi), [userMeasurements]);
 
   const calculateBMI = (w: number, h: number) => {
     const heightInMeters = h / 100;
@@ -51,7 +109,6 @@ const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measur
   };
 
   const calculateBodyFat = (waist: number, weight: number, gender: string) => {
-    // Simple Navy SEAL formula approximation for demo
     if (!waist) return undefined;
     const factor = gender.toLowerCase() === 'male' ? 0.45 : 0.55;
     return parseFloat(((waist / weight) * 100 * factor).toFixed(1));
@@ -70,6 +127,7 @@ const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measur
       leanBodyMass: bodyFat ? formData.weight * (1 - bodyFat/100) : undefined
     });
     setIsLogging(false);
+    showToast('Measurement logged', 'success');
   };
 
   if (isLogging) {
@@ -116,7 +174,7 @@ const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measur
               <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">Log History</h2>
            </div>
            <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-hide pb-32">
-              {userMeasurements.map(m => (
+              {historyList.map(m => (
                  <div key={m.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-4">
                     <div className="flex justify-between items-center border-b border-slate-50 pb-4">
                        <div className="flex items-center gap-2">
@@ -154,6 +212,42 @@ const MeasurementsView: React.FC<MeasurementsViewProps> = ({ currentUser, measur
       <div className="flex-1 overflow-y-auto p-5 space-y-6 pb-32 scrollbar-hide">
         {latest ? (
           <>
+            {/* Interactive Progress Chart */}
+            <section className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm space-y-8">
+               <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Progress Analytics</h3>
+                    <p className="text-lg font-black text-slate-900 uppercase tracking-tight">Weight Trend</p>
+                  </div>
+                  <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100">
+                    <TrendingUp className="w-3 h-3 text-blue-600" />
+                    <span className="text-[10px] font-black text-blue-600 uppercase">Last {weightTrend.length} Logs</span>
+                  </div>
+               </div>
+               
+               <div className="h-32 w-full relative group">
+                  <SimpleLineChart data={weightTrend} color="#2563eb" />
+                  <div className="absolute inset-x-0 bottom-[-20px] flex justify-between px-1">
+                    <span className="text-[8px] font-black text-slate-300 uppercase">Start</span>
+                    <span className="text-[8px] font-black text-blue-600 uppercase">Current</span>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Weight Change</p>
+                    <p className={`font-black text-lg ${weightTrend[weightTrend.length - 1] < weightTrend[0] ? 'text-green-600' : 'text-slate-900'}`}>
+                      {weightTrend[weightTrend.length - 1] - weightTrend[0] > 0 ? '+' : ''}
+                      {(weightTrend[weightTrend.length - 1] - weightTrend[0]).toFixed(1)}kg
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">BMI Trend</p>
+                    <p className="font-black text-lg text-blue-600">{bmiTrend[bmiTrend.length - 1]}</p>
+                  </div>
+               </div>
+            </section>
+
             <section className="bg-slate-900 rounded-[40px] p-8 text-white space-y-8 relative overflow-hidden shadow-2xl">
                <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">

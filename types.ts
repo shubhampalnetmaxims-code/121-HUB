@@ -1,3 +1,4 @@
+
 export interface TicketMessage {
   id: string;
   senderId: string;
@@ -17,6 +18,32 @@ export interface SupportTicket {
   createdAt: number;
   updatedAt: number;
   messages: TicketMessage[];
+}
+
+export type AdminPermission = 
+  | 'manage_facilities' 
+  | 'manage_curriculum' 
+  | 'manage_staff' 
+  | 'manage_users' 
+  | 'manage_timetable' 
+  | 'manage_marketplace' 
+  | 'manage_finance' 
+  | 'manage_operations' 
+  | 'manage_rewards' 
+  | 'manage_support' 
+  | 'manage_admin_staff'
+  | 'super_admin';
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  password?: string;
+  permissions: AdminPermission[];
+  assignedFacilityId?: string; // If set, user is restricted to this hub only
+  createdAt: number;
+  status: 'active' | 'suspended';
 }
 
 export interface Facility {
@@ -517,6 +544,41 @@ export const DEFAULT_USERS: User[] = [
   { id: 'u-lara', email: 'lara@test.com', fullName: 'lara@test.com', phone: '+1 555-0404', gender: 'Female', paymentMethod: 'added', status: 'blocked', createdAt: Date.now(), paymentCards: [], rewardPoints: 300, location: 'London, UK' }
 ];
 
+export const DEFAULT_ADMINS: AdminUser[] = [
+  {
+    id: 'adm-1',
+    name: 'Master Admin',
+    email: 'admin@121fit.com',
+    username: 'admin',
+    password: 'admin',
+    permissions: ['super_admin'],
+    createdAt: Date.now(),
+    status: 'active'
+  },
+  {
+    id: 'adm-gym-mgr',
+    name: 'Hub Manager (121 Gym)',
+    email: 'gym.manager@121fit.com',
+    username: 'hub_mgr',
+    password: 'password',
+    permissions: ['manage_curriculum', 'manage_timetable', 'manage_marketplace', 'manage_finance', 'manage_operations', 'manage_staff', 'manage_users'],
+    assignedFacilityId: '1', // Restricted to 121 Gym
+    createdAt: Date.now(),
+    status: 'active'
+  },
+  {
+    id: 'adm-fit-mgr',
+    name: 'Hub Manager (121 Fitness)',
+    email: 'fitness.mgr@121fit.com',
+    username: 'fitness_mgr',
+    password: 'password',
+    permissions: ['manage_curriculum', 'manage_timetable', 'manage_marketplace', 'manage_finance', 'manage_operations', 'manage_staff', 'manage_users'],
+    assignedFacilityId: '2', // Restricted to 121 Fitness
+    createdAt: Date.now(),
+    status: 'active'
+  }
+];
+
 export const DEFAULT_TRAINERS: Trainer[] = [
   { id: 't-rahul', name: 'Rahul Verma', email: 'rahul.verma@121fit.com', phone: '9876543210', facilityIds: ['1', '2', '3'], colorCode: '#FF6B6B', createdAt: Date.now(), isFirstLogin: false, description: 'Master of high intensity and heavy compound lifting.', speciality: 'HIIT, Strength Training', experience: '8 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: true, canReschedule: true, canTransfer: true } },
   { id: 't-ankit', name: 'Ankit Sharma', email: 'ankit.sharma@121fit.com', phone: '9876543221', facilityIds: ['2'], colorCode: '#4ECDC4', createdAt: Date.now(), isFirstLogin: false, description: 'Dance fitness expert and group cardio specialist.', speciality: 'Zumba, Cardio Blast', experience: '5 Years', status: 'active', appAccess: 'allowed', permissions: { canCancel: false, canReschedule: true, canTransfer: false } },
@@ -530,7 +592,7 @@ export const DEFAULT_CLASSES: Class[] = [
   { id: 'c-hiit', facilityId: '1', name: 'HIIT Workout', shortDescription: 'Explosive interval training for rapid fat burn.', duration: '45 mins', requirements: 'Towel', level: 'Expert', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop', pricePerSession: 20, status: 'active', createdAt: Date.now() },
   { id: 'c-boxing', facilityId: '1', name: 'Pro Boxing', shortDescription: 'Heavy bag drills and tactical footwork for combat.', duration: '1 hour', requirements: 'Gloves', level: 'Intermediate', imageUrl: 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?q=80&w=600&auto=format&fit=crop', pricePerSession: 30, status: 'active', createdAt: Date.now() },
   { id: 'c-zumba', facilityId: '2', name: 'Zumba', shortDescription: 'High energy dance fitness to popular rhythms.', duration: '1 hour', requirements: 'Comfortable footwear', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1524594152303-9fd13543fe6e?q=80&w=600&auto=format&fit=crop', pricePerSession: 15, status: 'active', createdAt: Date.now() },
-  { id: 'c-pilates', facilityId: '2', name: 'Power Pilates', shortDescription: 'Core stabilization and flexibility sequences.', duration: '45 mins', requirements: 'Grip socks', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1518611012118-2969c6a2c7a7?q=80&w=600&auto=format&fit=crop', pricePerSession: 22, status: 'active', createdAt: Date.now() },
+  { id: 'c-pilates', facilityId: '2', name: 'Power Pilates', shortDescription: 'Core stabilization and flexibility sequences.', duration: '45 mins', requirements: 'Grip socks', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1518611012118-2969c6a2c7a7?q=80&w=1000&auto=format&fit=crop', pricePerSession: 22, status: 'active', createdAt: Date.now() },
   { id: 'c-pt-121', facilityId: '2', name: 'Personal Training', shortDescription: 'One-on-one tailored fitness coaching.', duration: '1 hour', requirements: 'Comfortable clothing', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop', pricePerSession: 50, status: 'active', createdAt: Date.now() },
   { id: 'c-yoga', facilityId: '3', name: 'Yoga Flow', shortDescription: 'Vinyasa sequences to unite mind and body.', duration: '1.5 hours', requirements: 'Yoga Mat', level: 'All Levels', imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=1000&auto=format&fit=crop', pricePerSession: 35, status: 'active', createdAt: Date.now() },
   { id: 'c-meditation', facilityId: '3', name: 'Meditation', shortDescription: 'Guided sessions for stress reduction and focus.', duration: '1 hour', requirements: 'Silent mode phone', level: 'Beginner', imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=600&auto=format&fit=crop', pricePerSession: 25, status: 'active', createdAt: Date.now() }
@@ -647,10 +709,6 @@ export const DEFAULT_PASSES: Pass[] = [
   { id: 'pass-fit', facilityId: '2', name: 'Fitness Combo Pass', price: 90, credits: 8, personsPerBooking: 1, allowedClassIds: [], isAllClasses: true, description: 'Flexible entry for all Fitness hub classes.', quantity: 50, status: 'active', createdAt: Date.now() }
 ];
 
-export const DEFAULT_MEMBERSHIPS: Membership[] = [
-  { id: 'm-gym-monthly', facilityId: '1', title: '121 Gym Monthly', description: 'Unlimited premium gym floor access with 24/7 keycard.', price: 60, durationDays: 30, allow24Hour: true, daysOfWeek: [0,1,2,3,4,5,6], status: 'active', createdAt: Date.now() }
-];
-
 export const DEFAULT_BLOCKS: Block[] = [
   { id: 'b-hiit-4wk', facilityId: '1', trainerId: 't-rahul', name: 'HIIT 4 Week Block', about: 'Intense metabolic conditioning cycle.', expect: 'Fat loss and endurance improvements.', numWeeks: 4, daysOfWeek: [1,3,5], startDate: Date.now() + (86400000 * 2), startTime: '18:00', duration: '1 hour', maxPersons: 10, maxPersonsPerBooking: 1, paymentType: 'full', totalAmount: 150, status: 'active', createdAt: Date.now() },
   { id: 'b-boxing-101', facilityId: '1', trainerId: 't-aman', name: 'Boxing 101 Fundamentals', about: 'Core mechanics of professional boxing.', expect: 'Improved footwork and strike accuracy.', numWeeks: 8, daysOfWeek: [2,4], startDate: Date.now() - (86400000 * 10), startTime: '18:00', duration: '1.5 hours', maxPersons: 15, maxPersonsPerBooking: 2, paymentType: 'reserved', totalAmount: 240, reservedAmount: 50, status: 'active', createdAt: Date.now() },
@@ -737,6 +795,36 @@ export const DEFAULT_USER_PASSES: UserPass[] = [
   { id: 'up-lara-blocked', userId: 'u-lara', passId: 'pass-gym', facilityId: '1', name: 'Archived Gym Pass', totalCredits: 10, remainingCredits: 2, personsPerBooking: 1, isAllClasses: false, allowedClassIds: ['c-strength'], purchasedAt: Date.now() - (86400000 * 10), status: 'blocked', pricePaid: 120, paymentStatus: 'paid' }
 ];
 
+// Fix: Added missing DEFAULT_MEMBERSHIPS export to resolve import error in App.tsx.
+export const DEFAULT_MEMBERSHIPS: Membership[] = [
+  { 
+    id: 'm-gym-monthly', 
+    facilityId: '1', 
+    title: '121 Gym Monthly', 
+    description: 'Full access to gym floor and basic weights.', 
+    price: 60, 
+    durationDays: 30, 
+    allow24Hour: true, 
+    daysOfWeek: [0,1,2,3,4,5,6], 
+    status: 'active', 
+    createdAt: Date.now() 
+  },
+  { 
+    id: 'm-fit-pro', 
+    facilityId: '2', 
+    title: 'Fitness Pro', 
+    description: 'Unlimited classes and cardio zone access.', 
+    price: 45, 
+    durationDays: 30, 
+    allow24Hour: false, 
+    startTime: '06:00', 
+    endTime: '22:00', 
+    daysOfWeek: [1,2,3,4,5], 
+    status: 'active', 
+    createdAt: Date.now() 
+  }
+];
+
 export const DEFAULT_USER_MEMBERSHIPS: UserMembership[] = [
   { id: 'um-1', userId: 'u-shubham', membershipId: 'm-gym-monthly', facilityId: '1', title: '121 Gym Monthly', startDate: Date.now() - 86400000 * 15, endDate: Date.now() + 86400000 * 15, price: 60, allow24Hour: true, daysOfWeek: [0,1,2,3,4,5,6], status: 'active', purchasedAt: Date.now() - 86400000 * 15, paymentStatus: 'paid', autoRenew: true }
 ];
@@ -745,9 +833,8 @@ export const DEFAULT_MEASUREMENTS: Measurement[] = [
   { id: 'm-1', userId: 'u-shubham', date: Date.now() - 86400000 * 60, weight: 82, height: 175, age: 25, bmi: 26.8, bodyFatPercentage: 22, chest: 102, waist: 92, muscleMass: 42.5 }
 ];
 
-export const DEFAULT_PHOTO_LOGS: PhotoLog[] = [
-  { id: 'ph-1', userId: 'u-shubham', date: Date.now() - 86400000 * 60, imageUrl: 'https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop', note: 'Starting point.' }
-];
+// Fix: Added missing DEFAULT_PHOTO_LOGS export.
+export const DEFAULT_PHOTO_LOGS: PhotoLog[] = [];
 
 export const DEFAULT_TICKETS: SupportTicket[] = [
   {
@@ -764,51 +851,6 @@ export const DEFAULT_TICKETS: SupportTicket[] = [
       { id: 'm1', senderId: 'u-shubham', senderType: 'user', message: 'I am unable to reschedule my session for tomorrow in the 121 Gym hub.', createdAt: Date.now() - (86400000 * 2) },
       { id: 'm2', senderId: 'admin', senderType: 'admin', message: 'Hello Shubham, looking into this for you. Could you specify which session it is?', createdAt: Date.now() - (86400000 * 1.5) },
       { id: 'm2b', senderId: 'u-shubham', senderType: 'user', message: 'It is the Strength Training session at 7 AM.', createdAt: Date.now() - 3600000 }
-    ]
-  },
-  {
-    id: 'tk-102',
-    userId: 't-rahul',
-    userName: 'Rahul Verma',
-    userEmail: 'rahul.verma@121fit.com',
-    userType: 'trainer',
-    subject: 'Equipment Maintenance Request',
-    status: 'open',
-    createdAt: Date.now() - 7200000,
-    updatedAt: Date.now() - 7200000,
-    messages: [
-      { id: 'm3', senderId: 't-rahul', senderType: 'user', message: 'The squat rack in Area 1 needs urgent oiling and safety check.', createdAt: Date.now() - 7200000 }
-    ]
-  },
-  {
-    id: 'tk-103',
-    userId: 'u-neil',
-    userName: 'Neil Aldrin',
-    userEmail: 'neil@test.com',
-    userType: 'customer',
-    subject: 'Reward Points Sync',
-    status: 'resolved',
-    createdAt: Date.now() - (86400000 * 5),
-    updatedAt: Date.now() - (86400000 * 3),
-    messages: [
-      { id: 'm4', senderId: 'u-neil', senderType: 'user', message: 'My points from the last marketplace order are not showing in my wallet.', createdAt: Date.now() - (86400000 * 5) },
-      { id: 'm5', senderId: 'admin', senderType: 'admin', message: 'We have manually synced your account. You should see 50 points now.', createdAt: Date.now() - (86400000 * 4) },
-      { id: 'm6', senderId: 'u-neil', senderType: 'user', message: 'Confirmed. Thank you for the quick help!', createdAt: Date.now() - (86400000 * 3) }
-    ]
-  },
-  {
-    id: 'tk-104',
-    userId: 't-sneha',
-    userName: 'Sneha Kapoor',
-    userEmail: 'sneha.kapoor@121fit.com',
-    userType: 'trainer',
-    subject: 'Shift Swap Protocol',
-    status: 'replied',
-    createdAt: Date.now() - 86400000,
-    updatedAt: Date.now() - 43200000,
-    messages: [
-      { id: 'm7', senderId: 't-sneha', senderType: 'user', message: 'Can I swap my Friday session with Rahul? He has agreed.', createdAt: Date.now() - 86400000 },
-      { id: 'm8', senderId: 'admin', senderType: 'admin', message: 'Please use the Shift Transfer Proxy in your Trainer App under Permissions to initiate the swap request formally.', createdAt: Date.now() - 43200000 }
     ]
   }
 ];

@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_TICKETS } from './types';
+// Fix: Added missing AdminUser and DEFAULT_ADMINS imports from types to support admin management.
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, AdminUser, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_TICKETS, DEFAULT_ADMINS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -107,6 +109,10 @@ const AppContent: React.FC = () => {
   const [rewardSettings, setRewardSettings] = useState<RewardSettings>(() => safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
   const [tickets, setTickets] = useState<SupportTicket[]>(() => safeHydrate('tickets', DEFAULT_TICKETS));
   
+  // Initialized admin state to satisfy AdminPanel and login requirements.
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => safeHydrate('admin_users', DEFAULT_ADMINS));
+  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(() => safeHydrate('current_admin', null));
+  
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = safeHydrate('current_user', null);
     return saved || DEFAULT_USERS[0];
@@ -139,7 +145,8 @@ const AppContent: React.FC = () => {
       memberships, user_memberships: userMemberships, blocks, block_bookings: blockBookings,
       block_payments: blockPayments, measurements, photo_logs: photoLogs,
       reward_transactions: rewardTransactions, reward_settings: rewardSettings, tickets,
-      current_user: currentUser, current_trainer: currentTrainer
+      current_user: currentUser, current_trainer: currentTrainer,
+      admin_users: adminUsers, current_admin: currentAdmin
     };
 
     Object.entries(dataToStore).forEach(([key, value]) => {
@@ -149,7 +156,28 @@ const AppContent: React.FC = () => {
         localStorage.removeItem(STORAGE_PREFIX + key);
       }
     });
-  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, tickets, currentUser, currentTrainer, isReady]);
+  }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, tickets, currentUser, currentTrainer, adminUsers, currentAdmin, isReady]);
+
+  const onAddAdmin = (adm: Omit<AdminUser, 'id' | 'createdAt' | 'status'>) => {
+    const newAdmin: AdminUser = {
+      ...adm,
+      id: Math.random().toString(36).substr(2, 9),
+      createdAt: Date.now(),
+      status: 'active'
+    };
+    setAdminUsers(prev => [...prev, newAdmin]);
+    showToast('Admin staff enrolled successfully', 'success');
+  };
+
+  const onUpdateAdmin = (id: string, updates: Partial<AdminUser>) => {
+    setAdminUsers(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    if (currentAdmin?.id === id) setCurrentAdmin(prev => prev ? { ...prev, ...updates } : null);
+  };
+
+  const onDeleteAdmin = (id: string) => {
+    setAdminUsers(prev => prev.filter(a => a.id !== id));
+    showToast('Admin staff removed', 'info');
+  };
 
   const onAddTicket = (t: Omit<SupportTicket, 'id' | 'createdAt' | 'updatedAt' | 'messages'>, initialMessage: string) => {
     const newTicket: SupportTicket = {
@@ -355,9 +383,15 @@ const AppContent: React.FC = () => {
               tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket}
             />
           } />
-          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-login" element={<AdminLogin adminUsers={adminUsers} onLogin={setCurrentAdmin} />} />
           <Route path="/admin/*" element={
             <AdminPanel 
+              currentAdmin={currentAdmin}
+              adminUsers={adminUsers}
+              onAddAdmin={onAddAdmin}
+              onUpdateAdmin={onUpdateAdmin}
+              onDeleteAdmin={onDeleteAdmin}
+              
               facilities={facilities} onAdd={addFacility} onUpdate={updateFacility} onDelete={deleteFacility}
               classes={classes} onAddClass={addClass} onUpdateClass={updateClass} onDeleteClass={deleteClass}
               trainers={trainers} onAddTrainer={(t) => setTrainers(p => [...p, { ...t, id: Math.random().toString(36).substr(2,9), createdAt: Date.now(), isFirstLogin: true, password: '', speciality: '', experience: '' }])}

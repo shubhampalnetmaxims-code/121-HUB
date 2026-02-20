@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock } from 'lucide-react';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock, Building } from 'lucide-react';
 import { Facility, FEATURE_MODULES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
 import { useToast } from '../ToastContext';
@@ -13,16 +14,17 @@ interface FacilityDetailViewProps {
   facilities: Facility[];
   onUpdate: (id: string, updates: Partial<Facility>) => void;
   onOpenSidebar: () => void;
+  isRestricted?: boolean;
 }
 
-const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onUpdate, onOpenSidebar }) => {
+const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onUpdate, onOpenSidebar, isRestricted }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const facility = facilities.find(f => f.id === id);
+  const facility = facilities.find(f => f.id === id) || facilities[0];
   
   // Local state for batch saving
   const [localFeatures, setLocalFeatures] = useState<string[]>([]);
@@ -146,11 +148,11 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
     parentEnabled?: boolean
   }) => (
     <div className={`p-6 rounded-lg border transition-all flex items-center justify-between ${!parentEnabled ? 'opacity-40 grayscale pointer-events-none bg-slate-50' : active ? 'border-blue-600 bg-blue-50/20' : 'border-slate-100 bg-white'}`}>
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-5 text-left">
         <div className={`p-3.5 rounded-md ${active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
           <Icon className="w-5 h-5" />
         </div>
-        <div className="text-left">
+        <div>
           <div className="flex items-center gap-2">
             <p className="font-bold text-base text-slate-900 leading-none mb-1 uppercase tracking-tight">{label}</p>
             {!parentEnabled && <Lock className="w-3 h-3 text-slate-400" />}
@@ -175,12 +177,15 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
           <button onClick={onOpenSidebar} className="lg:hidden p-2 -ml-2 hover:bg-slate-100 rounded-md">
             <Menu className="w-6 h-6" />
           </button>
-          <button onClick={() => navigate('/admin')} className="p-2.5 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-slate-900">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          {!isRestricted && (
+            <button onClick={() => navigate('/admin')} className="p-2.5 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-slate-900">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
         </div>
         <div className="text-left flex-1">
           <div className="flex items-center gap-3">
+            {isRestricted && <Building className="w-8 h-8 text-blue-600" />}
             <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">{facility.name}</h2>
             <button 
               onClick={() => setIsEditModalOpen(true)}
@@ -189,7 +194,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
               <Edit3 className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">Platform Hub Configuration</p>
+          <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">{isRestricted ? "Authorized Institutional Control" : "Platform Hub Configuration"}</p>
         </div>
       </div>
 
@@ -252,7 +257,7 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
                   key={module.id} 
                   className={`flex items-center justify-between p-4 rounded-lg border transition-all ${isEnabled ? 'border-blue-600 bg-blue-50/10' : 'border-slate-50 hover:border-slate-100 bg-slate-50/30'}`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 text-left">
                     <div className={`p-3 rounded-md ${isEnabled ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-300'}`}>
                       <ModuleIcon className="w-5 h-5" />
                     </div>
