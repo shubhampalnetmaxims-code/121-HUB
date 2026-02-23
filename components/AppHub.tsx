@@ -176,8 +176,9 @@ const AppHub: React.FC<AppHubProps> = ({
             <Route path="facility/:id/memberships" element={<MembershipListView facilities={facilities} memberships={memberships} onBuyMembership={onBuyMembership} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onUpdateUser={onUpdateUser} />} />
             <Route path="facility/:id/blocks" element={<BlockListView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} />} />
             <Route path="facility/:id/block/:blockId" element={<BlockDetailView facilities={facilities} blocks={blocks} trainers={trainers} onAuthTrigger={handleAuthTrigger} currentUser={currentUser} onBookBlock={onBookBlock} onUpdateUser={onUpdateUser} rewardSettings={rewardSettings} onRedeemPoints={onRedeemPoints} />} />
-            {/* Fix: Added route for support page in member app */}
+            {/* 
             <Route path="support" element={<SupportView currentUser={currentUser} userType="customer" tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket} />} />
+            */}
             <Route 
               path="facility/:id/timetable" 
               element={

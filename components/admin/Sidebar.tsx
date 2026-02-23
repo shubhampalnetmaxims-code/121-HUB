@@ -92,10 +92,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentAdmin }) => {
           <SidebarItem to="/admin/blocks" icon={Layers} label="Blocks" permission="manage_finance" currentAdmin={currentAdmin} onClick={onClose} />
           <SidebarItem to="/admin/bookings-orders" icon={ClipboardList} label="Booking & Orders" permission="manage_operations" currentAdmin={currentAdmin} onClick={onClose} />
           <SidebarItem to="/admin/rewards" icon={Gift} label="Rewards" permission="manage_rewards" currentAdmin={currentAdmin} onClick={onClose} />
-          <SidebarItem to="/admin/support" icon={HelpCircle} label="Support" permission="manage_support" currentAdmin={currentAdmin} onClick={onClose} />
+          {/* <SidebarItem to="/admin/support" icon={HelpCircle} label="Support" permission="manage_support" currentAdmin={currentAdmin} onClick={onClose} /> */}
           
           <div className="pt-6 mt-6 border-t border-white/5">
-             <SidebarItem to="/admin/admin-staff" icon={Lock} label="Admin Access" permission="manage_admin_staff" currentAdmin={currentAdmin} onClick={onClose} />
+             {/* <SidebarItem to="/admin/admin-staff" icon={Lock} label="Admin Access" permission="manage_admin_staff" currentAdmin={currentAdmin} onClick={onClose} /> */}
           </div>
         </nav>
 

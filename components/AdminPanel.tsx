@@ -286,6 +286,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             </PermissionGuard>
           } />
 
+          {/* 
           <Route path="support" element={
             <PermissionGuard currentAdmin={currentAdmin} permission="manage_support">
               <SupportView tickets={tickets} onReplyTicket={onReplyTicket} onUpdateTicketStatus={onUpdateTicketStatus} onOpenSidebar={() => setIsSidebarOpen(true)} />
@@ -297,6 +298,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
               <AdminStaffView adminUsers={adminUsers} facilities={facilities} onAddAdmin={onAddAdmin} onUpdateAdmin={onUpdateAdmin} onDeleteAdmin={onDeleteAdmin} onOpenSidebar={() => setIsSidebarOpen(true)} />
             </PermissionGuard>
           } />
+          */}
         </Routes>
       </main>
     </div>

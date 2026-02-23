@@ -101,8 +101,9 @@ const TrainerApp: React.FC<TrainerAppProps> = ({
             <Route path="schedules" element={currentTrainer ? <TrainerSchedulesTab trainer={currentTrainer} classSlots={classSlots} classes={classes} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
             <Route path="bookings" element={currentTrainer ? <TrainerBookingsTab trainer={currentTrainer} bookings={bookings} classSlots={classSlots} classes={classes} /> : <Navigate to="/trainer" replace />} />
             <Route path="profile" element={currentTrainer ? <TrainerProfileTab trainer={currentTrainer} onLogout={onTrainerLogout} onUpdateTrainer={onUpdateTrainer} facilities={facilities} /> : <Navigate to="/trainer" replace />} />
-            {/* Fix: Added support route for trainer portal */}
+            {/* 
             <Route path="support" element={currentTrainer ? <SupportView currentUser={currentTrainer} userType="trainer" tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket} /> : <Navigate to="/trainer" replace />} />
+            */}
           </Routes>
         </div>
         {showNav && <TrainerBottomNav />}

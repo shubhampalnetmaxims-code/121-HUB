@@ -80,12 +80,14 @@ const TrainerProfileTab: React.FC<TrainerProfileTabProps> = ({ trainer, faciliti
         </section>
 
         <section className="grid grid-cols-2 gap-4">
+           {/* 
            <button onClick={() => navigate('/trainer/support')} className="p-5 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-sm">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                  <HelpCircle className="w-5 h-5" />
               </div>
               <span className="text-[9px] font-black uppercase tracking-widest text-slate-700">Get Support</span>
            </button>
+           */}
            <button onClick={onLogout} className="p-5 bg-white border border-slate-100 rounded-[32px] flex flex-col items-center justify-center gap-2 active:scale-95 transition-all shadow-sm">
               <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
                  <LogOut className="w-5 h-5" />

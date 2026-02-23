@@ -102,7 +102,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
             <GridMenuItem icon={ShoppingBag} label="Orders" color="text-orange-600" bg="bg-orange-50" onClick={() => navigate('/app/profile/orders')} />
             <GridMenuItem icon={Ticket} label="Passes" color="text-purple-600" bg="bg-purple-50" onClick={() => navigate('/app/profile/passes')} />
             <GridMenuItem icon={ShieldCheck} label="Memberships" color="text-green-600" bg="bg-green-50" onClick={() => navigate('/app/profile/memberships')} />
-            <GridMenuItem icon={HelpCircle} label="Support" color="text-blue-600" bg="bg-blue-50" onClick={() => navigate('/app/support')} />
+            {/* <GridMenuItem icon={HelpCircle} label="Support" color="text-blue-600" bg="bg-blue-50" onClick={() => navigate('/app/support')} /> */}
             <GridMenuItem icon={LogOut} label="Logout" color="text-slate-400" onClick={handleLogout} />
             <GridMenuItem icon={Trash2} label="Delete Account" color="text-red-600" bg="bg-red-50" onClick={() => setIsDeleteConfirmOpen(true)} />
           </div>

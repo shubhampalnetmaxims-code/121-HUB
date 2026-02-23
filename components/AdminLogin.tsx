@@ -92,8 +92,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ adminUsers, onLogin }) => {
              <p className="text-[10px] font-black text-blue-600 uppercase mb-2">Prototype Access Codes</p>
              <div className="space-y-1 text-[9px] font-bold text-slate-500 uppercase">
                 <p>Master: <span className="text-blue-900">admin@121fit.com / admin</span></p>
-                <p>Gym Mgr: <span className="text-blue-900">gym.manager@121fit.com / password</span></p>
-                <p>Fitness Mgr: <span className="text-blue-900">fitness.mgr@121fit.com / password</span></p>
              </div>
           </div>
 

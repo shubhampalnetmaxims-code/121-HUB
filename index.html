@@ -19,22 +19,30 @@
             scrollbar-width: none;  /* Firefox */
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
-  }
-}
-</script>
 <script>
     // Prevent crashes in environments where process is not defined
     window.process = window.process || { env: {} };
+    window.global = window;
+    
+    // Fix for "Cannot set property fetch of #<Window> which has only a getter"
+    // Some libraries try to polyfill fetch by assigning to window.fetch.
+    // If it's a getter-only property, we try to redefine it to be writable.
+    try {
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'fetch');
+        if (descriptor && !descriptor.writable && descriptor.configurable) {
+            const originalFetch = window.fetch;
+            Object.defineProperty(window, 'fetch', {
+                value: originalFetch,
+                writable: true,
+                configurable: true,
+                enumerable: true
+            });
+        }
+    } catch (e) {
+        console.warn('Note: fetch property is read-only and could not be redefined.');
+    }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
