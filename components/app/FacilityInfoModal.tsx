@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Activity } from 'lucide-react';
+import { X, Activity, MapPin } from 'lucide-react';
 import { Facility } from '../../types';
 
 interface FacilityInfoModalProps {
@@ -32,7 +32,14 @@ const FacilityInfoModal: React.FC<FacilityInfoModalProps> = ({ facility, onClose
           <div className="flex items-center gap-3 mb-2">
              <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Facility Details</span>
           </div>
-          <h3 className="text-4xl font-black mb-8 tracking-tighter text-slate-900 leading-tight">{facility.name}</h3>
+          <h3 className="text-4xl font-black mb-4 tracking-tighter text-slate-900 leading-tight">{facility.name}</h3>
+          
+          {facility.location && (
+            <div className="flex items-center gap-2 mb-8 text-slate-500 font-bold text-sm uppercase tracking-widest">
+              <MapPin className="w-4 h-4 text-blue-500" />
+              {facility.location}
+            </div>
+          )}
           
           <div className="space-y-8">
             <div 

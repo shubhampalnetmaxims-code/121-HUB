@@ -52,6 +52,7 @@ export interface Facility {
   description: string;
   icon: string;
   imageUrl?: string;
+  location?: string;
   galleryImages: string[];
   isActive: boolean;
   createdAt: number;

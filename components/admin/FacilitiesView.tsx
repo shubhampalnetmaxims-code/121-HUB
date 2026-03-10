@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Dumbbell, ChevronRight, Edit3, Menu, Bell, XCircle, RefreshCw, ShoppingCart, RotateCcw } from 'lucide-react';
+import { Plus, Search, Dumbbell, ChevronRight, Edit3, Menu, Bell, XCircle, RefreshCw, ShoppingCart, RotateCcw, Eye } from 'lucide-react';
 import { Facility } from '../../types';
 import { useNotifications } from '../NotificationContext';
 import FacilityFormModal from './FacilityFormModal';
@@ -142,6 +142,7 @@ const FacilitiesView: React.FC<FacilitiesViewProps> = ({ facilities, onAdd, onUp
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex justify-end gap-1.5">
+                        <button onClick={() => navigate(`facility/${f.id}`)} className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-white rounded-md transition-all border border-slate-200 shadow-sm" title="View Details"><Eye className="w-4 h-4" /></button>
                         <button onClick={() => handleEdit(f)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-white rounded-md transition-all border border-slate-200 shadow-sm" title="Edit Profile"><Edit3 className="w-4 h-4" /></button>
                       </div>
                     </td>

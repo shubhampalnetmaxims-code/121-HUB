@@ -429,6 +429,7 @@ const AppContent: React.FC = () => {
               measurements={measurements} photoLogs={photoLogs} rewardSettings={rewardSettings} rewardTransactions={rewardTransactions}
               onUpdateRewardSettings={(s) => setRewardSettings(s)}
               onResetSystem={handleResetSystem}
+              onLogout={() => setCurrentAdmin(null)}
               tickets={[]} onReplyTicket={() => {}} onUpdateTicketStatus={() => {}}
             />
           } />

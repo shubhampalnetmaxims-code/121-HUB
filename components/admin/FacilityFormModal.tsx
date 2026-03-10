@@ -16,6 +16,7 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
     description: facility?.description || '',
     icon: facility?.icon || 'Activity',
     imageUrl: facility?.imageUrl || '',
+    location: facility?.location || '',
     isActive: facility ? facility.isActive : true
   });
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
@@ -59,6 +60,11 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Location Title</label>
               <input required value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-all font-bold text-lg" placeholder="e.g. 121 Wellness Hub" />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Physical Address / Location</label>
+              <input value={formData.location} onChange={e => setFormData(p => ({ ...p, location: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-all font-bold text-sm" placeholder="e.g. 123 Fitness St, Wellness City" />
             </div>
 
             <div>

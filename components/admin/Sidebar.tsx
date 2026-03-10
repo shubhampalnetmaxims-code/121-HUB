@@ -11,6 +11,7 @@ import { AdminUser, AdminPermission } from '../../types';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  onLogout: () => void;
   currentAdmin: AdminUser;
 }
 
@@ -51,7 +52,7 @@ const SidebarItem = ({
   );
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentAdmin }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, currentAdmin }) => {
   return (
     <>
       {isOpen && (
@@ -67,15 +68,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentAdmin }) => {
           </button>
         </div>
 
-        <div className="mb-6 px-4 py-3 bg-white/5 rounded-xl border border-white/5 text-left">
-           <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Logged as</p>
-           <p className="font-bold text-xs text-white truncate uppercase">{currentAdmin.name}</p>
-           {currentAdmin.assignedFacilityId && (
-             <div className="mt-2 flex items-center gap-1.5 text-blue-400">
-                <Building className="w-3 h-3" />
-                <span className="text-[8px] font-black uppercase tracking-widest">Hub Restricted Access</span>
+        <div className="mb-6 px-4 py-4 bg-red-500/10 rounded-xl border border-red-500/20 text-left group hover:bg-red-500/20 transition-all cursor-pointer" onClick={onLogout}>
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-[8px] font-black text-red-400 uppercase tracking-widest mb-1">Session Active</p>
+               <p className="font-bold text-xs text-white truncate uppercase">Logout Admin</p>
              </div>
-           )}
+             <ArrowLeft className="w-4 h-4 text-red-400 group-hover:translate-x-[-4px] transition-transform" />
+           </div>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto scrollbar-hide text-left">
@@ -99,10 +99,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, currentAdmin }) => {
           </div>
         </nav>
 
-        <Link to="/" className="flex items-center gap-3 px-4 py-4 text-slate-500 hover:text-white transition-all text-sm font-bold border-t border-slate-800 mt-6 shrink-0">
+        <button onClick={onLogout} className="flex items-center gap-3 px-4 py-4 text-slate-500 hover:text-red-400 transition-all text-sm font-bold border-t border-slate-800 mt-6 shrink-0">
           <ArrowLeft className="w-4 h-4" />
           Sign Out
-        </Link>
+        </button>
       </aside>
     </>
   );

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock, Building } from 'lucide-react';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock, Building, MapPin } from 'lucide-react';
 import { Facility, FEATURE_MODULES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
 import { useToast } from '../ToastContext';
@@ -194,7 +194,10 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
               <Edit3 className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em]">{isRestricted ? "Authorized Institutional Control" : "Platform Hub Configuration"}</p>
+          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+            <MapPin className="w-3 h-3 text-blue-500" /> {facility.location || '121 Wellness Network'}
+          </div>
+          <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">{isRestricted ? "Authorized Institutional Control" : "Platform Hub Configuration"}</p>
         </div>
       </div>
 

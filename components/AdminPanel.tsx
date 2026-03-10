@@ -84,6 +84,7 @@ interface AdminPanelProps {
   rewardTransactions: RewardTransaction[];
   onUpdateRewardSettings: (s: RewardSettings) => void;
   onResetSystem: () => void;
+  onLogout: () => void;
   tickets: SupportTicket[];
   onReplyTicket: (id: string, message: string, senderType: 'user' | 'admin') => void;
   onUpdateTicketStatus: (id: string, status: SupportTicket['status']) => void;
@@ -135,7 +136,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   onUpdateUserPass, onDeleteUserPass,
   measurements, photoLogs,
   rewardTransactions, rewardSettings, onUpdateRewardSettings,
-  onResetSystem,
+  onResetSystem, onLogout,
   tickets, onReplyTicket, onUpdateTicketStatus
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -163,7 +164,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row text-left">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} currentAdmin={currentAdmin} />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} onLogout={onLogout} currentAdmin={currentAdmin} />
 
       <main className="flex-1 lg:ml-64 bg-slate-50 min-h-screen">
         <Routes>

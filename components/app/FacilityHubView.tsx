@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, LayoutDashboard, Activity, Info, Users, ChevronRight, CalendarDays } from 'lucide-react';
+import { ArrowLeft, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, LayoutDashboard, Activity, Info, Users, ChevronRight, CalendarDays, MapPin } from 'lucide-react';
 import { Facility, Trainer, FEATURE_MODULES } from '../../types';
 import TrainerBioModal from './TrainerBioModal';
 
@@ -64,7 +64,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
         </button>
         <div className="text-left">
           <h2 className="text-xl font-bold tracking-tight">{facility.name}</h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Digital Hub</p>
+          <div className="flex items-center gap-1 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
+            <MapPin className="w-2.5 h-2.5 text-blue-500" /> {facility.location || '121 Wellness Network'}
+          </div>
         </div>
       </div>
 
