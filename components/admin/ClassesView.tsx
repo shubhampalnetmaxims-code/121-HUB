@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Menu, BookOpen, Edit3, Trash2, Clock, Package, Image as ImageIcon, Search, Filter, User, CheckCircle2, XCircle, ChevronDown, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Plus, Menu, BookOpen, Edit3, Trash2, Clock, Package, Image as ImageIcon, Search, Filter, User, CheckCircle2, XCircle, ChevronDown, AlertTriangle, ShieldAlert, Eye } from 'lucide-react';
 import { Facility, Class, Trainer, Location, ClassSlot, Booking } from '../../types';
 import ClassFormModal from './ClassFormModal';
+import ClassViewModal from './ClassViewModal';
 import ConfirmationModal from './ConfirmationModal';
 
 interface ClassesViewProps {
@@ -31,6 +32,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
+  const [viewingClass, setViewingClass] = useState<Class | null>(null);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeletionBlocked, setShowDeletionBlocked] = useState<string | null>(null);
@@ -38,7 +40,6 @@ const ClassesView: React.FC<ClassesViewProps> = ({
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [trainerFilter, setTrainerFilter] = useState<string>('all');
   const [facilityFilter, setFacilityFilter] = useState<string>('all');
 
   const filteredClasses = useMemo(() => {
@@ -53,16 +54,9 @@ const ClassesView: React.FC<ClassesViewProps> = ({
       // Filter by Facility
       if (facilityFilter !== 'all' && c.facilityId !== facilityFilter) return false;
 
-      // Filter by Trainer (via ClassSlots)
-      if (trainerFilter !== 'all') {
-        const safeSlots = classSlots || [];
-        const hasTrainer = safeSlots.some(slot => slot.classId === c.id && slot.trainerId === trainerFilter);
-        if (!hasTrainer) return false;
-      }
-
       return true;
     });
-  }, [classes, classSlots, searchQuery, statusFilter, trainerFilter, facilityFilter]);
+  }, [classes, searchQuery, statusFilter, facilityFilter]);
 
   const grouped = useMemo(() => {
     const safeFacilities = facilities || [];
@@ -159,18 +153,6 @@ const ClassesView: React.FC<ClassesViewProps> = ({
                 {(facilities || []).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
-
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              <select 
-                value={trainerFilter} 
-                onChange={(e) => setTrainerFilter(e.target.value)}
-                className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer max-w-[120px]"
-              >
-                <option value="all">All Coaches</option>
-                {(trainers || []).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </div>
           </div>
         </div>
       </header>
@@ -211,6 +193,7 @@ const ClassesView: React.FC<ClassesViewProps> = ({
                         </div>
                       </div>
                       <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => setViewingClass(c)} className="p-2 bg-white/95 backdrop-blur rounded-md text-slate-600 hover:bg-slate-900 hover:text-white shadow-md transition-all border border-slate-200"><Eye className="w-3.5 h-3.5" /></button>
                         <button onClick={() => handleEdit(c)} className="p-2 bg-white/95 backdrop-blur rounded-md text-blue-600 hover:bg-blue-600 hover:text-white shadow-md transition-all border border-slate-200"><Edit3 className="w-3.5 h-3.5" /></button>
                         <button onClick={() => handleDeleteAttempt(c.id)} className="p-2 bg-white/95 backdrop-blur rounded-md text-red-600 hover:bg-red-600 hover:text-white shadow-md transition-all border border-slate-200"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
@@ -259,7 +242,6 @@ const ClassesView: React.FC<ClassesViewProps> = ({
               onClick={() => {
                 setSearchQuery('');
                 setStatusFilter('all');
-                setTrainerFilter('all');
                 setFacilityFilter('all');
               }}
               className="mt-6 px-6 py-2.5 bg-blue-600 text-white rounded-lg font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
@@ -282,6 +264,19 @@ const ClassesView: React.FC<ClassesViewProps> = ({
             setIsFormOpen(false);
             setEditingClass(null);
           }} 
+        />
+      )}
+
+      {viewingClass && (
+        <ClassViewModal 
+          cls={viewingClass}
+          facility={facilities.find(f => f.id === viewingClass.facilityId)}
+          onClose={() => setViewingClass(null)}
+          onEdit={() => {
+            const c = viewingClass;
+            setViewingClass(null);
+            handleEdit(c);
+          }}
         />
       )}
 

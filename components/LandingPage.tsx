@@ -67,6 +67,20 @@ const LandingPage: React.FC = () => {
             <p className="text-slate-500 text-sm font-medium leading-relaxed">Control facility profiles, staff, and rewards globally.</p>
           </div>
         </div>
+
+        <div className="mt-12 pt-8 border-t border-slate-100 flex justify-center">
+           <button 
+             onClick={() => {
+               if (window.confirm("Reset all system data to defaults?")) {
+                 localStorage.clear();
+                 window.location.reload();
+               }
+             }}
+             className="text-[10px] font-bold text-slate-300 uppercase tracking-widest hover:text-slate-500 transition-colors"
+           >
+             System Reset (Debug)
+           </button>
+        </div>
       </div>
     </div>
   );

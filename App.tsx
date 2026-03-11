@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 // Fix: Added missing AdminUser and DEFAULT_ADMINS imports from types to support admin management.
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, AdminUser, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_TICKETS, DEFAULT_ADMINS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, AdminUser, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_TICKETS, DEFAULT_ADMINS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -102,15 +102,15 @@ const AppContent: React.FC = () => {
   const [userMemberships, setUserMemberships] = useState<UserMembership[]>(() => safeHydrate('user_memberships', DEFAULT_USER_MEMBERSHIPS));
   const [blocks, setBlocks] = useState<Block[]>(() => safeHydrate('blocks', DEFAULT_BLOCKS));
   const [blockBookings, setBlockBookings] = useState<BlockBooking[]>(() => safeHydrate('block_bookings', DEFAULT_BLOCK_BOOKINGS));
-  const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>(() => safeHydrate('block_payments', []));
+  const [blockPayments, setBlockPayments] = useState<BlockWeeklyPayment[]>(() => safeHydrate('block_payments', DEFAULT_BLOCK_PAYMENTS));
   const [measurements, setMeasurements] = useState<Measurement[]>(() => safeHydrate('measurements', DEFAULT_MEASUREMENTS));
   const [photoLogs, setPhotoLogs] = useState<PhotoLog[]>(() => safeHydrate('photo_logs', DEFAULT_PHOTO_LOGS));
   const [rewardTransactions, setRewardTransactions] = useState<RewardTransaction[]>(() => safeHydrate('reward_transactions', DEFAULT_REWARD_TRANSACTIONS));
   const [rewardSettings, setRewardSettings] = useState<RewardSettings>(() => safeHydrate('reward_settings', DEFAULT_REWARD_SETTINGS));
-  // const [tickets, setTickets] = useState<SupportTicket[]>(() => safeHydrate('tickets', DEFAULT_TICKETS));
+  const [tickets, setTickets] = useState<SupportTicket[]>(() => safeHydrate('tickets', DEFAULT_TICKETS));
   
   // Initialized admin state to satisfy AdminPanel and login requirements.
-  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => safeHydrate('admin_users', [DEFAULT_ADMINS[0]]));
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>(() => safeHydrate('admin_users', DEFAULT_ADMINS));
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(() => safeHydrate('current_admin', null));
   
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -144,8 +144,8 @@ const AppContent: React.FC = () => {
       users, bookings, cart, orders, passes, user_passes: userPasses,
       memberships, user_memberships: userMemberships, blocks, block_bookings: blockBookings,
       block_payments: blockPayments, measurements, photo_logs: photoLogs,
-      reward_transactions: rewardTransactions, reward_settings: rewardSettings, // tickets,
-      current_user: currentUser, current_trainer: currentTrainer,
+      reward_transactions: rewardTransactions, reward_settings: rewardSettings,
+      tickets, current_user: currentUser, current_trainer: currentTrainer,
       admin_users: adminUsers, current_admin: currentAdmin
     };
 
@@ -158,7 +158,6 @@ const AppContent: React.FC = () => {
     });
   }, [facilities, classes, trainers, locations, classSlots, products, users, bookings, cart, orders, passes, userPasses, memberships, userMemberships, blocks, blockBookings, blockPayments, measurements, photoLogs, rewardTransactions, rewardSettings, currentUser, currentTrainer, adminUsers, currentAdmin, isReady]);
 
-  /*
   const onAddAdmin = (adm: Omit<AdminUser, 'id' | 'createdAt' | 'status'>) => {
     const newAdmin: AdminUser = {
       ...adm,
@@ -223,7 +222,6 @@ const AppContent: React.FC = () => {
   const onUpdateTicketStatus = (id: string, status: SupportTicket['status']) => {
     setTickets(prev => prev.map(t => t.id === id ? { ...t, status, updatedAt: Date.now() } : t));
   };
-  */
 
   const addRewardTransaction = (userId: string, type: 'earned' | 'used', source: RewardTransaction['source'], referenceId: string, points: number, facilityId?: string) => {
     const user = users.find(u => u.id === userId);
@@ -377,12 +375,12 @@ const AppContent: React.FC = () => {
               onBookBlock={bookBlock} onPayWeeklyBlock={(id) => setBlockPayments(p => p.map(py => py.id === id ? {...py, status: 'paid'} : py))} onBuyMembership={buyMembership}
               onAddMeasurement={(m) => setMeasurements(p => [...p, {...m, id: Math.random().toString(36).substr(2, 9)}])} onAddPhotoLog={(ph) => setPhotoLogs(p => [...p, {...ph, id: Math.random().toString(36).substr(2, 9)}])}
               onDeletePhotoLog={(id) => setPhotoLogs(p => p.filter(ph => ph.id !== id))}
-              tickets={[]} onAddTicket={() => {}} onReplyTicket={() => {}}
+              tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket}
             />
           } />
           <Route path="/trainer/*" element={
             <TrainerApp trainers={trainers} classSlots={classSlots} bookings={bookings} classes={classes} facilities={facilities} locations={locations} currentTrainer={currentTrainer} onTrainerLogin={(t) => setCurrentTrainer(t)} onTrainerLogout={() => setCurrentTrainer(null)} onUpdateTrainer={updateTrainer} onUpdateSlot={updateSlot} onUpdateBooking={updateBooking} 
-              tickets={[]} onAddTicket={() => {}} onReplyTicket={() => {}}
+              tickets={tickets} onAddTicket={onAddTicket} onReplyTicket={onReplyTicket}
             />
           } />
           <Route path="/admin-login" element={<AdminLogin adminUsers={adminUsers} onLogin={setCurrentAdmin} />} />
@@ -390,9 +388,9 @@ const AppContent: React.FC = () => {
             <AdminPanel 
               currentAdmin={currentAdmin}
               adminUsers={adminUsers}
-              onAddAdmin={() => {}}
-              onUpdateAdmin={() => {}}
-              onDeleteAdmin={() => {}}
+              onAddAdmin={onAddAdmin}
+              onUpdateAdmin={onUpdateAdmin}
+              onDeleteAdmin={onDeleteAdmin}
               
               facilities={facilities} onAdd={addFacility} onUpdate={updateFacility} onDelete={deleteFacility}
               classes={classes} onAddClass={addClass} onUpdateClass={updateClass} onDeleteClass={deleteClass}
@@ -430,7 +428,7 @@ const AppContent: React.FC = () => {
               onUpdateRewardSettings={(s) => setRewardSettings(s)}
               onResetSystem={handleResetSystem}
               onLogout={() => setCurrentAdmin(null)}
-              tickets={[]} onReplyTicket={() => {}} onUpdateTicketStatus={() => {}}
+              tickets={tickets} onReplyTicket={onReplyTicket} onUpdateTicketStatus={onUpdateTicketStatus}
             />
           } />
         </Routes>

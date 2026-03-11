@@ -837,6 +837,8 @@ export const DEFAULT_MEASUREMENTS: Measurement[] = [
 // Fix: Added missing DEFAULT_PHOTO_LOGS export.
 export const DEFAULT_PHOTO_LOGS: PhotoLog[] = [];
 
+export const DEFAULT_BLOCK_PAYMENTS: BlockWeeklyPayment[] = [];
+
 export const DEFAULT_TICKETS: SupportTicket[] = [
   {
     id: 'tk-101',
