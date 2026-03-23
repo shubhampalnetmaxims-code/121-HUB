@@ -256,7 +256,7 @@ const BookingsOrdersView: React.FC<BookingsOrdersViewProps> = ({
                <div className="space-y-1.5">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1 flex items-center gap-1.5"><UserIcon className="w-3 h-3" /> Instructor</label>
                   <select value={trainerFilter} onChange={e => setTrainerFilter(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold outline-none focus:bg-white transition-colors">
-                     <option value="all">All Trainers</option>
+                     <option value="all">All Trainers & Location</option>
                      {availableTrainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
                </div>

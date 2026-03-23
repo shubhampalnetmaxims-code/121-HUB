@@ -140,7 +140,7 @@ const TimetableView: React.FC<TimetableViewProps> = ({
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-md px-4 py-2">
               <Filter className="w-3 h-3 text-slate-400" />
               <select value={trainerFilter} onChange={e => setTrainerFilter(e.target.value)} className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer">
-                <option value="all">All Trainers</option>
+                <option value="all">All Trainers & Location</option>
                 {trainers.filter(t => t.facilityIds.includes(selectedFacilityId)).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>

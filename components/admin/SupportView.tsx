@@ -69,7 +69,7 @@ const SupportView: React.FC<SupportViewProps> = ({ tickets, onReplyTicket, onUpd
               <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)} className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer">
                 <option value="all">All Users</option>
                 <option value="customer">Customers</option>
-                <option value="trainer">Trainers</option>
+                <option value="trainer">Trainers & Location</option>
               </select>
               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer">
                 <option value="all">All Status</option>

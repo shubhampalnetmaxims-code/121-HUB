@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { X, Bold, Italic, List, CloudUpload } from 'lucide-react';
-import { Facility, FACILITY_THEME_COLORS } from '../../types';
+import { X, Bold, Italic, List, CloudUpload, Palette, Check } from 'lucide-react';
+import { Facility, THEMES } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
 interface FacilityFormModalProps {
@@ -18,7 +18,7 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
     imageUrl: facility?.imageUrl || '',
     location: facility?.location || '',
     isActive: facility ? facility.isActive : true,
-    themeColor: facility?.themeColor || FACILITY_THEME_COLORS[0].value
+    theme: facility?.theme || 'default'
   });
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -81,20 +81,28 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Theme Color</label>
-              <div className="flex flex-wrap gap-3">
-                {FACILITY_THEME_COLORS.map(color => (
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Facility Theme</label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                {THEMES.map(theme => (
                   <button
-                    key={color.value}
+                    key={theme.id}
                     type="button"
-                    onClick={() => setFormData(p => ({ ...p, themeColor: color.value }))}
-                    className={`w-10 h-10 rounded-full border-2 transition-all ${formData.themeColor === color.value ? 'border-slate-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  />
+                    onClick={() => setFormData(p => ({ ...p, theme: theme.id }))}
+                    className={`aspect-square rounded-lg border-2 transition-all flex flex-col items-center justify-center gap-1 group ${formData.theme === theme.id ? 'border-blue-600 bg-blue-50/30 shadow-sm' : 'border-slate-100 bg-slate-50/50 hover:border-slate-200 hover:bg-white'}`}
+                    title={theme.name}
+                  >
+                    <div 
+                      className="w-6 h-6 rounded-full shadow-inner border border-black/5 group-hover:scale-110 transition-transform relative flex items-center justify-center" 
+                      style={{ backgroundColor: theme.color }}
+                    >
+                      {formData.theme === theme.id && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <span className={`text-[8px] font-bold uppercase tracking-tighter ${formData.theme === theme.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                      {theme.id}
+                    </span>
+                  </button>
                 ))}
               </div>
-              <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">This color will be applied to the facility's hub and sub-views.</p>
             </div>
 
             <div>
