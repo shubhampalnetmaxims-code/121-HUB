@@ -108,7 +108,7 @@ const TrainerDetailView: React.FC<TrainerDetailViewProps> = ({
     return (
       <div className="p-20 text-center text-slate-400 font-black uppercase text-xs tracking-widest">
         Record Not Found
-        <button onClick={() => navigate('/admin/staff')} className="block mx-auto mt-6 text-blue-600 underline">Back to Staff</button>
+        <button onClick={() => navigate('/admin/staff')} className="block mx-auto mt-6 text-blue-600 underline">Back to Trainers & Location</button>
       </div>
     );
   }

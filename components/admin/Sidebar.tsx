@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogout, currentAdm
           <SidebarItem to="/admin" icon={currentAdmin.assignedFacilityId ? Building : LayoutDashboard} label={currentAdmin.assignedFacilityId ? "Hub Overview" : "Facilities"} permission="manage_facilities" currentAdmin={currentAdmin} onClick={onClose} />
           
           <SidebarItem to="/admin/classes" icon={BookOpen} label="Classes" permission="manage_curriculum" currentAdmin={currentAdmin} onClick={onClose} />
-          <SidebarItem to="/admin/staff" icon={Users} label="Trainers" permission="manage_staff" currentAdmin={currentAdmin} onClick={onClose} />
+          <SidebarItem to="/admin/staff" icon={Users} label="Trainers & Location" permission="manage_staff" currentAdmin={currentAdmin} onClick={onClose} />
           <SidebarItem to="/admin/users" icon={Users} label="Users" permission="manage_users" currentAdmin={currentAdmin} onClick={onClose} />
           <SidebarItem to="/admin/timetable" icon={CalendarDays} label="Timetable" permission="manage_timetable" currentAdmin={currentAdmin} onClick={onClose} />
           <SidebarItem to="/admin/marketplace" icon={ShoppingBag} label="Products" permission="manage_marketplace" currentAdmin={currentAdmin} onClick={onClose} />

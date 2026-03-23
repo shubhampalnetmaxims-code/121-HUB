@@ -148,11 +148,31 @@ const AppHub: React.FC<AppHubProps> = ({
     navigate('/app/onboarding', { state: { returnTo: location.pathname } });
   };
 
+  const getThemeColor = () => {
+    const match = location.pathname.match(/\/app\/facility\/([^/]+)/);
+    if (match) {
+      const facilityId = match[1];
+      const facility = facilities.find(f => f.id === facilityId);
+      return facility?.themeColor || '#0F172A';
+    }
+    return '#0F172A';
+  };
+
+  const themeColor = getThemeColor();
+
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 pt-20 pb-10">
+      <style>{`
+        .theme-bg { background-color: var(--facility-theme) !important; }
+        .theme-text { color: var(--facility-theme) !important; }
+        .theme-border { border-color: var(--facility-theme) !important; }
+        .theme-shadow { --tw-shadow-color: var(--facility-theme); }
+        .theme-ring { --tw-ring-color: var(--facility-theme); }
+        .theme-bg-soft { background-color: var(--facility-theme); opacity: 0.1; }
+      `}</style>
       <div className="relative w-full max-w-[400px] h-[860px] bg-black rounded-[48px] shadow-2xl overflow-hidden border-[8px] border-slate-900">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-slate-900 rounded-b-2xl z-[100]"></div>
-        <div className="h-full bg-white relative">
+        <div className="h-full bg-white relative" style={{ '--facility-theme': themeColor } as React.CSSProperties}>
           <Routes>
             <Route index element={<EntryView />} />
             <Route path="onboarding" element={<OnboardingFlow users={users} onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />

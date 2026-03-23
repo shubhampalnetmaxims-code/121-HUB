@@ -41,12 +41,12 @@ const MyPassesView: React.FC<MyPassesViewProps> = ({ currentUser, userPasses, fa
             <div key={pass.id} onClick={() => setViewingPass(pass)} className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm flex flex-col gap-5 relative overflow-hidden group active:scale-[0.98] transition-all cursor-pointer">
               <div className="flex justify-between items-start relative z-10">
                 <div className="flex items-center gap-3">
-                   <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-colors" style={{ backgroundColor: `${fac?.themeColor}1A`, color: fac?.themeColor }}>
                      <Ticket className="w-6 h-6" />
                    </div>
                    <div>
                      <h4 className="font-black text-slate-900 text-lg leading-tight tracking-tight uppercase line-clamp-1">{pass.name}</h4>
-                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{fac?.name}</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: fac?.themeColor }}>{fac?.name}</p>
                    </div>
                 </div>
                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
@@ -65,7 +65,7 @@ const MyPassesView: React.FC<MyPassesViewProps> = ({ currentUser, userPasses, fa
                     <ChevronRight className="w-5 h-5 text-slate-300 group-hover:translate-x-1 transition-transform" />
                  </div>
                  <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${creditPercent}%` }} />
+                    <div className="h-full transition-all duration-1000" style={{ width: `${creditPercent}%`, backgroundColor: fac?.themeColor }} />
                  </div>
               </div>
 

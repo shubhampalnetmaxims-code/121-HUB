@@ -27,13 +27,13 @@ interface AppClassSlotViewModalProps {
 const LoginPromptModal = ({ onLogin, onCancel }: { onLogin: () => void, onCancel: () => void }) => (
   <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
     <div className="bg-white rounded-[40px] p-8 text-center space-y-6 max-w-xs shadow-2xl">
-      <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto">
+      <div className="w-16 h-16 theme-bg-soft theme-text rounded-3xl flex items-center justify-center mx-auto">
         <ShieldCheck className="w-8 h-8" />
       </div>
       <h3 className="text-2xl font-black text-slate-900 tracking-tight">Authentication Required</h3>
       <p className="text-slate-500 text-sm font-medium leading-relaxed">Please log in to your 121 account to complete this booking.</p>
       <div className="space-y-3">
-        <button onClick={onLogin} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-500/20 active:scale-95 transition-all">Log In & Proceed</button>
+        <button onClick={onLogin} className="w-full py-4 theme-bg text-white rounded-2xl font-black shadow-xl active:scale-95 transition-all">Log In & Proceed</button>
         <button onClick={onCancel} className="w-full py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors">Maybe Later</button>
       </div>
     </div>
@@ -171,13 +171,13 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Area</p>
             </div>
             <p className="font-extrabold text-slate-900 leading-none mb-1">{location?.name || 'TBA'}</p>
-            <p className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">On-site</p>
+            <p className="text-[10px] font-black theme-text uppercase tracking-tighter">On-site</p>
           </div>
           {cls?.pricePerSession !== undefined && !selectedUserPassId && !selectedNewPassId && (
-            <div className="p-5 bg-blue-50 border border-blue-100 rounded-[28px] col-span-2">
+            <div className="p-5 theme-bg-soft theme-border rounded-[28px] col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <DollarSign className="w-4 h-4 text-blue-600" />
-                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">Pricing</p>
+                <DollarSign className="w-4 h-4 theme-text" />
+                <p className="text-[9px] font-black theme-text uppercase tracking-widest leading-none">Pricing</p>
               </div>
               <p className="font-extrabold text-slate-900 leading-none">${cls.pricePerSession}</p>
               <p className="text-[10px] font-bold text-slate-500">Per Session / Participant</p>
@@ -198,7 +198,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
                    <button 
                     key={up.id} 
                     onClick={() => { setSelectedUserPassId(up.id); setSelectedNewPassId(''); }}
-                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${selectedUserPassId === up.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white'}`}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${selectedUserPassId === up.id ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-white'}`}
                    >
                      <div className="flex items-center gap-3">
                         <Ticket className="w-5 h-5 text-blue-600" />
@@ -295,7 +295,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
                         newNames[idx] = e.target.value;
                         setNames(newNames);
                       }}
-                      className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+                      className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm focus:ring-2 theme-ring transition-all"
                     />
                   </div>
                 ))}
@@ -315,7 +315,7 @@ const AppClassSlotViewModal: React.FC<AppClassSlotViewModalProps> = ({
         <button 
           onClick={handlePreview}
           disabled={slot.status === 'full'}
-          className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+          className="w-full py-5 theme-bg text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all disabled:opacity-50"
         >
           {slot.status === 'full' ? 'Fully Booked' : 'Preview Booking'}
         </button>

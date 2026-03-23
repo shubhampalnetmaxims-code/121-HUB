@@ -102,7 +102,7 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
              <h3 className="font-bold text-slate-900">Saved Cards</h3>
              <button 
               onClick={() => { setEditingCard(null); setIsFormOpen(true); }}
-              className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg"
+              className="text-[10px] font-black theme-text uppercase tracking-widest flex items-center gap-1 theme-bg-soft px-3 py-1.5 rounded-lg"
              >
                <Plus className="w-3.5 h-3.5" /> Add New
              </button>
@@ -113,7 +113,7 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
               <div 
                 key={card.id}
                 className={`p-6 rounded-[32px] border-2 transition-all relative overflow-hidden ${
-                  card.isPrimary ? 'border-blue-600 bg-blue-50/10' : 'border-slate-100 bg-white'
+                  card.isPrimary ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-white'
                 }`}
               >
                 <div className="flex justify-between items-start relative z-10">
@@ -127,7 +127,7 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
                           {card.brand}
                         </div>
                         {card.isPrimary && (
-                          <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-black uppercase rounded-full tracking-widest">Primary</span>
+                          <span className="px-2 py-0.5 theme-bg text-white text-[8px] font-black uppercase rounded-full tracking-widest">Primary</span>
                         )}
                       </div>
                       <div>
@@ -146,7 +146,7 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
                    <div className="flex flex-col gap-2">
                       <button 
                         onClick={() => { setEditingCard(card); setIsFormOpen(true); }}
-                        className="p-3 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-2xl transition-colors"
+                        className="p-3 bg-slate-50 text-slate-400 hover:theme-text rounded-2xl transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -162,13 +162,13 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
                 {!card.isPrimary && (
                   <button 
                     onClick={() => setPrimary(card.id)}
-                    className="mt-6 w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-blue-600 hover:text-blue-600 transition-all"
+                    className="mt-6 w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:theme-border hover:theme-text transition-all"
                   >
                     Set as Primary Method
                   </button>
                 )}
                 
-                {card.isPrimary && <ShieldCheck className="absolute -right-4 -bottom-4 w-24 h-24 text-blue-600/5 rotate-12" />}
+                {card.isPrimary && <ShieldCheck className="absolute -right-4 -bottom-4 w-24 h-24 theme-text opacity-5 rotate-12" />}
               </div>
             )) : (
               <div className="py-16 text-center space-y-4 bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-100">
@@ -190,7 +190,7 @@ const MyPaymentsView: React.FC<MyPaymentsViewProps> = ({ currentUser, onUpdateUs
         <section className="p-6 bg-slate-900 rounded-[32px] text-white space-y-4">
            <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-               <ShieldCheck className="w-5 h-5 text-blue-400" />
+               <ShieldCheck className="w-5 h-5 theme-text" />
              </div>
              <div>
                <h4 className="font-bold tracking-tight">Security & Compliance</h4>

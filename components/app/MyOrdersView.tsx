@@ -29,8 +29,8 @@ const MyOrdersView: React.FC<MyOrdersViewProps> = ({ currentUser, orders, facili
           <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">Purchase Portfolio</h2>
         </div>
         <div className="flex gap-8">
-          <button onClick={() => setView('orders')} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${view === 'orders' ? 'text-blue-600' : 'text-slate-400'}`}>Orders{view === 'orders' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />}</button>
-          <button onClick={() => setView('invoices')} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${view === 'invoices' ? 'text-blue-600' : 'text-slate-400'}`}>Invoices{view === 'invoices' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />}</button>
+          <button onClick={() => setView('orders')} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${view === 'orders' ? 'theme-text' : 'text-slate-400'}`}>Orders{view === 'orders' && <div className="absolute bottom-0 left-0 right-0 h-1 theme-bg rounded-t-full" />}</button>
+          <button onClick={() => setView('invoices')} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${view === 'invoices' ? 'theme-text' : 'text-slate-400'}`}>Invoices{view === 'invoices' && <div className="absolute bottom-0 left-0 right-0 h-1 theme-bg rounded-t-full" />}</button>
         </div>
       </div>
 
@@ -41,7 +41,7 @@ const MyOrdersView: React.FC<MyOrdersViewProps> = ({ currentUser, orders, facili
             onClick={() => setViewingOrder(order)}
             className="w-full bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-4 group active:scale-[0.98] transition-all"
           >
-             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${view === 'invoices' ? 'bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-900'}`}>
+             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${view === 'invoices' ? 'theme-bg-soft theme-text' : 'bg-slate-50 text-slate-900'}`}>
                 {view === 'invoices' ? <FileText className="w-6 h-6" /> : <ShoppingBag className="w-6 h-6" />}
              </div>
              <div className="flex-1 text-left overflow-hidden">

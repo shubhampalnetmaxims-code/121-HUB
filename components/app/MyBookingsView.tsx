@@ -118,17 +118,17 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
       <div className="bg-white rounded-[32px] border border-slate-100 p-6 shadow-sm flex flex-col gap-4 group active:scale-[0.98] transition-all cursor-pointer" onClick={() => setViewingDetail({ type, item })}>
          <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
-               <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+               <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center group-hover:theme-bg group-hover:text-white transition-colors">
                   <Icon className="w-6 h-6" />
                </div>
                <div className="text-left overflow-hidden max-w-[150px]">
                   <h4 className="font-black text-slate-900 text-lg leading-none mb-1 uppercase tracking-tight truncate">{title}</h4>
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest truncate">{fac?.name}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest truncate" style={{ color: fac?.themeColor }}>{fac?.name}</p>
                </div>
             </div>
             <div className="flex flex-col items-end gap-1.5">
                <span className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase border ${
-                  status === 'upcoming' || status === 'active' || status === 'placed' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                  status === 'upcoming' || status === 'active' || status === 'placed' ? 'theme-bg-soft theme-text theme-border' :
                   status === 'delivered' || status === 'picked-up' ? 'bg-green-50 text-green-700 border-green-100' :
                   'bg-red-50 text-red-700 border-red-200'
                }`}>{status}</span>
@@ -166,9 +166,9 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
         {activeTab === 'classes' && (
           <div className="flex gap-8 mt-6">
             {(['upcoming', 'past'] as const).map(t => (
-              <button key={t} onClick={() => setActiveHistoryTab(t)} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${activeHistoryTab === t ? 'text-blue-600' : 'text-slate-400'}`}>
+              <button key={t} onClick={() => setActiveHistoryTab(t)} className={`text-[11px] font-black uppercase tracking-widest pb-3 transition-all relative ${activeHistoryTab === t ? 'theme-text' : 'text-slate-400'}`}>
                 {t}
-                {activeHistoryTab === t && <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full" />}
+                {activeHistoryTab === t && <div className="absolute bottom-0 left-0 right-0 h-1 theme-bg rounded-t-full" />}
               </button>
             ))}
           </div>

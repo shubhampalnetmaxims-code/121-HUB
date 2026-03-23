@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 // Fix: Added missing AdminUser and DEFAULT_ADMINS imports from types to support admin management.
-import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, AdminUser, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_TICKETS, DEFAULT_ADMINS } from './types';
+import { Facility, Class, Trainer, Location as StaffLocation, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, AdminUser, THEMES, DEFAULT_FACILITIES, DEFAULT_CLASSES, DEFAULT_TRAINERS, DEFAULT_LOCATIONS, DEFAULT_CLASS_SLOTS, DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_BOOKINGS, DEFAULT_ORDERS, DEFAULT_PASSES, DEFAULT_BLOCKS, DEFAULT_MEMBERSHIPS, DEFAULT_REWARD_SETTINGS, DEFAULT_REWARD_TRANSACTIONS, DEFAULT_USER_PASSES, DEFAULT_USER_MEMBERSHIPS, DEFAULT_MEASUREMENTS, DEFAULT_PHOTO_LOGS, DEFAULT_BLOCK_BOOKINGS, DEFAULT_BLOCK_PAYMENTS, DEFAULT_TICKETS, DEFAULT_ADMINS } from './types';
 import LandingPage from './components/LandingPage';
 import AppHub from './components/AppHub';
 import AdminPanel from './components/AdminPanel';
@@ -79,6 +79,44 @@ const GlobalHeader: React.FC = () => {
       </div>
     </div>
   );
+};
+
+const ThemeApplier: React.FC<{ facilities: Facility[] }> = ({ facilities }) => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const match = location.pathname.match(/\/(?:app|admin)\/facility\/([^/]+)/);
+    const facilityId = match ? match[1] : null;
+    const facility = facilities.find(f => f.id === facilityId);
+    const themeId = facility?.theme || 'default';
+    const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+
+    let styleTag = document.getElementById('theme-overrides');
+    if (!styleTag) {
+      styleTag = document.createElement('style');
+      styleTag.id = 'theme-overrides';
+      document.head.appendChild(styleTag);
+    }
+    
+    if (themeId === 'default') {
+      styleTag.innerHTML = '';
+    } else {
+      styleTag.innerHTML = `
+        .bg-blue-600 { background-color: ${theme.color} !important; }
+        .text-blue-600 { color: ${theme.color} !important; }
+        .border-blue-600 { border-color: ${theme.color} !important; }
+        .hover\\:bg-blue-700:hover { background-color: ${theme.color} !important; filter: brightness(0.9); }
+        .accent-blue-600 { accent-color: ${theme.color} !important; }
+        .bg-blue-50 { background-color: ${theme.secondary} !important; }
+        .bg-blue-50\\/10 { background-color: ${theme.color}1a !important; }
+        .bg-blue-50\\/20 { background-color: ${theme.color}33 !important; }
+        .ring-blue-600\\/10 { --tw-ring-color: ${theme.color}1a !important; }
+        .border-blue-600\\/10 { border-color: ${theme.color}1a !important; }
+      `;
+    }
+  }, [location.pathname, facilities]);
+
+  return null;
 };
 
 const AppContent: React.FC = () => {
@@ -348,6 +386,7 @@ const AppContent: React.FC = () => {
   return (
     <HashRouter>
       <GlobalHeader />
+      <ThemeApplier facilities={facilities} />
       <div className="pt-0">
         <Routes>
           <Route path="/" element={<LandingPage />} />

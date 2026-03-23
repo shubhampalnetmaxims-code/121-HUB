@@ -127,7 +127,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-40 scrollbar-hide">
         {(isUsingExistingPass || isBuyingNewPass) && (
-          <div className={`p-5 rounded-[28px] border flex items-center gap-4 ${isUsingExistingPass ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-green-50 border-green-100 text-green-600'}`}>
+          <div className={`p-5 rounded-[28px] border flex items-center gap-4 ${isUsingExistingPass ? 'theme-bg-soft theme-border theme-text' : 'bg-green-50 border-green-100 text-green-600'}`}>
             <div className="p-3 bg-white rounded-2xl shadow-sm"><Ticket className="w-5 h-5" /></div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{isUsingExistingPass ? 'Using Credit Balance' : 'Purchasing New Pass'}</p>
@@ -159,21 +159,21 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
         </section>
 
         {redemptionEnabled && (
-          <section className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100">
+          <section className="theme-bg-soft p-6 rounded-[32px] border theme-border">
              {hasMinPoints ? (
                 <>
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                       <Coins className="w-5 h-5 text-blue-600" />
+                       <Coins className="w-5 h-5 theme-text" />
                        <div className="text-left">
-                          <p className="text-xs font-black text-blue-900 uppercase leading-none mb-1">Use Rewards</p>
-                          <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Available: {currentUser.rewardPoints} Pts</p>
+                          <p className="text-xs font-black theme-text uppercase leading-none mb-1">Use Rewards</p>
+                          <p className="text-[9px] font-bold theme-text uppercase tracking-widest">Available: {currentUser.rewardPoints} Pts</p>
                        </div>
                     </div>
-                    <input type="checkbox" checked={useRewards} onChange={e => setUseRewards(e.target.checked)} className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer" />
+                    <input type="checkbox" checked={useRewards} onChange={e => setUseRewards(e.target.checked)} className="w-6 h-6 theme-accent rounded-lg cursor-pointer" />
                   </div>
                   {useRewards && (
-                    <div className="animate-in slide-in-from-top-2 duration-300 flex justify-between items-center p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="animate-in slide-in-from-top-2 duration-300 flex justify-between items-center p-3 bg-white rounded-xl border theme-border">
                        <span className="text-[10px] font-black text-slate-400 uppercase">Saving Applied</span>
                        <span className="font-black text-green-600">-${rewardDiscount.toFixed(2)}</span>
                     </div>
@@ -208,7 +208,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
              )}
              <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                 <span className="text-lg font-black text-slate-900 tracking-tight uppercase">Payable Total</span>
-                <span className="text-3xl font-black text-blue-600">${finalTotal.toFixed(2)}</span>
+                <span className="text-3xl font-black theme-text">${finalTotal.toFixed(2)}</span>
              </div>
           </div>
         </section>
@@ -222,14 +222,14 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
                   key={card.id}
                   onClick={() => setSelectedCardId(card.id)}
                   className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
-                    selectedCardId === card.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white'
+                    selectedCardId === card.id ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <CreditCard className="w-5 h-5 text-slate-400" />
                     <span className="font-bold text-sm text-slate-900">{card.cardNumber}</span>
                   </div>
-                  {selectedCardId === card.id && <Check className="w-4 h-4 text-blue-600" />}
+                  {selectedCardId === card.id && <Check className="w-4 h-4 theme-text" />}
                 </button>
               ))}
             </div>
@@ -242,10 +242,10 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
                 type="checkbox" 
                 checked={acceptedTerms} 
                 onChange={e => setAcceptedTerms(e.target.checked)}
-                className="w-6 h-6 rounded-lg accent-blue-600 mt-0.5 shrink-0" 
+                className="w-6 h-6 rounded-lg theme-accent mt-0.5 shrink-0" 
               />
               <span className="text-xs font-bold text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
-                I accept the <span className="text-blue-600 underline">Terms & Conditions</span> for this {isUsingExistingPass || isBuyingNewPass ? 'Pass' : 'Session'}.
+                I accept the <span className="theme-text underline">Terms & Conditions</span> for this {isUsingExistingPass || isBuyingNewPass ? 'Pass' : 'Session'}.
               </span>
            </label>
         </section>
@@ -255,7 +255,7 @@ const BookingPreviewModal: React.FC<BookingPreviewModalProps> = ({
         <button 
           onClick={handlePay}
           disabled={!acceptedTerms || (!isUsingExistingPass && finalTotal > 0 && !selectedCardId) || isProcessing}
-          className="w-full py-5 bg-black text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+          className="w-full py-5 theme-bg text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
         >
           {isProcessing ? 'Verifying...' : finalTotal === 0 ? 'Confirm Booking' : `Pay $${finalTotal.toFixed(2)}`}
         </button>

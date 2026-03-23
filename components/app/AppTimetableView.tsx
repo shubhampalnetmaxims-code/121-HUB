@@ -135,7 +135,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
     <div className="h-full flex flex-col bg-white overflow-hidden text-left">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors theme-text">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="text-left">
@@ -183,8 +183,8 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
               <button onClick={() => navigateDate(1)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><ChevronRight className="w-6 h-6" /></button>
             </div>
             <div className="flex gap-8">
-              <button onClick={() => setViewType('week')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewType === 'week' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent'}`}>Week</button>
-              <button onClick={() => setViewType('day')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewType === 'day' ? 'text-blue-600 border-blue-600' : 'text-slate-400 border-transparent'}`}>Day</button>
+              <button onClick={() => setViewType('week')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewType === 'week' ? 'theme-text theme-border' : 'text-slate-400 border-transparent'}`}>Week</button>
+              <button onClick={() => setViewType('day')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewType === 'day' ? 'theme-text theme-border' : 'text-slate-400 border-transparent'}`}>Day</button>
             </div>
           </div>
 
@@ -196,7 +196,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
               
               return (
                 <div key={date.toISOString()} className="flex">
-                  <div className="w-8 bg-red-600 rounded-l-2xl flex items-center justify-center relative overflow-hidden shrink-0">
+                  <div className="w-8 theme-bg rounded-l-2xl flex items-center justify-center relative overflow-hidden shrink-0">
                     <span className="text-white font-black uppercase text-[10px] tracking-widest whitespace-nowrap -rotate-90">
                       {dayName.substr(0, 3)} {dayNum}
                     </span>
@@ -212,7 +212,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                           <div 
                             key={s.id} 
                             onClick={() => handleSlotClick(s)}
-                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-[0.98] transition-all cursor-pointer border ${isFull ? 'bg-slate-100 border-slate-200 grayscale' : 'bg-slate-50 border-slate-100 hover:border-blue-200'}`}
+                            className={`min-w-[180px] rounded-2xl p-4 flex flex-col justify-between h-36 active:scale-[0.98] transition-all cursor-pointer border ${isFull ? 'bg-slate-100 border-slate-200 grayscale' : 'bg-slate-50 border-slate-100 hover:theme-border'}`}
                           >
                             <div className="text-left relative">
                               <div className="flex items-center justify-between gap-1.5 mb-1">
@@ -221,7 +221,7 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
                                   <h4 className={`font-bold text-xs line-clamp-1 ${isFull ? 'text-slate-400' : 'text-slate-900'}`}>{cls?.name}</h4>
                                 </div>
                                 {!isFull && cls?.pricePerSession !== undefined && (
-                                  <span className="text-[9px] font-black text-blue-600 shrink-0">${cls.pricePerSession}</span>
+                                  <span className="text-[9px] font-black theme-text shrink-0">${cls.pricePerSession}</span>
                                 )}
                               </div>
                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.startTime} • {s.duration}</p>

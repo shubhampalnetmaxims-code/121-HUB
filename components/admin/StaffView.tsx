@@ -103,7 +103,7 @@ const StaffView: React.FC<StaffViewProps> = ({
               onClick={() => setActiveTab('trainers')}
               className={`px-6 py-1.5 rounded-md text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'trainers' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              Trainers
+              Trainers & Location
             </button>
             <button 
               onClick={() => setActiveTab('locations')}

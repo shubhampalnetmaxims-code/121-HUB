@@ -44,7 +44,7 @@ const MyMembershipsView: React.FC<MyMembershipsViewProps> = ({ currentUser, user
                    </div>
                    <div>
                      <h4 className="font-black text-slate-900 text-lg leading-tight tracking-tight uppercase line-clamp-1">{um.title}</h4>
-                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{fac?.name}</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: fac?.themeColor }}>{fac?.name}</p>
                    </div>
                 </div>
                 <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${

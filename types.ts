@@ -57,6 +57,7 @@ export interface Facility {
   isActive: boolean;
   createdAt: number;
   features: string[];
+  theme?: string;
   settings?: {
     canCancelBooking: boolean;
     canRescheduleBooking: boolean;
@@ -455,6 +456,15 @@ export const FEATURE_MODULES = [
   { id: 'blocks', name: 'Blocks', icon: 'Layers' },
   { id: 'memberships', name: 'Memberships', icon: 'CreditCard' },
   { id: 'marketplace', name: 'Marketplace', icon: 'ShoppingBag' },
+];
+
+export const THEMES = [
+  { id: 'default', name: 'Default Blue', color: '#2563eb', secondary: '#f8fafc' },
+  { id: 'dark', name: 'Midnight Dark', color: '#1e293b', secondary: '#0f172a' },
+  { id: 'nature', name: 'Nature Green', color: '#059669', secondary: '#f0fdf4' },
+  { id: 'sunset', name: 'Sunset Orange', color: '#ea580c', secondary: '#fff7ed' },
+  { id: 'royal', name: 'Royal Purple', color: '#7c3aed', secondary: '#f5f3ff' },
+  { id: 'crimson', name: 'Crimson Red', color: '#dc2626', secondary: '#fef2f2' },
 ];
 
 export const CLASS_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'All Levels'];

@@ -98,7 +98,7 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-4 mb-2">
-          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl">
+          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl theme-text">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">Memberships</h2>
@@ -117,10 +117,10 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                  <div className="space-y-1">
                    <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none uppercase">{plan.title}</h4>
                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{plan.durationDays} Day Duration</span>
+                      <span className="text-[10px] font-black theme-text uppercase tracking-widest">{plan.durationDays} Day Duration</span>
                    </div>
                  </div>
-                 <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                 <div className="p-3 theme-bg-soft theme-text rounded-2xl">
                     <CreditCard className="w-6 h-6" />
                  </div>
                </div>
@@ -157,7 +157,7 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                </div>
                
                {plan.rewardPointsEnabled && plan.rewardPointsValue && (
-                 <div className="flex items-center gap-2 px-1 text-[9px] font-black text-blue-600 uppercase tracking-widest">
+                 <div className="flex items-center gap-2 px-1 text-[9px] font-black theme-text uppercase tracking-widest">
                     <Check className="w-3 h-3" /> Earn {plan.rewardPointsValue} Reward Points
                  </div>
                )}
@@ -180,7 +180,7 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-40 scrollbar-hide">
-            <div className="p-5 rounded-[28px] border bg-blue-50 border-blue-100 text-blue-600 flex items-center gap-4">
+            <div className="p-5 rounded-[28px] border theme-bg-soft theme-border theme-text flex items-center gap-4">
               <div className="p-3 bg-white rounded-2xl shadow-sm"><CreditCard className="w-5 h-5" /></div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Membership Type</p>
@@ -195,7 +195,7 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                  <div className="flex justify-between text-sm font-bold text-slate-600"><span>Access</span><span>{selectedPlan.allow24Hour ? '24/7' : 'Timed'}</span></div>
                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                     <span className="text-lg font-black text-slate-900 tracking-tight uppercase">Final Charge</span>
-                    <span className="text-3xl font-black text-blue-600">${calculateFinalPrice(selectedPlan).toFixed(2)}</span>
+                    <span className="text-3xl font-black theme-text">${calculateFinalPrice(selectedPlan).toFixed(2)}</span>
                  </div>
               </div>
             </section>
@@ -208,14 +208,14 @@ const MembershipListView: React.FC<MembershipListViewProps> = ({ facilities, mem
                     key={card.id}
                     onClick={() => setSelectedCardId(card.id)}
                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
-                      selectedCardId === card.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white'
+                      selectedCardId === card.id ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <CreditCard className="w-5 h-5 text-slate-400" />
                       <span className="font-bold text-sm text-slate-900">{card.cardNumber}</span>
                     </div>
-                    {selectedCardId === card.id && <Check className="w-4 h-4 text-blue-600" />}
+                    {selectedCardId === card.id && <Check className="w-4 h-4 theme-text" />}
                   </button>
                 ))}
                 <button onClick={() => setIsAddingCard(true)} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-400 flex items-center justify-center gap-2">

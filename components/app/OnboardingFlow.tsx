@@ -143,7 +143,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
             <div 
               key={s} 
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                ['email', 'otp', 'details', 'payment'].indexOf(step) >= idx ? 'w-6 bg-blue-600' : 'w-3 bg-slate-100'
+                ['email', 'otp', 'details', 'payment'].indexOf(step) >= idx ? 'w-6 theme-bg' : 'w-3 bg-slate-100'
               }`}
             />
           ))}
@@ -183,7 +183,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
 
         {step === 'otp' && (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-500">
-            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-[24px] flex items-center justify-center">
+            <div className="w-16 h-16 theme-bg-soft theme-text rounded-[24px] flex items-center justify-center">
               <ShieldCheck className="w-8 h-8" />
             </div>
             <div>
@@ -198,7 +198,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
                 placeholder="000 000"
                 value={formData.otp}
                 onChange={e => setFormData(p => ({ ...p, otp: e.target.value }))}
-                className="w-full px-4 py-6 bg-slate-50 border border-slate-100 rounded-[24px] outline-none focus:ring-4 focus:ring-blue-600/10 font-black text-4xl text-center tracking-[0.5em]"
+                className="w-full px-4 py-6 bg-slate-50 border border-slate-100 rounded-[24px] outline-none focus:ring-4 theme-ring-soft font-black text-4xl text-center tracking-[0.5em]"
               />
               <button 
                 onClick={nextStep}
@@ -210,7 +210,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
               <button 
                 type="button"
                 onClick={() => showToast('Magic code resent', 'info')}
-                className="w-full text-blue-600 font-bold text-sm"
+                className="w-full theme-text font-bold text-sm"
               >
                 Resend OTP
               </button>
@@ -300,7 +300,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
                 <div 
                   key={card.id}
                   className={`p-5 rounded-[28px] border-2 transition-all relative ${
-                    card.isPrimary ? 'border-blue-600 bg-blue-50/10' : 'border-slate-100 bg-slate-50/50'
+                    card.isPrimary ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-slate-50/50'
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -309,7 +309,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
                       <div className="text-left">
                         <p className="font-mono text-sm tracking-widest leading-none mb-1">{card.cardNumber}</p>
                         <div className="flex items-center gap-2">
-                           {card.isPrimary && <span className="text-[8px] font-black text-blue-600 uppercase tracking-widest">Primary</span>}
+                           {card.isPrimary && <span className="text-[8px] font-black theme-text uppercase tracking-widest">Primary</span>}
                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Exp: {card.expiryDate}</span>
                         </div>
                       </div>
@@ -323,7 +323,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ users, onComplete, onCa
 
               <button 
                 onClick={() => setIsCardModalOpen(true)}
-                className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-blue-600 hover:border-blue-600 hover:bg-blue-50/30 transition-all group"
+                className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-2 text-slate-400 hover:theme-text hover:theme-border hover:theme-bg-soft transition-all group"
               >
                 <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Plus className="w-5 h-5" />

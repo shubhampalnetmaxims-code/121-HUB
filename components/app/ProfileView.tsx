@@ -76,7 +76,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <div className="flex-1 overflow-hidden">
               <h3 className="text-xl font-black text-slate-900 tracking-tight truncate leading-tight uppercase">{currentUser.fullName}</h3>
-              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{currentUser.gender}</p>
+              <p className="text-[10px] font-black theme-text uppercase tracking-widest">{currentUser.gender}</p>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-slate-50 space-y-1 relative z-10">
@@ -95,7 +95,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({
         <section>
           <h4 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Management Grid</h4>
           <div className="grid grid-cols-3 gap-3">
-            <GridMenuItem icon={User} label="Profile" color="text-blue-600" bg="bg-blue-50" onClick={() => {}} />
+            <GridMenuItem icon={User} label="Profile" color="theme-text" bg="theme-bg-soft" onClick={() => {}} />
             <GridMenuItem icon={Trophy} label="Rewards" color="text-pink-600" bg="bg-pink-50" onClick={() => navigate('/app/rewards')} />
             <GridMenuItem icon={CreditCard} label="Payments" color="text-emerald-600" bg="bg-emerald-50" onClick={() => navigate('/app/profile/payments')} />
             <GridMenuItem icon={Calendar} label="Bookings" color="text-indigo-600" bg="bg-indigo-50" onClick={() => navigate('/app/bookings')} />

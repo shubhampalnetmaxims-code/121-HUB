@@ -82,7 +82,7 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
           >
             <ShoppingCart className="w-4 h-4 text-slate-400" />
             {cart.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+              <div className="absolute -top-1 -right-1 w-4 h-4 theme-bg text-white text-[8px] font-bold rounded-full flex items-center justify-center border-2 border-white">
                 {cart.length}
               </div>
             )}
@@ -95,7 +95,7 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
           <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide">
             <button 
               onClick={() => { setSelectedFacilityId('all'); setSeeAll(false); }}
-              className={`shrink-0 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedFacilityId === 'all' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}
+              className={`shrink-0 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedFacilityId === 'all' ? 'theme-bg text-white theme-border' : 'bg-white text-slate-400 border-slate-100'}`}
             >
               All
             </button>
@@ -103,7 +103,7 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
               <button 
                 key={f.id}
                 onClick={() => { setSelectedFacilityId(f.id); setSeeAll(true); }}
-                className={`shrink-0 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedFacilityId === f.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}
+                className={`shrink-0 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${selectedFacilityId === f.id ? 'theme-bg text-white theme-border' : 'bg-white text-slate-400 border-slate-100'}`}
               >
                 {f.name}
               </button>
@@ -118,7 +118,7 @@ const MarketView: React.FC<MarketViewProps> = ({ facilities, products, onAuthTri
                     <h3 className="text-base font-bold text-slate-900 tracking-tight">{group.facility.name}</h3>
                     <button 
                       onClick={() => { setSelectedFacilityId(group.facility.id); setSeeAll(true); }}
-                      className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-1"
+                      className="text-[10px] font-bold theme-text uppercase tracking-widest flex items-center gap-1"
                     >
                       View All <ChevronRight className="w-3 h-3" />
                     </button>
@@ -192,7 +192,7 @@ const ProductCard: React.FC<{ product: Product; onClick: () => void; onPlusClick
       
       <div className="p-3.5 flex-1 flex flex-col text-left">
         <div className="flex-1">
-          <p className="text-[8px] font-bold text-blue-600 uppercase tracking-widest mb-1">{product.category || 'Gear'}</p>
+          <p className="text-[8px] font-bold theme-text uppercase tracking-widest mb-1">{product.category || 'Gear'}</p>
           <h4 className="font-bold text-slate-900 text-sm line-clamp-2 leading-tight tracking-tight">{product.name}</h4>
         </div>
         
@@ -212,7 +212,7 @@ const ProductCard: React.FC<{ product: Product; onClick: () => void; onPlusClick
               e.stopPropagation();
               onPlusClick();
             }}
-            className="w-7 h-7 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0 shadow-sm transition-colors hover:bg-blue-600"
+            className="w-7 h-7 rounded-lg theme-bg flex items-center justify-center text-white shrink-0 shadow-sm transition-colors hover:opacity-80"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>

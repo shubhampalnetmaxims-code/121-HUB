@@ -48,10 +48,10 @@ const RewardsHistoryView: React.FC<RewardsHistoryViewProps> = ({ currentUser, tr
         <section className="bg-slate-900 rounded-[40px] p-8 text-white relative overflow-hidden shadow-2xl">
            <div className="relative z-10">
               <div className="flex justify-between items-start mb-10">
-                 <div className="p-3 bg-white/10 rounded-2xl"><Coins className="w-8 h-8 text-blue-400" /></div>
+                 <div className="p-3 bg-white/10 rounded-2xl"><Coins className="w-8 h-8 theme-text" /></div>
                  <div className="text-right">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Discount Ready</p>
-                    <p className="text-4xl font-black text-blue-400">${isUnlocked ? discountValue.toFixed(2) : '0.00'}</p>
+                    <p className="text-4xl font-black theme-text">${isUnlocked ? discountValue.toFixed(2) : '0.00'}</p>
                  </div>
               </div>
               <div>
@@ -79,7 +79,7 @@ const RewardsHistoryView: React.FC<RewardsHistoryViewProps> = ({ currentUser, tr
                    <Lock className="w-4 h-4 text-amber-500" />
                    <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Locked: Points Needed</h3>
                 </div>
-                <span className="text-[10px] font-black text-blue-600 uppercase">{currentUser.rewardPoints} / {minRequired}</span>
+                <span className="text-[10px] font-black theme-text uppercase">{currentUser.rewardPoints} / {minRequired}</span>
              </div>
              <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden">
                 <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
@@ -116,7 +116,7 @@ const RewardsHistoryView: React.FC<RewardsHistoryViewProps> = ({ currentUser, tr
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(tx.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} • ID: {tx.referenceId.substr(0,8)}</p>
                         </div>
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-1 text-[8px] font-black text-blue-600 uppercase tracking-widest">
+                          <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest" style={{ color: fac?.themeColor }}>
                             <MapPin className="w-2 h-2" /> {fac?.name || 'Manual'}
                           </div>
                           <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Bal: {tx.remainingBalance} pts</div>
@@ -134,11 +134,11 @@ const RewardsHistoryView: React.FC<RewardsHistoryViewProps> = ({ currentUser, tr
         </section>
 
         {/* Info Banner */}
-        <section className="p-6 bg-blue-50 rounded-[32px] border border-blue-100 flex items-start gap-4">
-           <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <section className="p-6 theme-bg-soft rounded-[32px] border theme-border flex items-start gap-4">
+           <Info className="w-5 h-5 theme-text shrink-0 mt-0.5" />
            <div className="text-left">
-              <p className="text-xs font-bold text-blue-900 leading-tight mb-1 uppercase tracking-tight">How to use points</p>
-              <p className="text-[10px] text-blue-700 leading-relaxed font-medium">You can redeem points for a discount on any Session, Program, or Hub Order. Simply toggle 'Use Rewards' during the pay phase.</p>
+              <p className="text-xs font-bold theme-text leading-tight mb-1 uppercase tracking-tight">How to use points</p>
+              <p className="text-[10px] theme-text leading-relaxed font-medium">You can redeem points for a discount on any Session, Program, or Hub Order. Simply toggle 'Use Rewards' during the pay phase.</p>
            </div>
         </section>
       </div>

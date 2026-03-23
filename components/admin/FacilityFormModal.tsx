@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { X, Bold, Italic, List, CloudUpload } from 'lucide-react';
-import { Facility } from '../../types';
+import { Facility, FACILITY_THEME_COLORS } from '../../types';
 import ConfirmationModal from './ConfirmationModal';
 
 interface FacilityFormModalProps {
@@ -17,7 +17,8 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
     icon: facility?.icon || 'Activity',
     imageUrl: facility?.imageUrl || '',
     location: facility?.location || '',
-    isActive: facility ? facility.isActive : true
+    isActive: facility ? facility.isActive : true,
+    themeColor: facility?.themeColor || FACILITY_THEME_COLORS[0].value
   });
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -77,6 +78,23 @@ const FacilityFormModal: React.FC<FacilityFormModalProps> = ({ facility, onClose
                 )}
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Theme Color</label>
+              <div className="flex flex-wrap gap-3">
+                {FACILITY_THEME_COLORS.map(color => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, themeColor: color.value }))}
+                    className={`w-10 h-10 rounded-full border-2 transition-all ${formData.themeColor === color.value ? 'border-slate-900 scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight">This color will be applied to the facility's hub and sub-views.</p>
             </div>
 
             <div>

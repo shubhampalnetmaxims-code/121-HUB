@@ -59,13 +59,13 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
   return (
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 flex items-center gap-4">
-        <button onClick={() => navigate('/app/home')} className="p-2 hover:bg-slate-100 rounded-xl">
+        <button onClick={() => navigate('/app/home')} className="p-2 hover:bg-slate-100 rounded-xl theme-text">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="text-left">
           <h2 className="text-xl font-bold tracking-tight">{facility.name}</h2>
           <div className="flex items-center gap-1 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
-            <MapPin className="w-2.5 h-2.5 text-blue-500" /> {facility.location || '121 Wellness Network'}
+            <MapPin className="w-2.5 h-2.5 theme-text" /> {facility.location || '121 Wellness Network'}
           </div>
         </div>
       </div>
@@ -79,8 +79,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                 onClick={() => navigate(`/app/facility/${id}/timetable`)}
                 className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
               >
-                <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <CalendarDays className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                  <div className="absolute inset-0 theme-bg opacity-10"></div>
+                  <CalendarDays className="w-7 h-7 theme-text relative z-10" />
                 </div>
                 <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Timetable</span>
               </button>
@@ -91,8 +92,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                 onClick={() => navigate(`/app/facility/${id}/market`)}
                 className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
               >
-                <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <ShoppingBag className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                  <div className="absolute inset-0 theme-bg opacity-10"></div>
+                  <ShoppingBag className="w-7 h-7 theme-text relative z-10" />
                 </div>
                 <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Marketplace</span>
               </button>
@@ -103,8 +105,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                 onClick={() => navigate(`/app/facility/${id}/memberships`)}
                 className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
               >
-                <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <CreditCard className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                  <div className="absolute inset-0 theme-bg opacity-10"></div>
+                  <CreditCard className="w-7 h-7 theme-text relative z-10" />
                 </div>
                 <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Memberships</span>
               </button>
@@ -115,8 +118,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                 onClick={() => navigate(`/app/facility/${id}/passes`)}
                 className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
               >
-                <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Ticket className="w-7 h-7" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                  <div className="absolute inset-0 theme-bg opacity-10"></div>
+                  <Ticket className="w-7 h-7 theme-text relative z-10" />
                 </div>
                 <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">Passes</span>
               </button>
@@ -132,8 +136,9 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
                   onClick={() => handleModuleNavigation(module.id)}
                   className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center gap-4 hover:bg-slate-50 transition-colors group active:scale-95"
                 >
-                  <div className="w-14 h-14 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <ModuleIcon className="w-7 h-7" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                    <div className="absolute inset-0 theme-bg opacity-10"></div>
+                    <ModuleIcon className="w-7 h-7 theme-text relative z-10" />
                   </div>
                   <span className="font-bold text-slate-900 text-sm tracking-tight leading-none">{module.name}</span>
                 </button>
@@ -177,7 +182,7 @@ const FacilityHubView: React.FC<FacilityHubViewProps> = ({ facilities, trainers,
 
       <button 
         onClick={() => onShowInfo(facility)}
-        className="absolute bottom-28 right-6 w-16 h-16 bg-black text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform z-20"
+        className="absolute bottom-28 right-6 w-16 h-16 theme-bg text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform z-20 theme-shadow"
       >
         <Info className="w-7 h-7" />
       </button>

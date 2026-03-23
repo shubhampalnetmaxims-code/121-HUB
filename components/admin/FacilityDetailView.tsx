@@ -1,8 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock, Building, MapPin } from 'lucide-react';
-import { Facility, FEATURE_MODULES } from '../../types';
+import { ArrowLeft, Edit3, Settings, BookOpen, Layers, Ticket, CreditCard, ShoppingBag, Menu, ShieldCheck, XCircle, RefreshCw, ShoppingCart, Image as ImageIcon, Trash2, Plus, CloudUpload, Save, Lock, Building, MapPin, Palette } from 'lucide-react';
+import { Facility, FEATURE_MODULES, THEMES } from '../../types';
 import FacilityFormModal from './FacilityFormModal';
 import { useToast } from '../ToastContext';
 
@@ -242,6 +242,49 @@ const FacilityDetailView: React.FC<FacilityDetailViewProps> = ({ facilities, onU
               <span className="text-[10px] font-black uppercase">Add Image</span>
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
             </button>
+          </div>
+        </section>
+
+        {/* Theme Selection Section */}
+        <section className="xl:col-span-2 bg-white rounded-lg p-8 border border-slate-200 shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-left">
+              <h3 className="text-xs font-black flex items-center gap-3 uppercase tracking-[0.2em] text-slate-400">
+                <Palette className="w-4 h-4" /> Visual Theme
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-1">Select a predefined color palette for this facility's user interface.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {THEMES.map(theme => {
+              const isSelected = (facility.theme || 'default') === theme.id;
+              return (
+                <button 
+                  key={theme.id}
+                  onClick={() => onUpdate(facility.id, { theme: theme.id })}
+                  className={`flex flex-col items-center gap-4 p-6 rounded-xl border transition-all group ${isSelected ? 'border-blue-600 bg-blue-50/20 shadow-md ring-2 ring-blue-600/10' : 'border-slate-100 hover:border-slate-200 bg-slate-50/30 hover:bg-white hover:shadow-sm'}`}
+                >
+                  <div className="relative">
+                    <div 
+                      className="w-12 h-12 rounded-full shadow-inner border border-black/5 group-hover:scale-110 transition-transform" 
+                      style={{ backgroundColor: theme.color }} 
+                    />
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center border-2 border-white">
+                        <Plus className="w-2 h-2 rotate-45" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <span className={`text-[10px] font-black uppercase tracking-widest block ${isSelected ? 'text-blue-600' : 'text-slate-500'}`}>{theme.name}</span>
+                    <div className="flex gap-1 justify-center mt-2">
+                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.color }} />
+                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.secondary }} />
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
 

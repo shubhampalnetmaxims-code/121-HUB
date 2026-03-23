@@ -23,7 +23,7 @@ const ImageSlider = ({ images }: { images: string[] }) => {
   }, [images]);
 
   if (!images || images.length === 0) return (
-    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-blue-600">
+    <div className="w-full h-full bg-slate-100 flex items-center justify-center theme-text">
       <Dumbbell className="w-10 h-10" />
     </div>
   );
@@ -108,7 +108,7 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
               <div className="absolute bottom-6 left-6 pointer-events-none">
                 <h4 className="text-white font-bold text-2xl tracking-tighter leading-none mb-1 uppercase">{f.name}</h4>
                 <div className="flex items-center gap-1.5 text-white/70 text-[9px] font-black uppercase tracking-[0.2em]">
-                   <MapPin className="w-2.5 h-2.5 text-blue-400" /> {f.location || '121 Wellness Network'}
+                   <MapPin className="w-2.5 h-2.5" style={{ color: f.themeColor || '#60A5FA' }} /> {f.location || '121 Wellness Network'}
                 </div>
               </div>
             </div>

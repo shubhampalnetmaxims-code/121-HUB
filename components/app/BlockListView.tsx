@@ -24,7 +24,7 @@ const BlockListView: React.FC<BlockListViewProps> = ({ facilities, blocks, train
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-12 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-4 mb-2">
-          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl">
+          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl theme-text">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 uppercase">Training Blocks</h2>
@@ -42,9 +42,9 @@ const BlockListView: React.FC<BlockListViewProps> = ({ facilities, blocks, train
                  <div className="flex justify-between items-start">
                    <div className="space-y-1">
                      <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none uppercase">{block.name}</h4>
-                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{block.numWeeks} Week Transformation</p>
+                     <p className="text-[10px] font-black theme-text uppercase tracking-widest">{block.numWeeks} Week Transformation</p>
                    </div>
-                   <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                   <div className="p-3 theme-bg-soft theme-text rounded-2xl">
                       <Layers className="w-6 h-6" />
                    </div>
                  </div>
@@ -78,7 +78,7 @@ const BlockListView: React.FC<BlockListViewProps> = ({ facilities, blocks, train
 
                  <button 
                   onClick={() => navigate(`/app/facility/${id}/block/${block.id}`)}
-                  className="w-full py-5 bg-black text-white rounded-[28px] font-black text-lg shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 group-hover:bg-slate-800"
+                  className="w-full py-5 theme-bg text-white rounded-[28px] font-black text-lg shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
                  >
                    View Detailed Plan <ArrowRight className="w-5 h-5" />
                  </button>

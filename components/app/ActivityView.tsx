@@ -44,7 +44,7 @@ const ActivityView: React.FC = () => {
           />
         </div>
 
-        <section className="p-6 bg-blue-600 rounded-[32px] text-white space-y-2 mt-4">
+        <section className="p-6 theme-bg rounded-[32px] text-white space-y-2 mt-4">
            <h4 className="font-bold tracking-tight uppercase text-sm">Stay Consistent</h4>
            <p className="text-[10px] text-white/70 leading-relaxed font-medium uppercase tracking-tight">
              Regular logging helps you stay on track with your long-term health and wellness goals.

@@ -94,7 +94,7 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
     <div className="h-full flex flex-col bg-slate-50 overflow-hidden text-left relative">
       <div className="bg-white p-6 pt-12 border-b border-slate-50 shrink-0">
         <div className="flex items-center gap-4 mb-2">
-          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl">
+          <button onClick={() => navigate(`/app/facility/${id}`)} className="p-2 hover:bg-slate-100 rounded-xl theme-text">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <h2 className="text-2xl font-black tracking-tight text-slate-900">Hub Passes</h2>
@@ -109,7 +109,7 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
                <div className="space-y-1">
                  <h4 className="text-2xl font-black text-slate-900 tracking-tighter leading-none uppercase">{pass.name}</h4>
                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{pass.isAllClasses ? 'Global Sessions' : 'Class Specific'}</span>
+                    <span className="text-[10px] font-black theme-text uppercase tracking-widest">{pass.isAllClasses ? 'Global Sessions' : 'Class Specific'}</span>
                  </div>
                </div>
                <div className="text-right">
@@ -133,7 +133,7 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{pass.description}</p>
                 <button 
                   onClick={() => setSelectedPass(pass)}
-                  className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest"
+                  className="flex items-center gap-2 text-xs font-black theme-text uppercase tracking-widest"
                 >
                   Read terms & conditions <Info className="w-3.5 h-3.5" />
                 </button>
@@ -161,17 +161,17 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
               </div>
               <div className="space-y-6 text-left overflow-y-auto max-h-[50vh] pr-2 scrollbar-hide">
                  <div className="space-y-2">
-                    <p className="font-black text-[10px] text-blue-600 uppercase tracking-widest">Valid Use</p>
+                    <p className="font-black text-[10px] theme-text uppercase tracking-widest">Valid Use</p>
                     <p className="text-sm font-medium text-slate-600 leading-relaxed">This pass allows for {selectedPass.credits} session credits. Each booking can include up to {selectedPass.personsPerBooking} participants.</p>
                  </div>
                  <div className="space-y-2">
-                    <p className="font-black text-[10px] text-blue-600 uppercase tracking-widest">Coverage</p>
+                    <p className="font-black text-[10px] theme-text uppercase tracking-widest">Coverage</p>
                     <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedPass.isAllClasses ? 'Valid for all standard sessions at this facility.' : 'Valid only for specific classes as configured by the hub administrator.'}</p>
                  </div>
               </div>
               <button 
                 onClick={handleGoToCheckout}
-                className="w-full py-5 bg-blue-600 text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all"
+                className="w-full py-5 theme-bg text-white rounded-[28px] font-black text-xl shadow-2xl active:scale-95 transition-all"
               >
                 Proceed to Payment
               </button>
@@ -193,7 +193,7 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-40 scrollbar-hide">
-            <div className="p-5 rounded-[28px] border bg-blue-50 border-blue-100 text-blue-600 flex items-center gap-4">
+            <div className="p-5 rounded-[28px] border theme-bg-soft theme-border theme-text flex items-center gap-4">
               <div className="p-3 bg-white rounded-2xl shadow-sm"><Ticket className="w-5 h-5" /></div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Selected Plan</p>
@@ -210,7 +210,7 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
                  </div>
                  <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                     <span className="text-lg font-black text-slate-900 tracking-tight">Total Price</span>
-                    <span className="text-3xl font-black text-blue-600">${selectedPass.price.toFixed(2)}</span>
+                    <span className="text-3xl font-black theme-text">${selectedPass.price.toFixed(2)}</span>
                  </div>
               </div>
             </section>
@@ -223,14 +223,14 @@ const PassListView: React.FC<PassListViewProps> = ({ facilities, passes, onBuyPa
                     key={card.id}
                     onClick={() => setSelectedCardId(card.id)}
                     className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
-                      selectedCardId === card.id ? 'border-blue-600 bg-blue-50' : 'border-slate-100 bg-white'
+                      selectedCardId === card.id ? 'theme-border theme-bg-soft' : 'border-slate-100 bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <CreditCard className="w-5 h-5 text-slate-400" />
                       <span className="font-bold text-sm text-slate-900">{card.cardNumber}</span>
                     </div>
-                    {selectedCardId === card.id && <Check className="w-4 h-4 text-blue-600" />}
+                    {selectedCardId === card.id && <Check className="w-4 h-4 theme-text" />}
                   </button>
                 ))}
                 <button onClick={() => setIsAddingCard(true)} className="w-full py-4 border-2 border-dashed border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-400 flex items-center justify-center gap-2">
