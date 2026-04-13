@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Dumbbell, Info, MapPin, ArrowRight } from 'lucide-react';
+import { Search, Bell, Dumbbell, Info, MapPin, ArrowRight, CalendarDays } from 'lucide-react';
 import { Facility, User } from '../../types';
 import { useNotifications } from '../NotificationContext';
 import NotificationListModal from './NotificationListModal';
@@ -113,8 +113,8 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
               </div>
             </div>
 
-            <div className="p-4 flex justify-between items-center bg-white">
-               <div className="flex -space-x-2">
+            <div className="p-4 flex justify-between items-center bg-white gap-3">
+               <div className="flex -space-x-2 shrink-0">
                  {/* Decorative feature icons */}
                  {f.features.slice(0, 3).map(feat => (
                    <div key={feat} className="w-7 h-7 rounded-full bg-slate-50 border-2 border-white flex items-center justify-center shadow-sm">
@@ -122,13 +122,24 @@ const HomeView: React.FC<HomeViewProps> = ({ facilities, onShowInfo, currentUser
                    </div>
                  ))}
                </div>
-               <button 
-                onClick={() => navigate(`/app/facility/${f.id}`)}
-                className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-lg font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-sm"
-               >
-                 Explore
-                 <ArrowRight className="w-3.5 h-3.5" />
-               </button>
+               <div className="flex gap-2 flex-1 justify-end">
+                 {f.features.includes('timetable') && (
+                   <button 
+                    onClick={() => navigate(`/app/facility/${f.id}/timetable`)}
+                    className="flex items-center gap-2 bg-slate-50 text-slate-600 px-4 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
+                   >
+                     <CalendarDays className="w-3.5 h-3.5" />
+                     Timetable
+                   </button>
+                 )}
+                 <button 
+                  onClick={() => navigate(`/app/facility/${f.id}`)}
+                  className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-sm"
+                 >
+                   Explore
+                   <ArrowRight className="w-3.5 h-3.5" />
+                 </button>
+               </div>
             </div>
           </div>
         ))}

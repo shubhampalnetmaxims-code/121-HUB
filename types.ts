@@ -321,14 +321,19 @@ export interface PhotoLog {
 export interface ProductSizeStock {
   size: string;
   quantity: number;
+  price: number;
+  discountedPrice?: number;
 }
 
 export interface Product {
   id: string;
   facilityId: string;
+  facilityIds?: string[]; // Added for multiple facilities support if needed
   name: string;
-  price: number;
-  discountPercent?: number;
+  price: number; // Base price
+  discountType?: 'flat' | 'percent';
+  discountValue?: number;
+  discountPercent?: number; // Legacy
   discountedPrice?: number;
   quantity: number;
   sizeStocks: ProductSizeStock[];
@@ -709,10 +714,10 @@ export const DEFAULT_BOOKINGS: Booking[] = (() => {
 })();
 
 export const DEFAULT_PRODUCTS: Product[] = [
-  { id: 'p-gloves', facilityId: '1', name: 'Gym Gloves', price: 15, quantity: 50, sizeStocks: [{size: 'M', quantity: 30}, {size: 'L', quantity: 20}], category: 'Gear', status: 'active', createdAt: Date.now(), description: 'High grip weightlifting gloves.', images: ['https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop'] },
-  { id: 'p-tshirt', facilityId: '1', name: 'Gym T-Shirt', price: 20, quantity: 40, sizeStocks: [{size: 'S', quantity: 10}, {size: 'M', quantity: 10}, {size: 'L', quantity: 10}, {size: 'XL', quantity: 10}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Moisture-wicking standard fit.', images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop'] },
-  { id: 'p-mat', facilityId: '3', name: 'Yoga Mat', price: 25, quantity: 15, sizeStocks: [{size: 'Standard', quantity: 15}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Eco-friendly non-slip mat.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'] },
-  { id: 'p-bottle', facilityId: '2', name: 'Water Bottle', price: 12, quantity: 30, sizeStocks: [{size: '750ml', quantity: 30}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Insulated steel bottle.', images: ['https://images.unsplash.com/photo-1602143307185-84447545512d?q=80&w=400&auto=format&fit=crop'] }
+  { id: 'p-gloves', facilityId: '1', name: 'Gym Gloves', price: 15, quantity: 50, sizeStocks: [{size: 'M', quantity: 30, price: 15}, {size: 'L', quantity: 20, price: 18}], category: 'Gear', status: 'active', createdAt: Date.now(), description: 'High grip weightlifting gloves.', images: ['https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-tshirt', facilityId: '1', name: 'Gym T-Shirt', price: 20, quantity: 40, sizeStocks: [{size: 'S', quantity: 10, price: 20}, {size: 'M', quantity: 10, price: 20}, {size: 'L', quantity: 10, price: 22}, {size: 'XL', quantity: 10, price: 25}], category: 'Apparel', status: 'active', createdAt: Date.now(), description: 'Moisture-wicking standard fit.', images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-mat', facilityId: '3', name: 'Yoga Mat', price: 25, quantity: 15, sizeStocks: [{size: 'Standard', quantity: 15, price: 25}], category: 'Equipment', status: 'active', createdAt: Date.now(), description: 'Eco-friendly non-slip mat.', images: ['https://images.unsplash.com/photo-1592432678016-e910b452f9a2?q=80&w=400&auto=format&fit=crop'] },
+  { id: 'p-bottle', facilityId: '2', name: 'Water Bottle', price: 12, quantity: 30, sizeStocks: [{size: '750ml', quantity: 30, price: 12}], category: 'Accessories', status: 'active', createdAt: Date.now(), description: 'Insulated steel bottle.', images: ['https://images.unsplash.com/photo-1602143307185-84447545512d?q=80&w=400&auto=format&fit=crop'] }
 ];
 
 export const DEFAULT_PASSES: Pass[] = [

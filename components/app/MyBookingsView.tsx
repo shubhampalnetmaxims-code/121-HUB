@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, ChevronRight, XCircle, MoreVertical, ShieldCheck, AlertCircle, User as UserIcon, Layers, Ticket, DollarSign, CheckCircle2, TrendingUp, Info, X, FileText, ShoppingBag, Eye, RefreshCcw } from 'lucide-react';
 import { Booking, User, Facility, Class, Trainer, Block, BlockBooking, BlockWeeklyPayment, UserMembership, Order, ClassSlot } from '../../types';
 import { useToast } from '../ToastContext';
@@ -250,11 +250,23 @@ const MyBookingsView: React.FC<MyBookingsViewProps> = ({
   );
 };
 
-const EmptyState = ({ icon: Icon, label }: { icon: any, label: string }) => (
-  <div className="py-24 text-center space-y-4">
-    <div className="w-16 h-16 bg-white rounded-[40px] flex items-center justify-center mx-auto border border-slate-100 text-slate-200"><Icon className="w-8 h-8" /></div>
-    <p className="text-lg font-bold text-slate-400 uppercase text-xs tracking-widest">{label}</p>
-  </div>
-);
+const EmptyState = ({ icon: Icon, label }: { icon: any, label: string }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="py-24 text-center space-y-6">
+      <div className="w-20 h-20 bg-white rounded-[40px] flex items-center justify-center mx-auto border border-slate-100 text-slate-200 shadow-sm"><Icon className="w-10 h-10" /></div>
+      <div className="space-y-2">
+        <p className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none">{label}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nothing scheduled yet</p>
+      </div>
+      <button 
+        onClick={() => navigate('/app/timetable')}
+        className="px-8 py-4 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+      >
+        Book a Session
+      </button>
+    </div>
+  );
+};
 
 export default MyBookingsView;

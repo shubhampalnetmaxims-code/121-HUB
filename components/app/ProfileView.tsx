@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User as UserType, Booking, Facility, Class, Order, UserPass, UserMembership } from '../../types';
-import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ShieldCheck, AlertTriangle, FileText, Trophy, HelpCircle } from 'lucide-react';
+import { User, Mail, Phone, CreditCard, Calendar, ShoppingBag, Ticket, LogOut, Trash2, ShieldCheck, AlertTriangle, FileText, Trophy, HelpCircle, Activity, Image } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ProfileViewProps {
@@ -99,6 +99,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({
             <GridMenuItem icon={Trophy} label="Rewards" color="text-pink-600" bg="bg-pink-50" onClick={() => navigate('/app/rewards')} />
             <GridMenuItem icon={CreditCard} label="Payments" color="text-emerald-600" bg="bg-emerald-50" onClick={() => navigate('/app/profile/payments')} />
             <GridMenuItem icon={Calendar} label="Bookings" color="text-indigo-600" bg="bg-indigo-50" onClick={() => navigate('/app/bookings')} />
+            <GridMenuItem icon={Activity} label="Measurements" color="text-blue-600" bg="bg-blue-50" onClick={() => navigate('/app/measurements')} />
+            <GridMenuItem icon={Image} label="Photo Log" color="text-purple-600" bg="bg-purple-50" onClick={() => navigate('/app/photo-logs')} />
             <GridMenuItem icon={ShoppingBag} label="Orders" color="text-orange-600" bg="bg-orange-50" onClick={() => navigate('/app/profile/orders')} />
             <GridMenuItem icon={Ticket} label="Passes" color="text-purple-600" bg="bg-purple-50" onClick={() => navigate('/app/profile/passes')} />
             <GridMenuItem icon={ShieldCheck} label="Memberships" color="text-green-600" bg="bg-green-50" onClick={() => navigate('/app/profile/memberships')} />

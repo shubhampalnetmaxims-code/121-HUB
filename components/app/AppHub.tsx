@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, useLocation, useParams, useNavigate } from 'react-router-dom';
 // Fix: Added SupportTicket to imports from types
-import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket } from '../../types';
+import { Facility, Class, Trainer, Location, ClassSlot, Product, User, Booking, CartItem, Order, Pass, UserPass, Block, BlockBooking, BlockWeeklyPayment, Membership, UserMembership, Measurement, PhotoLog, RewardTransaction, RewardSettings, SupportTicket, THEMES } from '../../types';
 import EntryView from './EntryView';
 import HomeView from './HomeView';
 import FacilityHubView from './FacilityHubView';
@@ -148,17 +148,21 @@ const AppHub: React.FC<AppHubProps> = ({
     navigate('/app/onboarding', { state: { returnTo: location.pathname } });
   };
 
-  const getThemeColor = () => {
+  const getThemeColors = () => {
     const match = location.pathname.match(/\/app\/facility\/([^/]+)/);
     if (match) {
       const facilityId = match[1];
       const facility = facilities.find(f => f.id === facilityId);
-      return facility?.themeColor || '#0F172A';
+      const theme = THEMES.find(t => t.id === facility?.theme);
+      return {
+        primary: theme?.color || '#0F172A',
+        secondary: theme?.secondary || '#F1F5F9'
+      };
     }
-    return '#0F172A';
+    return { primary: '#0F172A', secondary: '#F1F5F9' };
   };
 
-  const themeColor = getThemeColor();
+  const { primary: themeColor, secondary: themeSecondary } = getThemeColors();
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 pt-20 pb-10">
@@ -166,13 +170,20 @@ const AppHub: React.FC<AppHubProps> = ({
         .theme-bg { background-color: var(--facility-theme) !important; }
         .theme-text { color: var(--facility-theme) !important; }
         .theme-border { border-color: var(--facility-theme) !important; }
-        .theme-shadow { --tw-shadow-color: var(--facility-theme); }
-        .theme-ring { --tw-ring-color: var(--facility-theme); }
-        .theme-bg-soft { background-color: var(--facility-theme); opacity: 0.1; }
+        .theme-shadow { --tw-shadow-color: var(--facility-theme) !important; }
+        .theme-ring { --tw-ring-color: var(--facility-theme) !important; }
+        .theme-accent { accent-color: var(--facility-theme) !important; }
+        .theme-bg-soft { background-color: var(--facility-theme-soft) !important; }
+        .theme-text-soft { color: var(--facility-theme-soft) !important; }
+        .theme-ring-soft { --tw-ring-color: var(--facility-theme-soft) !important; }
+        .hover\:theme-bg:hover { background-color: var(--facility-theme) !important; }
+        .hover\:theme-text:hover { color: var(--facility-theme) !important; }
+        .hover\:theme-border:hover { border-color: var(--facility-theme) !important; }
+        .hover\:theme-bg-soft:hover { background-color: var(--facility-theme-soft) !important; }
       `}</style>
       <div className="relative w-full max-w-[400px] h-[860px] bg-black rounded-[48px] shadow-2xl overflow-hidden border-[8px] border-slate-900">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-slate-900 rounded-b-2xl z-[100]"></div>
-        <div className="h-full bg-white relative" style={{ '--facility-theme': themeColor } as React.CSSProperties}>
+        <div className="h-full bg-white relative" style={{ '--facility-theme': themeColor, '--facility-theme-soft': themeSecondary } as React.CSSProperties}>
           <Routes>
             <Route index element={<EntryView />} />
             <Route path="onboarding" element={<OnboardingFlow users={users} onComplete={onRegisterUser} onCancel={() => navigate('/app/home')} />} />

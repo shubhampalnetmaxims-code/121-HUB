@@ -22,9 +22,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [isSuccessPromptOpen, setIsSuccessPromptOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizeStocks?.[0]?.size || '');
 
-  const hasDiscount = product.discountPercent && product.discountPercent > 0;
   const currentSizeStock = product.sizeStocks?.find(ss => ss.size === selectedSize);
   const isOutOfStock = !currentSizeStock || currentSizeStock.quantity === 0;
+  
+  const currentPrice = currentSizeStock?.price || product.price;
+  const currentDiscountedPrice = currentSizeStock?.discountedPrice || product.discountedPrice;
+  const hasDiscount = (currentDiscountedPrice && currentDiscountedPrice < currentPrice) || (product.discountPercent && product.discountPercent > 0);
 
   const handleAction = (type: 'wishlist' | 'cart') => {
     if (!currentUser) {
@@ -40,7 +43,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           id: Math.random().toString(36).substr(2, 9),
           productId: product.id,
           name: product.name,
-          price: hasDiscount ? (product.discountedPrice || product.price) : product.price,
+          price: hasDiscount ? (currentDiscountedPrice || currentPrice) : currentPrice,
           size: selectedSize,
           quantity: 1,
           image: product.images[0] || '',
@@ -104,13 +107,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <h3 className="text-3xl font-black text-slate-900 tracking-tight leading-tight uppercase">{product.name}</h3>
             </div>
             <div className="text-right shrink-0">
-              {hasDiscount && product.discountedPrice ? (
+              {hasDiscount && currentDiscountedPrice ? (
                 <>
-                  <div className="text-[11px] text-slate-400 line-through font-bold decoration-red-400/50 leading-none mb-1">${product.price.toFixed(2)}</div>
-                  <div className="text-2xl font-black text-red-600 tracking-tighter leading-none">${product.discountedPrice.toFixed(2)}</div>
+                  <div className="text-[11px] text-slate-400 line-through font-bold decoration-red-400/50 leading-none mb-1">${currentPrice.toFixed(2)}</div>
+                  <div className="text-2xl font-black text-red-600 tracking-tighter leading-none">${currentDiscountedPrice.toFixed(2)}</div>
                 </>
               ) : (
-                <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none">${product.price.toFixed(2)}</span>
+                <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none">${currentPrice.toFixed(2)}</span>
               )}
             </div>
           </div>
@@ -196,7 +199,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           ) : (
             <>
               <ShoppingCart className="w-5 h-5" />
-              Add to Cart • ${hasDiscount ? product.discountedPrice?.toFixed(2) : product.price.toFixed(2)}
+              Add to Cart • ${hasDiscount ? currentDiscountedPrice?.toFixed(2) : currentPrice.toFixed(2)}
             </>
           )}
         </button>

@@ -28,8 +28,12 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      // Facility Check
-      if (p.facilityId !== selectedFacilityId) return false;
+      // Facility Check - support both legacy facilityId and new facilityIds array
+      const belongsToFacility = p.facilityIds 
+        ? p.facilityIds.includes(selectedFacilityId)
+        : p.facilityId === selectedFacilityId;
+        
+      if (!belongsToFacility) return false;
       
       // Search Check
       if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -156,9 +160,9 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
                     <span className={`px-2 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm border ${p.status === 'active' ? 'bg-green-500/90 text-white border-green-600' : 'bg-red-500/90 text-white border-red-600'}`}>
                       {p.status}
                     </span>
-                    {p.discountPercent && p.discountPercent > 0 && (
+                    {((p.discountPercent && p.discountPercent > 0) || (p.discountValue && p.discountValue > 0)) && (
                       <span className="px-2 py-0.5 bg-blue-600 text-white rounded-sm text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-md border border-blue-700">
-                        <Percent className="w-2.5 h-2.5" /> {p.discountPercent}% OFF
+                        <Percent className="w-2.5 h-2.5" /> {p.discountType === 'flat' ? `$${p.discountValue} OFF` : `${p.discountValue || p.discountPercent}% OFF`}
                       </span>
                     )}
                     {p.quantity === 0 && (
@@ -178,11 +182,17 @@ const MarketplaceView: React.FC<MarketplaceViewProps> = ({ facilities, products,
                     <div className="text-right">
                       {p.discountedPrice && p.discountedPrice < p.price ? (
                         <>
-                          <div className="text-[10px] text-slate-400 line-through font-bold">${p.price.toFixed(2)}</div>
-                          <div className="font-black text-blue-600 text-sm">${p.discountedPrice.toFixed(2)}</div>
+                          <div className="text-[10px] text-slate-400 line-through font-bold">
+                            {p.sizeStocks?.length > 1 ? 'From ' : ''}${p.price.toFixed(2)}
+                          </div>
+                          <div className="font-black text-blue-600 text-sm">
+                            {p.sizeStocks?.length > 1 ? 'From ' : ''}${p.discountedPrice.toFixed(2)}
+                          </div>
                         </>
                       ) : (
-                        <span className="font-black text-blue-600 text-sm">${p.price.toFixed(2)}</span>
+                        <span className="font-black text-blue-600 text-sm">
+                          {p.sizeStocks?.length > 1 ? 'From ' : ''}${p.price.toFixed(2)}
+                        </span>
                       )}
                     </div>
                   </div>

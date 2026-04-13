@@ -50,7 +50,11 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
   const [viewingSlot, setViewingSlot] = useState<ClassSlot | null>(null);
   
   const [viewType, setViewType] = useState<'week' | 'day'>('week');
-  const [anchorDate, setAnchorDate] = useState(new Date());
+  const [anchorDate, setAnchorDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const weekDays = useMemo(() => {
@@ -115,7 +119,8 @@ const AppTimetableView: React.FC<AppTimetableViewProps> = ({
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val) {
-      const selectedDate = new Date(val);
+      const [y, m, d] = val.split('-').map(Number);
+      const selectedDate = new Date(y, m - 1, d);
       if (!isNaN(selectedDate.getTime())) {
         setAnchorDate(selectedDate);
         setViewType('day');

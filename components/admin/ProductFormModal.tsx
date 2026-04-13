@@ -16,12 +16,11 @@ const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 
 const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities, initialFacilityId, onClose, onSave }) => {
   const [formData, setFormData] = useState({
-    facilityId: product?.facilityId || initialFacilityId,
+    facilityIds: product?.facilityIds || (product?.facilityId ? [product.facilityId] : [initialFacilityId]),
     name: product?.name || '',
     description: product?.description || '',
-    price: product?.price || 0,
-    discountPercent: product?.discountPercent || 0,
-    discountedPrice: product?.discountedPrice || product?.price || 0,
+    discountType: product?.discountType || 'percent' as 'flat' | 'percent',
+    discountValue: product?.discountValue || 0,
     sizeStocks: product?.sizeStocks || [] as ProductSizeStock[],
     color: product?.color || '',
     category: product?.category || '',
@@ -32,13 +31,23 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-calculate discounted price
-  useEffect(() => {
-    const final = formData.discountPercent > 0 
-      ? formData.price * (1 - (formData.discountPercent / 100))
-      : formData.price;
-    setFormData(prev => ({ ...prev, discountedPrice: Number(final.toFixed(2)) }));
-  }, [formData.price, formData.discountPercent]);
+  const calculateDiscountedPrice = (price: number) => {
+    if (formData.discountValue <= 0) return price;
+    if (formData.discountType === 'percent') {
+      return price * (1 - (formData.discountValue / 100));
+    } else {
+      return Math.max(0, price - formData.discountValue);
+    }
+  };
+
+  const toggleFacility = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      facilityIds: prev.facilityIds.includes(id)
+        ? prev.facilityIds.filter(fid => fid !== id)
+        : [...prev.facilityIds, id]
+    }));
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -64,15 +73,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
       if (exists) {
         return { ...prev, sizeStocks: prev.sizeStocks.filter(ss => ss.size !== size) };
       } else {
-        return { ...prev, sizeStocks: [...prev.sizeStocks, { size, quantity: 0 }] };
+        return { ...prev, sizeStocks: [...prev.sizeStocks, { size, quantity: 0, price: 0 }] };
       }
     });
   };
 
-  const updateSizeStock = (size: string, quantity: number) => {
+  const updateSizeField = (size: string, field: 'quantity' | 'price', value: number) => {
     setFormData(prev => ({
       ...prev,
-      sizeStocks: prev.sizeStocks.map(ss => ss.size === size ? { ...ss, quantity } : ss)
+      sizeStocks: prev.sizeStocks.map(ss => ss.size === size ? { ...ss, [field]: value } : ss)
     }));
   };
 
@@ -83,7 +92,24 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
 
   const finalSave = () => {
     const totalQuantity = formData.sizeStocks.reduce((sum, ss) => sum + ss.quantity, 0);
-    onSave({ ...formData, quantity: totalQuantity });
+    const minPrice = formData.sizeStocks.length > 0 
+      ? Math.min(...formData.sizeStocks.map(ss => ss.price))
+      : 0;
+
+    // Update discounted prices for each size before saving
+    const updatedSizeStocks = formData.sizeStocks.map(ss => ({
+      ...ss,
+      discountedPrice: Number(calculateDiscountedPrice(ss.price).toFixed(2))
+    }));
+
+    onSave({ 
+      ...formData, 
+      facilityId: formData.facilityIds[0] || '', // Keep for backward compatibility
+      price: minPrice,
+      discountedPrice: Number(calculateDiscountedPrice(minPrice).toFixed(2)),
+      sizeStocks: updatedSizeStocks,
+      quantity: totalQuantity 
+    });
     setIsConfirmingSave(false);
   };
 
@@ -99,11 +125,27 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
           <form onSubmit={handleFormSubmit} className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto text-left pb-32 scrollbar-hide">
             
             <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Host Facility</label>
-              <select required value={formData.facilityId} onChange={e => setFormData(p => ({ ...p, facilityId: e.target.value }))} className="w-full px-6 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold text-slate-900">
-                <option value="">Select Facility...</option>
-                {facilities.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Choose Facilities</label>
+              <div className="flex flex-wrap gap-2">
+                {facilities.map(f => {
+                  const isSelected = formData.facilityIds.includes(f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => toggleFacility(f.id)}
+                      className={`px-4 py-2 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
+                        isSelected 
+                        ? 'border-blue-600 bg-blue-50 text-blue-600' 
+                        : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
+                      }`}
+                    >
+                      {isSelected && <Check className="w-3 h-3" />}
+                      {f.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>
@@ -111,37 +153,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
               <input required value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" placeholder="e.g. Premium Protein Powder" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Original Price ($)</label>
-                <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input required type="number" step="0.01" min="0" value={formData.price} onChange={e => setFormData(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" placeholder="0.00" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Discount (%)</label>
-                <div className="relative">
-                  <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type="number" min="0" max="100" value={formData.discountPercent} onChange={e => setFormData(p => ({ ...p, discountPercent: parseInt(e.target.value) || 0 }))} className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" placeholder="0" />
-                </div>
-              </div>
-            </div>
-
-            {formData.discountPercent > 0 && (
-              <div className="p-5 bg-blue-600 rounded-[24px] text-white shadow-xl shadow-blue-500/20 flex items-center justify-between animate-in zoom-in-95 duration-300">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Final Discounted Price</p>
-                  <p className="text-2xl font-black">${formData.discountedPrice.toFixed(2)}</p>
-                </div>
-                <div className="bg-white/20 p-2 rounded-xl">
-                  <Check className="w-6 h-6" />
-                </div>
-              </div>
-            )}
-
             <div className="space-y-4">
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Size & Individual Stock</label>
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Select Which Size</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {AVAILABLE_SIZES.map(s => {
                   const isSelected = formData.sizeStocks.some(ss => ss.size === s);
@@ -164,21 +177,97 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
               </div>
 
               {formData.sizeStocks.length > 0 && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 p-5 bg-slate-50 rounded-[32px] border border-slate-100">
+                <div className="mt-4 space-y-3 p-5 bg-slate-50 rounded-[32px] border border-slate-100">
+                  <div className="grid grid-cols-12 gap-2 px-4 mb-1">
+                    <div className="col-span-3 text-[8px] font-black text-slate-400 uppercase tracking-widest">Size</div>
+                    <div className="col-span-4 text-[8px] font-black text-slate-400 uppercase tracking-widest">Price ($)</div>
+                    <div className="col-span-5 text-[8px] font-black text-slate-400 uppercase tracking-widest">Stock</div>
+                  </div>
                   {formData.sizeStocks.map(ss => (
-                    <div key={ss.size} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100">
-                      <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-[10px] shrink-0">{ss.size}</div>
-                      <input 
-                        type="number" 
-                        min="0" 
-                        value={ss.quantity} 
-                        onChange={e => updateSizeStock(ss.size, parseInt(e.target.value) || 0)}
-                        className="w-full bg-transparent outline-none font-bold text-sm"
-                        placeholder="Qty"
-                      />
-                      <Package className="w-4 h-4 text-slate-200 shrink-0" />
+                    <div key={ss.size} className="grid grid-cols-12 gap-2 items-center bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="col-span-3 flex items-center gap-2">
+                        <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-[10px] shrink-0">{ss.size}</div>
+                      </div>
+                      <div className="col-span-4 relative">
+                        <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          min="0" 
+                          value={ss.price} 
+                          onChange={e => updateSizeField(ss.size, 'price', parseFloat(e.target.value) || 0)}
+                          className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-xs"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="col-span-5 relative">
+                        <Package className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-300" />
+                        <input 
+                          type="number" 
+                          min="0" 
+                          value={ss.quantity} 
+                          onChange={e => updateSizeField(ss.size, 'quantity', parseInt(e.target.value) || 0)}
+                          className="w-full pl-6 pr-2 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-xs"
+                          placeholder="Qty"
+                        />
+                      </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">Discount Settings</label>
+                <div className="flex bg-white rounded-lg p-1 border border-slate-100">
+                  <button 
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, discountType: 'percent' }))}
+                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-md transition-all ${formData.discountType === 'percent' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400'}`}
+                  >
+                    Percent
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, discountType: 'flat' }))}
+                    className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-md transition-all ${formData.discountType === 'flat' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400'}`}
+                  >
+                    Flat
+                  </button>
+                </div>
+              </div>
+              
+              <div className="relative">
+                {formData.discountType === 'percent' ? (
+                  <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                ) : (
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                )}
+                <input 
+                  type="number" 
+                  min="0" 
+                  value={formData.discountValue} 
+                  onChange={e => setFormData(p => ({ ...p, discountValue: parseFloat(e.target.value) || 0 }))} 
+                  className="w-full pl-11 pr-4 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold" 
+                  placeholder={formData.discountType === 'percent' ? "Enter percentage (0-100)" : "Enter flat amount"} 
+                />
+              </div>
+
+              {formData.discountValue > 0 && formData.sizeStocks.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Discounted Prices Preview</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {formData.sizeStocks.map(ss => (
+                      <div key={ss.size} className="bg-blue-600 p-3 rounded-2xl text-white shadow-lg shadow-blue-500/20 flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase">{ss.size}</span>
+                        <div className="text-right">
+                          <span className="text-[8px] opacity-60 line-through block">${ss.price.toFixed(2)}</span>
+                          <span className="text-xs font-black">${calculateDiscountedPrice(ss.price).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -220,7 +309,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ product, facilities
 
             <div className="flex flex-col md:flex-row gap-4 pt-10 sticky bottom-0 bg-white/80 backdrop-blur-md pb-4">
               <button type="button" onClick={onClose} className="flex-1 py-4 border-2 border-slate-100 rounded-2xl font-bold text-slate-400 hover:bg-slate-50 transition-colors">Discard</button>
-              <button type="submit" disabled={!formData.facilityId || !formData.name} className="flex-1 py-4 bg-black text-white rounded-2xl font-extrabold shadow-2xl hover:bg-slate-800 transition-all disabled:opacity-50">Publish Product</button>
+              <button type="submit" disabled={formData.facilityIds.length === 0 || !formData.name} className="flex-1 py-4 bg-black text-white rounded-2xl font-extrabold shadow-2xl hover:bg-slate-800 transition-all disabled:opacity-50">Publish Product</button>
             </div>
           </form>
         </div>
