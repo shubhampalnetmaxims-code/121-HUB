@@ -158,7 +158,6 @@ const RewardsView: React.FC<RewardsViewProps> = ({ settings, facilities, onUpdat
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
              <EarningCard label="Class Booking" icon={Layout} configPath="classes" />
-             <EarningCard label="Pass Purchase" icon={Ticket} configPath="passes" />
              <EarningCard label="Program Block" icon={Layers} configPath="blocks" />
              <EarningCard label="Market Order" icon={ShoppingBag} configPath="orders" />
              <EarningCard label="Membership" icon={CreditCard} configPath="memberships" />
@@ -227,7 +226,6 @@ const RewardsView: React.FC<RewardsViewProps> = ({ settings, facilities, onUpdat
                     <div className="flex flex-wrap gap-4">
                        {[
                          { id: 'booking', label: 'Bookings', icon: Layout },
-                         { id: 'pass', label: 'Passes', icon: Ticket },
                          { id: 'block', label: 'Blocks', icon: Layers },
                          { id: 'order', label: 'Products', icon: ShoppingBag }
                        ].map(channel => {

@@ -793,11 +793,11 @@ export const DEFAULT_REWARD_TRANSACTIONS: RewardTransaction[] = [
 
 export const DEFAULT_REWARD_SETTINGS: RewardSettings = {
   classes: { enabled: true, points: 50, facilityIds: [] },
-  passes: { enabled: true, points: 100, facilityIds: [] },
+  passes: { enabled: false, points: 0, facilityIds: [] },
   blocks: { enabled: true, points: 150, facilityIds: [] },
   orders: { enabled: true, points: 20, facilityIds: [] },
   memberships: { enabled: true, points: 200, facilityIds: [] },
-  redemption: { enabled: true, pointsToValue: 1000, monetaryValue: 10, minPointsRequired: 1000, enabledModules: ['booking', 'block', 'pass', 'order'] }
+  redemption: { enabled: true, pointsToValue: 1000, monetaryValue: 10, minPointsRequired: 1000, enabledModules: ['booking', 'block', 'order'] }
 };
 
 export const DEFAULT_USER_PASSES: UserPass[] = [
